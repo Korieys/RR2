@@ -1,0 +1,14 @@
+{
+  "name": "RR.Strategy",
+  "rootNamespace": "RR.Strategy",
+  "references": ["Commandfall.Core", "Commandfall.AI"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

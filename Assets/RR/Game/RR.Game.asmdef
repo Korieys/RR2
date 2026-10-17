@@ -1,0 +1,14 @@
+{
+  "name": "RR.Game",
+  "rootNamespace": "RR.Game",
+  "references": ["RR.Strategy", "Commandfall.Core", "Commandfall.AI", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime", "Unity.InputSystem"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

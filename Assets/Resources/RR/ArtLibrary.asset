@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2ff8e2cc462c594fa90151e304287b5, type: 3}
+  m_Name: ArtLibrary
+  m_EditorClassIdentifier: RR.Game::RR.Game.ArtLibrary
+  planet: {fileID: 4800000, guid: 2320a401192151548ab3b920575dabef, type: 3}
+  atmosphere: {fileID: 4800000, guid: 1e24eb51c9cff5740b91169e8065c919, type: 3}
+  ring: {fileID: 4800000, guid: 1c9bacfe8e8d5df4b8314eaee2c622c2, type: 3}
+  starSurface: {fileID: 4800000, guid: b110d5ed55f737447bb81a57b8da9bd2, type: 3}
+  corona: {fileID: 4800000, guid: fd21b999654bca4419693ebc748bb9c5, type: 3}
+  ship: {fileID: 4800000, guid: 91dc19ac2301466428091d5a7bfb531e, type: 3}
+  sky: {fileID: 4800000, guid: 5b886523bfcc94d4c8fb8d20b21bd2f6, type: 3}
+  starField: {fileID: 4800000, guid: 1b3a40fb288b16d49a66910a733eb8c9, type: 3}
+  galaxyVolume: {fileID: 4800000, guid: 1297a0990380943408ae2c25ba1f8f9c, type: 3}
+  territory: {fileID: 4800000, guid: d995aff0ca0a6d44c82648feb6647f1c, type: 3}
+  lane: {fileID: 4800000, guid: 39f025f25cfe4d44bb60ed9c429342b1, type: 3}
+  marker: {fileID: 4800000, guid: a1f14c7777e5a8b44abb5cb75246cace, type: 3}
+  hexGrid: {fileID: 4800000, guid: 91a92724826993a45aa55c7ee623d7df, type: 3}
+  fx: {fileID: 4800000, guid: eeceeee00541e974f9efbf02e5136f16, type: 3}
+  fade: {fileID: 0}
+  haze: {fileID: 4800000, guid: 6daa406add9d354439bc8936d4be0622, type: 3}
+  postFx: {fileID: 11400000, guid: abfb6d1c03c01b34396f3b018e45f9c0, type: 2}
+  panelSettings: {fileID: 11400000, guid: 4cc60ef1fcca01c459b699d222bf939e, type: 2}
+  displayFont: {fileID: 12800000, guid: bca43f6cfbbccfd469605066c39ebf62, type: 3}
+  bodyFont: {fileID: 12800000, guid: df2b967d1bfc0224b8f18106495c1c76, type: 3}
+  bodySemiBold: {fileID: 12800000, guid: 437931f4dc04c984c86dafa975b91c61, type: 3}
+  bodyBold: {fileID: 12800000, guid: 9765b9034ade9f04dbcf412d45c2fecc, type: 3}
+  condensed: {fileID: 12800000, guid: c6903adc8b7531443bf31b0eb77ba0f3, type: 3}
+  models:
+  - {fileID: 919132149155446097, guid: c9c40204e31adca4985cd72b5f2dad40, type: 3}
+  - {fileID: 919132149155446097, guid: 371e7765a771ac14db69f7596a86faa4, type: 3}
+  - {fileID: 919132149155446097, guid: 848277eb6f4becb41b27677a95be7f2a, type: 3}
+  - {fileID: 919132149155446097, guid: 09a97542aacc3f64bbc6de55f3447cca, type: 3}
+  - {fileID: 919132149155446097, guid: 6be26f08d1b94914e9e735a6efe82161, type: 3}
+  - {fileID: 919132149155446097, guid: 4d8e8526c75f5c44cac41f57ce5c8ea6, type: 3}
+  - {fileID: 919132149155446097, guid: 83f2ad2c6400b7f429832ffb22b84c08, type: 3}
+  - {fileID: 919132149155446097, guid: be5a2dc43f81d9b418dac95214e65ef7, type: 3}
+  - {fileID: 919132149155446097, guid: 2f4b51b7aff2f7a4e9107b1b4cd76b05, type: 3}
+  - {fileID: 919132149155446097, guid: 6a72ab24fa0a20f47971f19308f55668, type: 3}
+  - {fileID: 919132149155446097, guid: d98d5024dbc2d5345bd350ebf2a56df8, type: 3}
+  - {fileID: 919132149155446097, guid: 8da5d45e927d19c40a90113654c57955, type: 3}
+  - {fileID: 919132149155446097, guid: f6e0845c204f72c44872a9a42eb7797e, type: 3}
+  - {fileID: 919132149155446097, guid: a07f4094b1fc9264b9d7432db793f723, type: 3}
+  - {fileID: 919132149155446097, guid: c24971bfbf89142458ff7c000db4add1, type: 3}
+  - {fileID: 919132149155446097, guid: 4ba8fe41446941f41a3e3450b1c3127c, type: 3}
+  - {fileID: 919132149155446097, guid: d93a5be7f8f559444b45b9faf2d6d4fc, type: 3}
+  - {fileID: 919132149155446097, guid: cb46d90aaa3a45d41a4f605aa87606ac, type: 3}
+  - {fileID: 919132149155446097, guid: 949fe5041504f0243b4fe2233640045a, type: 3}
+  - {fileID: 919132149155446097, guid: 076d977e6d1ea0643839277454243506, type: 3}
+  - {fileID: 919132149155446097, guid: bd1ae270f23066e4d974eb30e96ae81d, type: 3}
+  - {fileID: 919132149155446097, guid: 1ef1e05a67e0f58409f30707122d8416, type: 3}
+  - {fileID: 919132149155446097, guid: 1ef96cf821dd2344ba389bb8bf840ea9, type: 3}
+  - {fileID: 919132149155446097, guid: d52128628b5930d4494c893e0cf86ec5, type: 3}
+  - {fileID: 919132149155446097, guid: 36710737e18b39a4496c951e0fad4f9c, type: 3}
+  - {fileID: 919132149155446097, guid: 9b91e86d2f5f1d349a856a9f9977ae8b, type: 3}
+  - {fileID: 919132149155446097, guid: 3e85b72c9390864469bcba6a5cb8bfa1, type: 3}
+  - {fileID: 919132149155446097, guid: 1691c4f09bfa0f541b5981697d488996, type: 3}
+  audio:
+  - {fileID: 8300000, guid: 0dcee573eb2fd294e966a48140b334a8, type: 3}
+  - {fileID: 8300000, guid: 313bf098adfa1804f815e97ec4ecd028, type: 3}
+  - {fileID: 8300000, guid: 6b797a78ee8614b4ba51c91e8ff984d9, type: 3}
+  - {fileID: 8300000, guid: 7c65b0db490e4584989fbe12d1e5cbc6, type: 3}
+  - {fileID: 8300000, guid: c71a9c9dfe0d4e24d9b6ef1ac829a285, type: 3}
+  - {fileID: 8300000, guid: eab19833e9528d24c97c5f2125b49a0a, type: 3}
+  - {fileID: 8300000, guid: de756bcc5aef46441a1985daa685c92f, type: 3}
+  - {fileID: 8300000, guid: b6d9f5801937a1e46a38a0d2f3099e06, type: 3}
+  - {fileID: 8300000, guid: e845c3a65d6f7f04e8e374346f4375b6, type: 3}
+  - {fileID: 8300000, guid: 13f34d71ba029c64b94c67066e181683, type: 3}
+  - {fileID: 8300000, guid: da74982c7e3efe6409f738254c4ff411, type: 3}
+  - {fileID: 8300000, guid: a7af6a3fc74df364ead18109b909bf41, type: 3}
+  - {fileID: 8300000, guid: d3c4a7fdf8e4496439092affc3565924, type: 3}
+  - {fileID: 8300000, guid: c2b2bb81faecd464ab7230afebd1987e, type: 3}
+  - {fileID: 8300000, guid: 8febe580c252bf0409c1d438dc02f4da, type: 3}
+  - {fileID: 8300000, guid: 4be539eb58d78a044ad85c7fa5efe5af, type: 3}
+  - {fileID: 8300000, guid: f56fb4bf828084f4bb0bf95a916311b2, type: 3}
+  - {fileID: 8300000, guid: d98088dfba1c3a8448ae090526663fa3, type: 3}
+  - {fileID: 8300000, guid: 319048b530085374eafc4c227ade6558, type: 3}
+  - {fileID: 8300000, guid: 24f00d6daf84c6f4f8c27b66b20f1f83, type: 3}
+  - {fileID: 8300000, guid: 5b565cf0fc10ac6499e9b394d4cce458, type: 3}
+  - {fileID: 8300000, guid: 38f4d1bceaddbd44dbd76ee5d51739fc, type: 3}
+  - {fileID: 8300000, guid: 11b0e3f356bd4274e8ef9d093d78c25c, type: 3}
+  icons: []

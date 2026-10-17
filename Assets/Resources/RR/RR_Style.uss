@@ -1,0 +1,133 @@
+/* Rule and Ruin slice interface. Colour roles: charcoal and near-black blue surfaces, fine metallic framing,
+   restrained warm gold emphasis, ivory text, faction accents. States use shape and text as well as colour. */
+:root {
+    --ivory: rgb(236, 230, 214);
+    --muted: rgb(150, 156, 166);
+    --dim: rgb(104, 110, 122);
+    --gold: rgb(201, 164, 92);
+    --gold-bright: rgb(232, 198, 120);
+    --metal: rgba(140, 150, 163, 0.55);
+    --metal-faint: rgba(140, 150, 163, 0.22);
+    --panel: rgba(10, 13, 20, 0.86);
+    --panel-solid: rgba(12, 15, 22, 0.97);
+    --danger: rgb(226, 86, 72);
+    --positive: rgb(120, 200, 150);
+    --silex: rgb(74, 168, 255);
+    --craigon: rgb(196, 82, 255);
+    color: var(--ivory);
+    font-size: 15px;
+}
+.layer { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.panel {
+    background-color: var(--panel);
+    border-width: 1px; border-color: var(--metal-faint);
+    border-top-color: var(--metal);
+    border-top-left-radius: 0; border-top-right-radius: 7px; border-bottom-left-radius: 7px; border-bottom-right-radius: 0;
+    padding: 12px 14px;
+}
+.panel-solid { background-color: var(--panel-solid); }
+.h-display { -unity-font-style: normal; font-size: 22px; color: var(--ivory); letter-spacing: 1px; -unity-text-align: middle-left; }
+.h-section { font-size: 12px; color: var(--gold); letter-spacing: 2px; margin-top: 10px; margin-bottom: 4px; -unity-font-style: bold; }
+.subtitle { font-size: 13px; color: var(--muted); -unity-font-style: italic; margin-bottom: 6px; white-space: normal; }
+.body { font-size: 14px; color: var(--ivory); white-space: normal; }
+.small { font-size: 12px; color: var(--muted); white-space: normal; }
+.num { font-size: 15px; color: var(--ivory); -unity-font-style: bold; }
+.row { flex-direction: row; align-items: center; }
+.spacer { flex-grow: 1; }
+.divider { height: 1px; background-color: var(--metal-faint); margin-top: 8px; margin-bottom: 8px; }
+
+/* Buttons */
+.btn {
+    background-color: rgba(28, 33, 44, 0.95);
+    border-width: 1px; border-color: var(--metal-faint); border-top-color: var(--metal);
+    border-top-left-radius: 0; border-top-right-radius: 5px; border-bottom-left-radius: 5px; border-bottom-right-radius: 0;
+    color: var(--ivory); font-size: 14px; padding: 6px 12px; margin: 2px; -unity-text-align: middle-center;
+    transition-duration: 0.15s; transition-property: background-color, border-color;
+}
+.btn:hover { background-color: rgba(46, 52, 66, 0.98); border-color: var(--gold); }
+.btn:active { background-color: rgba(62, 56, 40, 1); }
+.btn-primary { border-color: var(--gold); color: var(--gold-bright); background-color: rgba(48, 40, 22, 0.95); }
+.btn-primary:hover { background-color: rgba(72, 58, 30, 1); }
+.btn-danger { border-color: rgba(226, 86, 72, 0.8); color: rgb(240, 170, 160); }
+.btn:disabled { color: var(--dim); border-color: rgba(90, 96, 108, 0.3); background-color: rgba(22, 25, 32, 0.8); }
+.btn-toggle-on { border-color: var(--gold); color: var(--gold-bright); }
+.btn-icon { width: 34px; height: 30px; padding: 0; }
+
+/* Top status strip */
+.topbar { position: absolute; left: 0; right: 0; top: 0; height: 46px; flex-direction: row; align-items: center; padding-left: 14px; padding-right: 10px;
+    background-color: rgba(8, 10, 16, 0.92); border-bottom-width: 1px; border-bottom-color: var(--metal); }
+.res { flex-direction: row; align-items: center; margin-right: 18px; }
+.res-value { font-size: 16px; -unity-font-style: bold; margin-left: 5px; }
+.res-income { font-size: 12px; color: var(--positive); margin-left: 4px; }
+.date { font-size: 14px; color: var(--ivory); margin-left: 8px; margin-right: 8px; min-width: 190px; -unity-text-align: middle-center; }
+.emblem-name { font-size: 18px; color: var(--ivory); margin-left: 8px; margin-right: 22px; letter-spacing: 1px; }
+
+/* Side panels */
+.outliner { position: absolute; left: 12px; top: 58px; width: 270px; }
+.inspector { position: absolute; right: 12px; top: 58px; width: 360px; max-height: 84%; }
+.ticker { position: absolute; left: 300px; right: 390px; bottom: 12px; align-items: center; }
+.ticker-line { font-size: 13px; color: var(--muted); -unity-text-align: middle-center; white-space: normal; }
+.toast { padding: 8px 14px; margin-top: 4px; font-size: 14px; white-space: normal; }
+.toast-ok { border-left-width: 3px; border-left-color: var(--gold); }
+.toast-bad { border-left-width: 3px; border-left-color: var(--danger); color: rgb(245, 196, 188); }
+.toast-danger { border-left-width: 3px; border-left-color: var(--danger); }
+
+.item { flex-shrink: 0; padding: 6px 8px; margin-top: 2px; border-left-width: 2px; border-left-color: rgba(0,0,0,0); background-color: rgba(255,255,255,0.025); }
+.item:hover { background-color: rgba(255,255,255,0.07); }
+.item-selected { border-left-color: var(--gold); background-color: rgba(201, 164, 92, 0.12); }
+.item-title { font-size: 14px; color: var(--ivory); }
+.item-sub { font-size: 12px; color: var(--muted); white-space: normal; }
+.tag { font-size: 11px; padding: 1px 6px; margin-left: 4px; border-width: 1px; border-color: var(--metal-faint); color: var(--muted);
+    border-top-right-radius: 3px; border-bottom-left-radius: 3px; }
+.tag-danger { border-color: var(--danger); color: rgb(240, 170, 160); }
+.tag-gold { border-color: var(--gold); color: var(--gold-bright); }
+
+.bar { height: 6px; background-color: rgba(255,255,255,0.08); margin-top: 3px; }
+.bar-fill { height: 6px; background-color: var(--gold); }
+.bar-hp { background-color: rgb(120, 200, 150); }
+.bar-hp-low { background-color: var(--danger); }
+
+/* Labels anchored to the world */
+.label { position: absolute; font-size: 13px; color: var(--ivory); -unity-text-align: middle-center; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+.label-sector { font-size: 26px; letter-spacing: 3px; color: rgba(236, 230, 214, 0.75); }
+.label-sector-sub { font-size: 13px; color: rgba(200, 200, 210, 0.6); -unity-font-style: italic; }
+.label-system { font-size: 13px; }
+.label-owned { color: rgb(190, 222, 255); }
+.label-hostile { color: rgb(232, 190, 255); }
+.label-fleet { font-size: 12px; color: var(--gold-bright); }
+.label-planet { font-size: 13px; color: var(--ivory); }
+
+/* Modals */
+.modal-back { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(2, 3, 6, 0.55); align-items: center; justify-content: center; }
+.modal { width: 1180px; max-height: 92%; flex-direction: column; }
+.modal-title { font-size: 28px; letter-spacing: 2px; color: var(--ivory); }
+.ship-row { flex-direction: row; align-items: center; padding: 6px 8px; margin-top: 3px; background-color: rgba(255,255,255,0.03); border-left-width: 3px; border-left-color: rgba(0,0,0,0); }
+.ship-row:hover { background-color: rgba(255,255,255,0.07); }
+.ship-row-on { border-left-color: var(--gold); background-color: rgba(201, 164, 92, 0.055); }
+.ship-row-off { opacity: 0.6; }
+.col-name { width: 230px; }
+.col-stat { width: 66px; -unity-text-align: middle-center; }
+.col-text { flex-grow: 1; flex-shrink: 1; }
+.budget { font-size: 16px; }
+.budget-over { color: var(--danger); }
+
+.loading { position: absolute; left: 0; right: 0; bottom: 70px; align-items: center; }
+.fade { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+
+/* Battle HUD */
+.battle-top { position: absolute; left: 0; right: 0; top: 0; height: 50px; flex-direction: row; align-items: center; justify-content: center;
+    background-color: rgba(8, 10, 16, 0.9); border-bottom-width: 1px; border-bottom-color: var(--metal); }
+.battle-left { position: absolute; left: 12px; top: 62px; width: 260px; }
+.battle-right { position: absolute; right: 12px; top: 62px; width: 340px; }
+.battle-actions { position: absolute; left: 0; right: 0; bottom: 14px; flex-direction: row; justify-content: center; }
+.battle-preview { position: absolute; left: 0; right: 0; bottom: 70px; align-items: center; }
+.unit-card { padding: 5px 7px; margin-top: 3px; background-color: rgba(255,255,255,0.03); border-left-width: 3px; border-left-color: rgba(0,0,0,0); }
+.unit-card-active { border-left-color: var(--gold); }
+.unit-card-done { opacity: 0.55; }
+.unit-card-dead { opacity: 0.3; }
+.leader { color: var(--gold-bright); }
+.row { flex-shrink: 0; }
+.bar { flex-shrink: 0; }
+.unit-card { flex-shrink: 0; }
+.ship-row { flex-shrink: 0; }
+.inspector { flex-direction: column; }
