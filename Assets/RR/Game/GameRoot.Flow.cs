@@ -361,16 +361,25 @@ namespace RR.Game
 
         // ------------------------------------------------------------------ labels
 
+
         void BuildGalaxyLabels()
         {
             var hud = UI.Strategy;
             hud.ClearLabels();
             foreach (var s in G.Sectors)
             {
+                // The faction map sets each sector as emblem, title and subtitle. Emblems are provisional crops of the map
+                // legend until the creator's artwork arrives (Resources/RR/Emblems/<polity id>.png).
                 var c = GalaxyScale.ToWorld(s.X, s.Y, 0) + Vector3.up * 6;
+                var emblem = s.OwnerId != null ? UnityEngine.Resources.Load<Texture2D>("RR/Emblems/" + s.OwnerId) : null;
+                if (emblem != null)
+                {
+                    var ce = c + new Vector3(0, 0, 33);
+                    hud.AddEmblem(emblem, () => ce, 190, 330, 5000, 46);
+                }
                 hud.AddLabel(s.Name.ToUpperInvariant(), () => c, 200, 330, 5000, "label-sector");
                 var c2 = c + new Vector3(0, 0, -16);
-                hud.AddLabel(s.Subtitle, () => c2, 150, 420, 5000, "label-sector-sub");
+                hud.AddLabel(s.Eclipse ? "(Unexplored Space)" : s.Subtitle, () => c2, 150, 420, 5000, "label-sector-sub");
             }
             foreach (var s in G.Systems)
             {

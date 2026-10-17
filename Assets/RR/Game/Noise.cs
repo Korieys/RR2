@@ -36,6 +36,24 @@ namespace RR.Game
             return Mathf.Lerp(Mathf.Lerp(x00, x10, wy), Mathf.Lerp(x01, x11, wy), wz) * 1.6f;
         }
 
+        /// <summary>Gradient noise that repeats every <paramref name="period"/> lattice cells on all axes (for tiling textures).</summary>
+        public static float GradientPeriodic(float px, float py, float pz, int period, uint seed = 0)
+        {
+            int ix = Mathf.FloorToInt(px), iy = Mathf.FloorToInt(py), iz = Mathf.FloorToInt(pz);
+            float fx = px - ix, fy = py - iy, fz = pz - iz;
+            float wx = Fade(fx), wy = Fade(fy), wz = Fade(fz);
+            float Corner(int ox, int oy, int oz)
+            {
+                Grad(Wrap(ix + ox, period), Wrap(iy + oy, period), Wrap(iz + oz, period), seed, out var gx, out var gy, out var gz);
+                return gx * (fx - ox) + gy * (fy - oy) + gz * (fz - oz);
+            }
+            float x00 = Mathf.Lerp(Corner(0, 0, 0), Corner(1, 0, 0), wx), x10 = Mathf.Lerp(Corner(0, 1, 0), Corner(1, 1, 0), wx);
+            float x01 = Mathf.Lerp(Corner(0, 0, 1), Corner(1, 0, 1), wx), x11 = Mathf.Lerp(Corner(0, 1, 1), Corner(1, 1, 1), wx);
+            return Mathf.Lerp(Mathf.Lerp(x00, x10, wy), Mathf.Lerp(x01, x11, wy), wz) * 1.6f;
+        }
+
+        static int Wrap(int i, int period) { int m = i % period; return m < 0 ? m + period : m; }
+
         public static float Fbm(Vector3 p, int octaves, uint seed = 0, float lacunarity = 2.03f, float gain = 0.5f)
         {
             float s = 0, a = 0.5f, n = 0;

@@ -49,9 +49,25 @@ namespace RR.Strategy
         public string Subtitle;
         public string OwnerId;              // null = unclaimed
         public double X, Y;                  // galactic data coordinates (light years, +Y = galactic north on the map)
-        public double Radius;
+        public double Radius;                // east-west radius (light years)
+        public double Aspect = 1;            // east-west radius over north-south radius (the map's sectors are wide ovals)
         public bool Eclipse;                 // the Eclipse Sector's presentation mood
         public bool ProvisionalName;
+    }
+
+    public enum MapFeatureKind { GalacticHeart, OriginVortex, Disputed, Incursion }
+
+    /// <summary>
+    /// Something the approved faction map draws that is not a sector, system or lane: the galactic heart inside the Eclipse,
+    /// the Craigon origin vortex, disputed zones and incursion routes. Presentation only; no rule reads these.
+    /// </summary>
+    public sealed class MapFeature
+    {
+        public string Id;
+        public MapFeatureKind Kind;
+        public string PolityId;              // the incursion or origin owner; null for neutral features
+        public double Radius;                // light years (zones, vortex, heart)
+        public List<double> Points = new List<double>();   // x0, y0, x1, y1, ... in light years; one point for zones
     }
 
     public sealed class Planet
@@ -181,6 +197,7 @@ namespace RR.Strategy
         public List<Sector> Sectors = new List<Sector>();
         public List<StarSystem> Systems = new List<StarSystem>();
         public List<Lane> Lanes = new List<Lane>();
+        public List<MapFeature> Features = new List<MapFeature>();
         public List<Fleet> Fleets = new List<Fleet>();
         public List<Engagement> Engagements = new List<Engagement>();
         public HashSet<string> AppliedBattles = new HashSet<string>(StringComparer.Ordinal);
@@ -190,6 +207,7 @@ namespace RR.Strategy
         public Polity Player => Polities.First(p => p.PlayerControlled);
         public StarSystem GetSystem(string id) => Systems.FirstOrDefault(s => s.Id == id);
         public Sector GetSector(string id) => Sectors.FirstOrDefault(s => s.Id == id);
+        public MapFeature GetFeature(MapFeatureKind kind) => Features.FirstOrDefault(f => f.Kind == kind);
         public Fleet GetFleet(string id) => Fleets.FirstOrDefault(f => f.Id == id);
         public Engagement GetEngagement(string id) => Engagements.FirstOrDefault(e => e.Id == id);
         public Planet GetPlanet(string id) => Systems.SelectMany(s => s.Planets).FirstOrDefault(p => p.Id == id);

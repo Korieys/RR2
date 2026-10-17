@@ -89,8 +89,9 @@
 
 /* Labels anchored to the world */
 .label { position: absolute; font-size: 13px; color: var(--ivory); -unity-text-align: middle-center; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
-.label-sector { font-size: 26px; letter-spacing: 3px; color: rgba(236, 230, 214, 0.75); }
-.label-sector-sub { font-size: 13px; color: rgba(200, 200, 210, 0.6); -unity-font-style: italic; }
+.label-sector { font-size: 26px; letter-spacing: 3px; color: rgba(240, 234, 220, 0.9); text-shadow: 0 0 6px rgba(0,0,0,0.95); }
+.label-sector-sub { font-size: 14px; color: rgba(222, 220, 228, 0.78); -unity-font-style: italic; text-shadow: 0 0 4px rgba(0,0,0,0.95); }
+.label-emblem { -unity-background-scale-mode: scale-to-fit; opacity: 0.92; }
 .label-system { font-size: 13px; }
 .label-owned { color: rgb(190, 222, 255); }
 .label-hostile { color: rgb(232, 190, 255); }

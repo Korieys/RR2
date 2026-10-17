@@ -135,8 +135,17 @@ namespace RR.Game
             root.ToggleOverlays(); yield return Wait(0.3f);
             yield return Shot(dir, "g02_galaxy_overview_no_overlay");
             root.ToggleOverlays();
+            // Map registration: straight down over the whole galaxy, so the faction map can be laid over the frame.
+            var galaxyLimits = rig.Limits;
+            rig.Limits = new CamLimits { MinDistance = galaxyLimits.MinDistance, MaxDistance = 1200, MinPitch = galaxyLimits.MinPitch, MaxPitch = 89.5f, FocusBounds = galaxyLimits.FocusBounds };
+            yield return Settle(rig, new CamPose { Focus = Vector3.zero, Yaw = 0, Pitch = 89.5f, Distance = 860, Fov = 40 }, 1.0f);
+            yield return Shot(dir, "g00_map_frame");
+            root.ToggleOverlays(); yield return Wait(0.3f);
+            yield return Shot(dir, "g00_map_frame_no_overlay");
+            root.ToggleOverlays();
+            rig.Limits = galaxyLimits;
             var ecl = root.Galaxy.EclipseCenter;
-            yield return Settle(rig, new CamPose { Focus = ecl, Yaw = 0, Pitch = 50, Distance = 210, Fov = 40 }, 0.8f);
+            yield return Settle(rig, new CamPose { Focus = ecl + new Vector3(0, 0, -20), Yaw = 0, Pitch = 55, Distance = 380, Fov = 40 }, 0.8f);
             yield return Shot(dir, "g03_eclipse_sector");
             root.ToggleOverlays(); yield return Wait(0.3f);
             yield return Shot(dir, "g04_eclipse_sector_no_overlay");
@@ -148,12 +157,32 @@ namespace RR.Game
             root.SelectAndFocusFleet(SliceScenario.PlayerFleet);
             yield return Wait(0.9f);
             yield return Shot(dir, "g06_fleet_selected_galaxy");
+            // Zoomed in on the player's fleet: the territory mist clears around it.
+            var crownPos = root.Galaxy.FleetPosition(G.GetFleet(SliceScenario.PlayerFleet), 0);
+            yield return Settle(rig, new CamPose { Focus = crownPos, Yaw = 0, Pitch = 55, Distance = 70, Fov = 40 }, 0.6f);
+            yield return Shot(dir, "g06b_fleet_zoomed");
             // Chart-versus-space test at galaxy scale: overlays off, lateral pans and an orbit.
             root.ToggleOverlays();
             var basePose = new CamPose { Focus = aur + new Vector3(30, 0, -20), Yaw = 10, Pitch = 40, Distance = 150, Fov = 40 };
             for (int i = 0; i < 3; i++) { var p = basePose; p.Focus += Quaternion.Euler(0, 10, 0) * new Vector3(-60 + i * 60, 0, 0); yield return Settle(rig, p, 0.35f); yield return Shot(dir, "cv_galaxy_pan_" + i); }
             for (int i = 0; i < 3; i++) { var p = basePose; p.Yaw = 10 + i * 35; yield return Settle(rig, p, 0.35f); yield return Shot(dir, "cv_galaxy_orbit_" + i); }
             root.ToggleOverlays();
+
+            // Camera feel checks: zoom-linked pitch and pan glide, driven through the same calls as player input.
+            {
+                yield return Settle(rig, root.GalaxyHome, 0.3f);
+                float p0 = rig.Target.Pitch;
+                rig.Zoom(0.2f);
+                yield return Wait(0.6f);
+                Note("camera feel: zooming from " + root.GalaxyHome.Distance.ToString("0") + " to " + rig.Current.Distance.ToString("0") + " moved pitch from " +
+                     p0.ToString("0.0") + " to " + rig.Current.Pitch.ToString("0.0") + " degrees");
+                // A brisk mouse drag: 700 pixels a second for 0.3 s, independent of frame rate.
+                for (float tt = 0; tt < 0.3f; tt += Time.unscaledDeltaTime) { rig.Pan(new Vector2(-700f * Time.unscaledDeltaTime, 0)); yield return null; }
+                var released = rig.Target.Focus;
+                yield return Wait(0.6f);
+                Note("camera feel: after a drag ends the focus glides on " + (rig.Target.Focus - released).magnitude.ToString("0.0") + " units" +
+                     (Settings.ReducedMotion ? " (reduced motion: expected 0)" : ""));
+            }
 
             // Interaction checks: UI input capture and camera cancellation.
             {

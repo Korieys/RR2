@@ -18,4 +18,8 @@ Resume from "Next step". Full status: [HANDOFF.md](HANDOFF.md). Decisions: [DECI
   aliases, so use longer variable names. In bash heredocs, avoid a backslash before a quote; use forward slashes in paths.
 
 ## Next step
+* Galaxy view: [GALAXY_FIDELITY_PLAN.md](GALAXY_FIDELITY_PLAN.md) is complete (phase 2 skipped by the creator). Next: creator
+  review of `Docs/Evidence/final2__*` and the side by side, then the remaining known weaknesses in HANDOFF. Emblems stay provisional until the creator sends the artwork (drop-in PNGs, see HANDOFF).
+* Measure at true 1080p: launch with `-screen-fullscreen 1 -screen-width 1920 -screen-height 1080` (the player otherwise keeps
+  its last window size; check the second line of the tour log).
 * Creator review of `Docs/Evidence`, then act on "Known weaknesses" in HANDOFF.md (the galaxy overview's map-like look first).

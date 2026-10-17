@@ -25,6 +25,23 @@ namespace RR.Game
             return new Color(((p.Color >> 16) & 0xFF) / 255f, ((p.Color >> 8) & 0xFF) / 255f, (p.Color & 0xFF) / 255f);
         }
 
+        /// <summary>Scatters the faint distant galaxies drawn by RR_SpaceSky (deterministic, set once as shader globals).</summary>
+        public static void SeedDistantGalaxies()
+        {
+            var dirs = new Vector4[40]; var shape = new Vector4[40]; var tint = new Vector4[40];
+            for (int i = 0; i < 40; i++)
+            {
+                float z = Noise.Rand01(i, 1) * 2 - 1, a = Noise.Rand01(i, 2) * Mathf.PI * 2, r = Mathf.Sqrt(1 - z * z);
+                dirs[i] = new Vector4(r * Mathf.Cos(a), z, r * Mathf.Sin(a), Mathf.Lerp(0.008f, 0.03f, Mathf.Pow(Noise.Rand01(i, 3), 2)));
+                shape[i] = new Vector4(Noise.Rand01(i, 4) * Mathf.PI * 2, Mathf.Lerp(0.25f, 1f, Noise.Rand01(i, 5)), Noise.Rand01(i, 6), Mathf.Lerp(0.07f, 0.22f, Noise.Rand01(i, 7)));
+                var c = Color.Lerp(new Color(0.62f, 0.72f, 1f), new Color(0.9f, 0.78f, 1f), Noise.Rand01(i, 8));
+                tint[i] = new Vector4(c.r, c.g, c.b, 1);
+            }
+            Shader.SetGlobalVectorArray("_RR_Galaxies", dirs);
+            Shader.SetGlobalVectorArray("_RR_GalaxyShape", shape);
+            Shader.SetGlobalVectorArray("_RR_GalaxyTint", tint);
+        }
+
         public static Color StarColor(StarClass c)
         {
             switch (c)

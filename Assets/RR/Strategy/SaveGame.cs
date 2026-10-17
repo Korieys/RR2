@@ -157,7 +157,11 @@ namespace RR.Strategy
                 ["sectors"] = g.Sectors.Select(s => (object)new Dictionary<string, object>
                 {
                     ["id"] = s.Id, ["name"] = s.Name, ["subtitle"] = s.Subtitle, ["owner"] = s.OwnerId, ["x"] = s.X, ["y"] = s.Y, ["r"] = s.Radius,
-                    ["eclipse"] = s.Eclipse, ["provisional"] = s.ProvisionalName,
+                    ["aspect"] = s.Aspect, ["eclipse"] = s.Eclipse, ["provisional"] = s.ProvisionalName,
+                }).ToList(),
+                ["features"] = g.Features.Select(f => (object)new Dictionary<string, object>
+                {
+                    ["id"] = f.Id, ["kind"] = f.Kind.ToString(), ["polity"] = f.PolityId, ["r"] = f.Radius, ["points"] = f.Points.Cast<object>().ToList(),
                 }).ToList(),
                 ["systems"] = g.Systems.Select(s => (object)new Dictionary<string, object>
                 {
@@ -228,7 +232,11 @@ namespace RR.Strategy
                     CommandfallFaction = p.S("cfFaction"), Stock = Res(p.O("stock")) });
             foreach (IDictionary<string, object> s in r.A("sectors"))
                 g.Sectors.Add(new Sector { Id = s.S("id"), Name = s.S("name"), Subtitle = s.S("subtitle"), OwnerId = s.S("owner"), X = s.D("x"), Y = s.D("y"),
-                    Radius = s.D("r"), Eclipse = s.B("eclipse"), ProvisionalName = s.B("provisional") });
+                    Radius = s.D("r"), Aspect = s.D("aspect") > 0 ? s.D("aspect") : 1, Eclipse = s.B("eclipse"), ProvisionalName = s.B("provisional") });
+            // Map features arrived without a version bump: they are optional presentation data, and older saves simply have none.
+            foreach (IDictionary<string, object> f in r.A("features"))
+                g.Features.Add(new MapFeature { Id = f.S("id"), Kind = En<MapFeatureKind>(f.S("kind")), PolityId = f.S("polity"), Radius = f.D("r"),
+                    Points = f.A("points").Select(v => v is double d ? d : 0).ToList() });
             foreach (IDictionary<string, object> s in r.A("systems"))
             {
                 var sys = new StarSystem

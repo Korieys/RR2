@@ -39,6 +39,15 @@ namespace RR.Game
         System.Action _onDone;
         Vector3 _focusVel;
         float _distVel, _yawVel, _pitchVel;
+        Vector3 _panVel;        // world units per second, carried after a drag ends (glide)
+        bool _pannedThisFrame;
+
+        /// <summary>
+        /// Optional zoom-linked pitch (galaxy view): the camera looks down steeply from far out and flattens as it closes in,
+        /// so the disk shows its depth. Zooming shifts the pitch by the change in this curve, so a pitch the player chose by
+        /// orbiting is kept as an offset.
+        /// </summary>
+        public System.Func<float, float> PitchForDistance;
 
         public static CameraRig Create()
         {
@@ -59,11 +68,12 @@ namespace RR.Game
             return rig;
         }
 
-        public void Snap(CamPose p) { _tween = false; Target = Current = Clamp(p); Apply(); }
+        public void Snap(CamPose p) { _tween = false; _panVel = Vector3.zero; Target = Current = Clamp(p); Apply(); }
 
         public void TransitionTo(CamPose to, float seconds, System.Action done = null)
         {
             if (Settings.ReducedMotion) seconds = Mathf.Min(seconds, 0.12f);
+            _panVel = Vector3.zero;
             _from = Current; _to = Clamp(to); _t = 0; _dur = Mathf.Max(0.01f, seconds); _tween = true; _onDone = done;
         }
 
@@ -86,14 +96,25 @@ namespace RR.Game
         }
 
         public void Orbit(float dyaw, float dpitch) { Target.Yaw += dyaw; Target.Pitch = Mathf.Clamp(Target.Pitch + dpitch, Limits.MinPitch, Limits.MaxPitch); }
-        public void Zoom(float factor) { Target.Distance = Mathf.Clamp(Target.Distance * factor, Limits.MinDistance, Limits.MaxDistance); }
+        public void Zoom(float factor)
+        {
+            float before = Target.Distance;
+            Target.Distance = Mathf.Clamp(Target.Distance * factor, Limits.MinDistance, Limits.MaxDistance);
+            if (PitchForDistance != null)
+                Target.Pitch = Mathf.Clamp(Target.Pitch + PitchForDistance(Target.Distance) - PitchForDistance(before), Limits.MinPitch, Limits.MaxPitch);
+        }
         public void Pan(Vector2 screenDelta)
         {
             // Pan on the reference plane, scaled by distance so it feels constant on screen.
             var rot = Quaternion.Euler(0, Target.Yaw, 0);
             float k = Target.Distance * 0.0016f;
-            Target.Focus += rot * new Vector3(-screenDelta.x * k, 0, -screenDelta.y * k);
+            var step = rot * new Vector3(-screenDelta.x * k, 0, -screenDelta.y * k);
+            Target.Focus += step;
             Target.Focus = Limits.FocusBounds.ClosestPoint(Target.Focus);
+            // Track the drag speed (smoothed) so the view can glide on briefly when the drag ends.
+            float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-3f);
+            _panVel = Vector3.ClampMagnitude(Vector3.Lerp(_panVel, step / dt, 0.35f), Target.Distance * 0.9f);   // at most a glide of ~0.14 x distance
+            _pannedThisFrame = true;
         }
 
         void LateUpdate()
@@ -114,9 +135,20 @@ namespace RR.Game
             }
             else
             {
+                // Glide: after a drag, the focus keeps moving and eases out over about 0.15 s (not with reduced motion).
+                if (!_pannedThisFrame && _panVel.sqrMagnitude > 1e-4f)
+                {
+                    if (Settings.ReducedMotion) _panVel = Vector3.zero;
+                    else
+                    {
+                        Target.Focus = Limits.FocusBounds.ClosestPoint(Target.Focus + _panVel * dt);
+                        _panVel *= Mathf.Exp(-dt / 0.15f);
+                    }
+                }
+                _pannedThisFrame = false;
                 const float tau = 0.09f;   // short damping: immediate response, no fighting inertia
                 Current.Focus = Vector3.SmoothDamp(Current.Focus, Target.Focus, ref _focusVel, tau, Mathf.Infinity, dt);
-                Current.Distance = Mathf.SmoothDamp(Current.Distance, Target.Distance, ref _distVel, tau, Mathf.Infinity, dt);
+                Current.Distance = Mathf.SmoothDamp(Current.Distance, Target.Distance, ref _distVel, tau * 1.8f, Mathf.Infinity, dt);   // zoom eases a little longer
                 Current.Yaw = Mathf.SmoothDampAngle(Current.Yaw, Target.Yaw, ref _yawVel, tau, Mathf.Infinity, dt);
                 Current.Pitch = Mathf.SmoothDamp(Current.Pitch, Target.Pitch, ref _pitchVel, tau, Mathf.Infinity, dt);
                 Current.Fov = Mathf.Lerp(Current.Fov, Target.Fov, 1 - Mathf.Exp(-dt / tau));

@@ -20,7 +20,7 @@ namespace RR.Game
         readonly Dictionary<IconKind, Label> _inc = new Dictionary<IconKind, Label>();
         Label _date, _speedLabel;
         Button _pause, _s1, _s2, _s3, _overlayBtn;
-        readonly List<(Label label, Func<Vector3?> pos, int priority, float minD, float maxD)> _worldLabels = new List<(Label, Func<Vector3?>, int, float, float)>();
+        readonly List<(VisualElement label, Func<Vector3?> pos, int priority, float minD, float maxD)> _worldLabels = new List<(VisualElement, Func<Vector3?>, int, float, float)>();
         GalaxyState G => _root.G;
 
         public StrategyHud(GameRoot root, VisualElement parent)
@@ -438,6 +438,20 @@ namespace RR.Game
             _worldLabels.Add((l, pos, priority, minDist, maxDist));
         }
 
+        /// <summary>A faction emblem anchored in the world, placed and decluttered like a label.</summary>
+        public void AddEmblem(Texture2D tex, Func<Vector3?> pos, int priority, float minDist, float maxDist, float sizePx)
+        {
+            var e = new VisualElement();
+            e.AddToClassList("label");
+            e.AddToClassList("label-emblem");
+            e.style.width = sizePx * tex.width / Mathf.Max(1f, tex.height);
+            e.style.height = sizePx;
+            e.style.backgroundImage = new StyleBackground(tex);
+            e.pickingMode = PickingMode.Ignore;
+            _labels.Add(e);
+            _worldLabels.Add((e, pos, priority, minDist, maxDist));
+        }
+
         readonly List<Rect> _placed = new List<Rect>();
 
         public void UpdateLabels(Camera cam, bool visible)
@@ -448,6 +462,9 @@ namespace RR.Game
             var panel = Root.panel;
             if (panel == null) return;
             _placed.Clear();
+            // The HUD panels are translucent, so a label behind one would show through: treat visible panels as occupied.
+            foreach (var panelEl in new[] { _top, _outliner, _inspector })
+                if (panelEl != null && panelEl.resolvedStyle.display != DisplayStyle.None && panelEl.worldBound.width > 0) _placed.Add(panelEl.worldBound);
             // Highest priority first; anything overlapping an already placed label is hidden (semantic declutter).
             foreach (var w in _worldLabels.OrderByDescending(x => x.priority))
             {

@@ -57,8 +57,10 @@ namespace RR.Game
             Post = pv.AddComponent<Volume>();
             Post.isGlobal = true;
             Post.sharedProfile = lib.postFx;
+            GalaxyGrade = BuildGalaxyGrade(pv.transform);
             Sky = new Material(lib.sky) { name = "Space Sky" };
             RenderSettings.skybox = Sky;
+            Look.SeedDistantGalaxies();
             RenderSettings.ambientMode = AmbientMode.Flat;
             RenderSettings.ambientLight = Color.black;
             WorldRoot = new GameObject("World").transform;
@@ -127,6 +129,39 @@ namespace RR.Game
 
         public CamPose GalaxyHome => new CamPose { Focus = new Vector3(-10, 0, -20), Yaw = 0, Pitch = 62, Distance = 720, Fov = 40 };
 
+        // Galaxy camera: steep from far out (62 degrees at the home view), flatter close in (40 degrees), so the disk shows depth.
+        static float GalaxyPitch(float distance) => Mathf.Lerp(40f, 62f, Mathf.InverseLerp(60f, 720f, distance));
+
+        public Volume GalaxyGrade { get; private set; }
+
+        // A second global volume layered over the base profile for the galaxy view: a little more contrast and saturation
+        // (closer to the faction map), a firmer vignette, and bloom that catches only the bright knots, capitals and borders.
+        static Volume BuildGalaxyGrade(Transform parent)
+        {
+            var go = new GameObject("Galaxy grade");
+            go.transform.SetParent(parent, false);
+            var vol = go.AddComponent<Volume>();
+            vol.isGlobal = true;
+            vol.priority = 1;
+            vol.weight = 0;
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            profile.name = "Galaxy grade";
+            var ca = profile.Add<UnityEngine.Rendering.Universal.ColorAdjustments>(true);
+            // Gentle on purpose: the faint gas lives in the low values, and any lift below zero erases it.
+            ca.postExposure.value = 0.25f;
+            ca.contrast.value = 12f;
+            ca.saturation.value = 12f;
+            var bloom = profile.Add<UnityEngine.Rendering.Universal.Bloom>(true);
+            bloom.threshold.value = 0.95f;
+            bloom.intensity.value = 0.7f;
+            bloom.scatter.value = 0.72f;
+            var vig = profile.Add<UnityEngine.Rendering.Universal.Vignette>(true);
+            vig.intensity.value = 0.3f;
+            vig.smoothness.value = 0.45f;
+            vol.sharedProfile = profile;
+            return vol;
+        }
+
         void SetGalaxyLimits()
         {
             Rig.Limits = new CamLimits { MinDistance = 22, MaxDistance = 900, MinPitch = 28, MaxPitch = 82, FocusBounds = new Bounds(Vector3.zero, new Vector3(860, 10, 640)) };
@@ -149,6 +184,14 @@ namespace RR.Game
         void Update()
         {
             Shader.SetGlobalFloat("_RR_Time", Time.unscaledTime);
+            Shader.SetGlobalFloat("_RR_Motion", Settings.ReducedMotion ? 0.2f : 1f);   // scales purely ambient shader motion
+            // The galaxy view has its own grade, faded in and out with the scale (about a third of a second).
+            if (GalaxyGrade != null)
+            {
+                float want = Scale == ViewScale.Galaxy ? 1f : 0f;
+                GalaxyGrade.weight = Mathf.MoveTowards(GalaxyGrade.weight, want, Time.unscaledDeltaTime / (Settings.ReducedMotion ? 0.1f : 0.35f));
+            }
+            Rig.PitchForDistance = Scale == ViewScale.Galaxy ? GalaxyPitch : (Func<float, float>)null;
             if (G == null || Galaxy == null) return;
             Clock.Blocked = Busy || Scale == ViewScale.Battle || UI.ModalOpen;
             Clock.Tick(G, Time.unscaledDeltaTime);

@@ -47,7 +47,7 @@ Everything marked **provisional** is my interpretation pending the creator's app
 ## Conflicts and how they were resolved
 | Topic | Sources | Resolution |
 |---|---|---|
-| Shattered Veil vs The Eclipse Sector | Faction map (Shattered Veil, lower right edge) vs the brief (latest decision: Eclipse Sector, central region) | The brief wins. The Eclipse Sector is placed in the dark south-central gap below the Meeple core, the nearest "central" location not already a faction's sector. **Provisional placement.** |
+| Shattered Veil vs The Eclipse Sector | Faction map v1 (Shattered Veil, lower right edge) vs the brief (Eclipse Sector, central region) | **Resolved by faction map v2** (`Docs/Reference/faction_map_v2.webp`, 2026-10-16): the Eclipse Sector is the centre of the galaxy, with the eclipse (the galactic heart) north-east of its middle, and Meeples moved to the south-east where the Veil was. The creator confirmed v2 as the canonical layout. The earlier south-central placement is retired. |
 | Barlow vs Borglow the Vicious | Lore sheet (Borglow) vs the brief and poster "Barlow the Vicious" | Barlow (the latest approved). Not otherwise used in the slice. |
 | Craigon vs Cräigon spelling | Codex JSON (Cräigon) vs earlier docs (Craigon) | Display name Cräigon (codex). Stable id `craigon`. |
 | Pygmaei colour | Faction map (purple) vs character art (red and black) | The territory uses the map palette. Pygmaei units are not in the slice. |
@@ -56,7 +56,7 @@ Everything marked **provisional** is my interpretation pending the creator's app
 
 ## Provisional names
 All system and planet names not printed on the approved map are provisional and flagged `ProvisionalName` in data (the inspector
-says so): Aurelith and its worlds, Lithar, Spore Drift, Cinder Verge, Umbra and the rest. Meeple Core, Unity, Hope,
+says so): Aurelith and its worlds, Lithar, Spore Drift, Cinder Verge, Umbra and the rest, plus the systems added for map v2: Gloam, Nocturne, Penumbra, The Quiet, Vesper and The Hollow Star in the Eclipse, and Lantern, Accord and Bastion in Meeples. Positions follow nodes drawn on map v2. Meeple Core, Unity, Hope,
 Commonweal, Hearth and the sector names are from the approved map. Fleet names ("First Crown Fleet", "Brood of the Gift")
 are provisional.
 
@@ -69,3 +69,15 @@ are provisional.
   and violet stars. No faction, lore event or gameplay penalty is assigned to it.
 * Hero world Aurelith Prime: a Silex crystal world, with pale stone continents, crystal fields that glint, cyan-white city
   networks and banded cloud systems.
+
+## Faction map v2 adoption (2026-10-16)
+* Sector centres, radii and oval aspect for Meeples, the Eclipse and the Elven Front are traced from map v2 at its own pixel scale
+  (1,000 ly = 175 px). Silex, Pygmaei, Pirate Reach, Inhumanus and Craigon are unchanged on the map and in data.
+* Things the map draws that are not sectors, systems or lanes are stored as `MapFeature` data (presentation only): the galactic heart,
+  the Craigon origin vortex, two disputed zones and three Craigon incursion routes. The incursion routes are traced roughly and are
+  **provisional**.
+* Routes between the west and the Meeples now cross the unexplored Eclipse (map v2 draws routes through it). The raid route
+  (Spore Drift, Cinder Verge, Aurelith) is unchanged, so contact days are unchanged.
+* Saves: the format stays version 1. Sector aspect and map features are optional fields; older saves load with their own
+  (v1) geometry and no features.
+* Faction emblems are provisional until the creator sends the artwork.

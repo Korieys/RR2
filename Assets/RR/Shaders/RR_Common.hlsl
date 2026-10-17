@@ -7,7 +7,8 @@ float4 _RR_StarPosWS;      // xyz = star position (world), w = star radius
 float4 _RR_StarColor;      // rgb = colour * intensity
 float4 _RR_Ambient;        // rgb = faint indirect fill, a = rim/bounce strength
 float4 _RR_Highlight;      // rgb = selection tint (per draw via material), unused globally
-float  _RR_Time;           // presentation time in seconds (paused with reduced motion)
+float  _RR_Time;           // presentation time in seconds
+float  _RR_Motion;         // ambient motion scale: 1, or 0.2 with reduced motion
 
 // ---------------------------------------------------------------------------------------- hashing
 uint RR_Hash(uint x)

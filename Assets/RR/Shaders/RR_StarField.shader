@@ -41,7 +41,10 @@ Shader "RR/StarField"
                 o.uv = v.uv;
                 float fall = saturate((_RefDistance * _RefDistance) / (dist * dist));
                 float energy = px / r;                                        // keep total light when clamped up to 1 px
-                o.col = float4(v.col.rgb * v.col.a * _Brightness * lerp(0.25, 1.0, fall) * saturate(energy * 2 + 0.25), 1);
+                // A slow, subtle twinkle on the brighter stars, mostly calmed by reduced motion.
+                float h = RR_Rand(RR_Hash(asuint(v.posOS.x) ^ RR_Hash(asuint(v.posOS.z))));
+                float twinkle = 1 + 0.28 * _RR_Motion * sin(_RR_Time * (0.8 + 1.6 * h) + h * 60) * smoothstep(0.35, 0.8, v.col.a);
+                o.col = float4(v.col.rgb * v.col.a * _Brightness * lerp(0.25, 1.0, fall) * saturate(energy * 2 + 0.25) * twinkle, 1);
                 return o;
             }
             float4 frag(V i) : SV_Target

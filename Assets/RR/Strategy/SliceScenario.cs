@@ -42,14 +42,14 @@ namespace RR.Strategy
             AddSector("pygmaei_sector", "Pygmaei Sector", "A People Reborn.", "pygmaei", 535, 275, 110);
             AddSector("pirate_reach", "Pirate Reach", "Lawless. Profitable. Familiar.", "pirates", 800, 245, 125);
             AddSector("inhumanus_dominion", "Inhumanus Dominion", "Consumption Without End.", "inhumanus", 1185, 300, 200);
-            AddSector("elven_front", "Elven Front", "Beauty. Power. Proximity.", "elven", 1060, 480, 120);
-            AddSector("meeples", "Meeples", "Core Worlds. Allied Races. A Larger Tomorrow.", "meeples", 760, 580, 230);
+            AddSector("elven_front", "Elven Front", "Beauty. Power. Proximity.", "elven", 1075, 455, 130, 1.25);
+            // Faction map v2: Meeples moved to the south-east (where the Shattered Veil was), a wide oval.
+            AddSector("meeples", "Meeples", "Core Worlds. Allied Races. A Larger Tomorrow.", "meeples", 1110, 730, 290, 1.7);
             AddSector("craigon", "Cr\u00e4igon", "Everywhere. Always.", "craigon", 290, 680, 210);
-            // The Eclipse Sector replaces The Shattered Veil (latest creator decision). Placed in the dark south-central
-            // gap below the Meeple core: a provisional reading of "the central region" (see Docs/DECISIONS.md).
-            var ecl = AddSector("eclipse_sector", "The Eclipse Sector", "Uncharted. Unclaimed. Watched.", null, 700, 880, 120);
+            // Faction map v2: The Eclipse Sector is the centre of the galaxy, with the eclipse (the galactic heart) north-east
+            // of its middle. It replaces The Shattered Veil.
+            var ecl = AddSector("eclipse_sector", "The Eclipse Sector", "Uncharted. Unclaimed. Watched.", null, 705, 548, 240, 1.12);
             ecl.Eclipse = true;
-
             // ------------------------------------------------------------------ systems
             // Silex Expanse
             AddSys("lithar", "Lithar", "silex_expanse", 235, 255, StarClass.BlueGiant, "silex", SystemDetail.Local, prov: true);
@@ -70,13 +70,16 @@ namespace RR.Strategy
             AddSys("brood_hollow", "Brood Hollow", "craigon", 330, 770, StarClass.Orange, "craigon");
             AddSys("synapse_gate", "Synapse Gate", "craigon", 440, 690, StarClass.Violet, "craigon");
             AddSys("the_moult", "The Moult", "craigon", 490, 830, StarClass.Orange, "craigon");
-            // Meeples (names on the approved map are not provisional)
-            AddSys("meeple_core", "Meeple Core", "meeples", 757, 625, StarClass.Yellow, "meeples", prov: false);
-            AddSys("unity", "Unity", "meeples", 690, 578, StarClass.White, "meeples", prov: false);
-            AddSys("hope", "Hope", "meeples", 815, 580, StarClass.Yellow, "meeples", prov: false);
-            AddSys("commonweal", "Commonweal", "meeples", 848, 638, StarClass.White, "meeples", prov: false);
-            AddSys("hearth", "Hearth", "meeples", 772, 708, StarClass.Orange, "meeples", prov: false);
-            AddSys("concord", "Concord", "meeples", 615, 470, StarClass.Yellow, "meeples");
+            // Meeples (names on the approved map are not provisional): the Meeple Core ring in the south-east.
+            AddSys("meeple_core", "Meeple Core", "meeples", 1092, 790, StarClass.Yellow, "meeples", prov: false);
+            AddSys("unity", "Unity", "meeples", 1040, 770, StarClass.White, "meeples", prov: false);
+            AddSys("hope", "Hope", "meeples", 1142, 770, StarClass.Yellow, "meeples", prov: false);
+            AddSys("commonweal", "Commonweal", "meeples", 1158, 803, StarClass.White, "meeples", prov: false);
+            AddSys("hearth", "Hearth", "meeples", 1097, 857, StarClass.Orange, "meeples", prov: false);
+            AddSys("concord", "Concord", "meeples", 896, 723, StarClass.Yellow, "meeples");
+            AddSys("lantern", "Lantern", "meeples", 1218, 629, StarClass.BlueGiant, "meeples");
+            AddSys("accord", "Accord", "meeples", 1293, 703, StarClass.White, "meeples");
+            AddSys("bastion", "Bastion", "meeples", 962, 798, StarClass.Orange, "meeples");
             // Pygmaei, Pirates, Inhumanus, Elven Front
             AddSys("forgefall", "Forgefall", "pygmaei_sector", 525, 240, StarClass.Orange, "pygmaei");
             AddSys("ironmouth", "Ironmouth", "pygmaei_sector", 592, 312, StarClass.RedDwarf, "pygmaei");
@@ -90,11 +93,14 @@ namespace RR.Strategy
             AddSys("aethel_spire", "Aethel Spire", "elven_front", 1060, 452, StarClass.BlueGiant, "elven");
             AddSys("sylvara", "Sylvara", "elven_front", 1132, 522, StarClass.White, "elven");
             AddSys("thornmere", "Thornmere", "elven_front", 990, 512, StarClass.Yellow, "elven");
-            // The Eclipse Sector: unclaimed, dim and unusual stars
-            AddSys("umbra", "Umbra", "eclipse_sector", 692, 862, StarClass.Dim, null, SystemDetail.Local);
-            AddSys("nocturne", "Nocturne", "eclipse_sector", 612, 902, StarClass.Violet, null);
-            AddSys("hollow_star", "The Hollow Star", "eclipse_sector", 782, 905, StarClass.Dim, null);
-
+            // The Eclipse Sector: unclaimed, dim and unusual stars around the galactic heart (faction map v2 nodes).
+            AddSys("umbra", "Umbra", "eclipse_sector", 718, 410, StarClass.Dim, null, SystemDetail.Local);
+            AddSys("gloam", "Gloam", "eclipse_sector", 508, 380, StarClass.Violet, null);
+            AddSys("nocturne", "Nocturne", "eclipse_sector", 568, 507, StarClass.Violet, null);
+            AddSys("penumbra", "Penumbra", "eclipse_sector", 619, 646, StarClass.Dim, null);
+            AddSys("the_quiet", "The Quiet", "eclipse_sector", 740, 668, StarClass.RedDwarf, null);
+            AddSys("vesper", "Vesper", "eclipse_sector", 869, 607, StarClass.Violet, null);
+            AddSys("hollow_star", "The Hollow Star", "eclipse_sector", 853, 514, StarClass.Dim, null);
             // ------------------------------------------------------------------ lanes
             string[] lanes =
             {
@@ -103,12 +109,18 @@ namespace RR.Strategy
                 "*geodane-cinderhold", "quartzhold-forgefall", "forgefall-cinderhold", "forgefall-ironmouth", "cinderhold-ironmouth",
                 "*forgefall-salvage_row", "ironmouth-blackwake", "salvage_row-blackwake", "blackwake-shoal_haven", "*shoal_haven-dividend",
                 "dividend-ledgerhold", "ledgerhold-pale_exchange", "*ledgerhold-aethel_spire", "pale_exchange-sylvara",
-                "aethel_spire-sylvara", "aethel_spire-thornmere", "*thornmere-commonweal", "thornmere-hope", "concord-unity",
+                "aethel_spire-sylvara", "aethel_spire-thornmere",
+                // Meeples in the south-east: the Meeple Core ring, its gateways to the Elven Front, Inhumanus and the Eclipse.
                 "unity-meeple_core", "hope-meeple_core", "commonweal-meeple_core", "hearth-meeple_core", "unity-hope", "commonweal-hearth",
-                "*concord-cinderhold", "*concord-shalecrest", "shoal_haven-hope", "origin_brood-carapace_deep", "carapace_deep-spore_drift",
-                "carapace_deep-chitin_reach", "chitin_reach-brood_hollow", "brood_hollow-synapse_gate", "synapse_gate-spore_drift",
-                "brood_hollow-the_moult", "*synapse_gate-unity", "spore_drift-cinder_verge", "cinder_verge-aurelith",
-                "the_moult-nocturne", "nocturne-umbra", "umbra-hollow_star", "*umbra-hearth", "hollow_star-commonweal",
+                "concord-unity", "concord-bastion", "bastion-hearth", "hope-lantern", "lantern-accord", "accord-commonweal",
+                "*sylvara-lantern", "thornmere-concord", "pale_exchange-accord",
+                // Craigon, and the raid route into the Silex Expanse (unchanged).
+                "origin_brood-carapace_deep", "carapace_deep-spore_drift", "carapace_deep-chitin_reach", "chitin_reach-brood_hollow",
+                "brood_hollow-synapse_gate", "synapse_gate-spore_drift", "brood_hollow-the_moult", "spore_drift-cinder_verge", "cinder_verge-aurelith",
+                // Through the Eclipse: the only short way between the west and the Meeples, and unexplored.
+                "*shalecrest-gloam", "cinderhold-gloam", "gloam-umbra", "gloam-nocturne", "nocturne-penumbra", "penumbra-the_quiet",
+                "the_quiet-vesper", "vesper-hollow_star", "hollow_star-umbra", "shoal_haven-umbra", "*synapse_gate-nocturne",
+                "the_moult-penumbra", "*the_quiet-concord", "hollow_star-thornmere",
             };
             foreach (var l in lanes)
             {
@@ -119,6 +131,16 @@ namespace RR.Strategy
                 double px = Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y)) / LyPerPx;
                 g.Lanes.Add(new Lane { A = a.Id, B = b.Id, Major = major, Days = Math.Max(4, Math.Min(14, (int)Math.Round(px / 11.5))) });
             }
+
+            // ------------------------------------------------------------------ map features (faction map v2; presentation only)
+            Feature("galactic_heart", MapFeatureKind.GalacticHeart, null, 31, 731, 500);
+            Feature("craigon_origin", MapFeatureKind.OriginVortex, "craigon", 45, 100, 560);
+            Feature("disputed_elven_meeples", MapFeatureKind.Disputed, null, 30, 1020, 548);
+            Feature("disputed_eclipse_meeples", MapFeatureKind.Disputed, null, 26, 893, 808);
+            // Craigon incursion routes, traced roughly from the red dashed lines (provisional).
+            Feature("craigon_incursion_north", MapFeatureKind.Incursion, "craigon", 0, 100, 560, 225, 505, 330, 398, 415, 480);
+            Feature("craigon_incursion_eclipse", MapFeatureKind.Incursion, "craigon", 0, 415, 480, 543, 449, 568, 507, 555, 628, 619, 646);
+            Feature("craigon_incursion_south", MapFeatureKind.Incursion, "craigon", 0, 265, 617, 390, 810, 390, 858, 560, 742, 665, 800, 765, 875, 850, 850);
 
             // ------------------------------------------------------------------ planets
             HeroPlanets(g.GetSystem(HeroSystem));
@@ -151,12 +173,18 @@ namespace RR.Strategy
             return g;
 
             // ---------------------------------------------------------------- local helpers
-            Sector AddSector(string id, string name, string sub, string owner, double px, double py, double rpx)
+            Sector AddSector(string id, string name, string sub, string owner, double px, double py, double rpx, double aspect = 1)
             {
                 var sec = new Sector { Id = id, Name = name, Subtitle = sub, OwnerId = owner, X = X(px), Y = Y(py), Radius = rpx * LyPerPx,
-                    ProvisionalName = false };
+                    Aspect = aspect, ProvisionalName = false };
                 g.Sectors.Add(sec);
                 return sec;
+            }
+            void Feature(string id, MapFeatureKind kind, string polity, double rpx, params double[] pxy)
+            {
+                var f = new MapFeature { Id = id, Kind = kind, PolityId = polity, Radius = rpx * LyPerPx };
+                for (int i = 0; i + 1 < pxy.Length; i += 2) { f.Points.Add(X(pxy[i])); f.Points.Add(Y(pxy[i + 1])); }
+                g.Features.Add(f);
             }
             void AddSys(string id, string name, string sector, double px, double py, StarClass star, string owner,
                      SystemDetail detail = SystemDetail.Distant, bool prov = true, bool station = false, string map = "orbital_gate")
