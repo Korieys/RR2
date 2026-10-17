@@ -6,7 +6,8 @@ Resume from "Next step". Full status: [HANDOFF.md](HANDOFF.md). Decisions: [DECI
 * Playable build: `Builds/W1/RuleAndRuin.exe`. The full sequence is verified by `-rrTour` (Captures/final, tour_1440,
   tour_intercept_1440).
 * Tests 167/167 (`Tools/SliceTests`). Soak 10/10 cycles clean. The Commandfall 0.15 regression is clean.
-* Committed on `main` (initial commit e7186a3). Builds, Library, Captures and test binaries are ignored.
+* Committed on `main` and pushed to https://github.com/Korieys/RR2 (`origin`). Initial commit e7186a3; the session 2 galaxy work
+  is 32dbab1. Builds, Library, Captures and test binaries are ignored.
 
 ## Build-loop facts
 * Build: `Unity.exe -batchmode -quit -projectPath . -executeMethod RR.EditorTools.BuildTools.BuildWindows -rrBuildOut Builds/W1/RuleAndRuin.exe`.
