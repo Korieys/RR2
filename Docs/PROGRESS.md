@@ -6,7 +6,7 @@ Resume from "Next step". Full status: [HANDOFF.md](HANDOFF.md). Decisions: [DECI
 * Playable build: `Builds/W1/RuleAndRuin.exe`. The full sequence is verified by `-rrTour` (Captures/final, tour_1440,
   tour_intercept_1440).
 * Tests 167/167 (`Tools/SliceTests`). Soak 10/10 cycles clean. The Commandfall 0.15 regression is clean.
-* Nothing is committed yet: the repository was initialised in `E:\ClaudeCode\RR3` with no commits, pending the owner's go-ahead.
+* Committed on `main` (initial commit e7186a3). Builds, Library, Captures and test binaries are ignored.
 
 ## Build-loop facts
 * Build: `Unity.exe -batchmode -quit -projectPath . -executeMethod RR.EditorTools.BuildTools.BuildWindows -rrBuildOut Builds/W1/RuleAndRuin.exe`.
