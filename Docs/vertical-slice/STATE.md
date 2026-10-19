@@ -6,7 +6,8 @@ Updated 2026-10-19, end of Prompt 0 (audit). Branch `claude/rule-ruin-vertical-s
 |---|---|
 | Prompt 0: contract and audit | Done (this document, [PROJECT_CONTRACT](PROJECT_CONTRACT.md), [DECISIONS](DECISIONS.md), [ACCEPTANCE](ACCEPTANCE.md)) |
 | Prompt 1: authoritative deterministic combat | Done and verified (see "Prompt 1 result"). |
-| Prompts 2 to 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
+| Prompts 2 to 5: battlefield, flagship protection, two fleets, the encounter | Done and verified (see "Prompts 2 to 5 result"). Checkpoint after Prompt 5: the tactical hook works by the rules; human playtesting has not happened. |
+| Prompts 6 to 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
 
 ## Verified baseline
 
@@ -111,6 +112,48 @@ the tour itself kept a reference to the galaxy state that the mid-battle load re
 **Found, not yet fixed.** D-11: the battle inspector shows an active ability as "ready" while the ship is DISABLED
 ([frame](evidence/p1/b06_after_midbattle_load.jpg), Throne Ark). D-12: after a mid-battle reload the opponent AI is recreated, so its
 seeded tie-break may choose differently than without the reload (state never diverges; CR-14, Prompt 5).
+
+## Prompts 2 to 5 result (2026-10-19)
+
+**Rules** (vendored patch vs-2, [VENDOR_PATCHES](VENDOR_PATCHES.md); decisions VS-10 to VS-18): the `trade_passage` battlefield at
+Umbra; capital firing arcs with a turn order; Pygmaei industrial overclock with visible heat; Inhumanus fleet contracts with disclosed
+arrivals; the slice roster of five classes per faction with two compositions each, authored counters and load-time validation
+(`SliceRoster.Validate`, shown as an error at start-up if anything is wrong). The enumerator gained a width parameter so the
+command-threat analysis never misses a distant area strike.
+
+**Strategy layer:** `CommandThreat` (lethal lines for the next enemy activation, round focus fire, `AttackExplainer`), `SliceAI`,
+`PassageScenario` (challenge, training, either faction, hotseat), `BattleNarrator` and `BattleSession.Narration`/`Decisive`.
+
+**Game:** the Command Threat panel, overclock (O) and turn (R) modes, arc fan, facing on the model, heat and contract labels, entry
+markers, dashed enemy rings (ownership by pattern and colour), an inspector that shows heat, facing, contract, "Protected by" and
+intercepts left; the AI on a worker thread; F6 scenario menu with fleet cards and doctrines; a skirmish result screen with the decisive
+action, the inspectable sequence, rematch, swap sides, scenario menu and return. Generated models for the ten classes and the escort
+token, with provisional palettes. D-05 (controls enabled after the battle) and D-11 ("ready" while DISABLED) are fixed; D-12 is fixed
+by the stable AI seed.
+
+**Tests:** 214/214 (146 vendored). New: `PassageBattlefieldTests` (validator, per-pattern reachability, the DIAG finding, arcs
+and turns), `FlagshipProtectionTests` (the seven Prompt 3 fixtures plus "disabling is not an instant win" and "the threat analysis never
+claims safety or touches the board"), `DoctrineTests` (heat boundaries, cooling, exploitability, contract accounting, arrival and
+blocking, roster legality), `PassageEncounterTests` (immediate win, defensive response, stable AI, the rush countered, two winning lines
+against specific mistakes, AI mirror replay, training, narration).
+
+**Runtime** (`Builds/VS`, 1920x1080, `-rrPassageTour`; [log](evidence/p2-5/tour_log.txt)): the menu-driven challenge as Pygmaei;
+the flank frigate's normal and overclocked reach with the heat preview; the capital arc; the threat panel (5 ships, 1,223 orders
+checked); an attack preview equal to the committed result; save and load in the middle of the skirmish restored the same battle; play
+to the end with the decisive action and the last five orders narrated, and the replay from the record identical; swap sides, restart,
+training and two players at one machine (orders for both seats, the AI never acted). Frames: [start](evidence/p2-5/p01_passage_start.jpg),
+[overclock](evidence/p2-5/p03_overclock_reach.jpg), [arc](evidence/p2-5/p04_capital_arc.jpg), [threat](evidence/p2-5/p05_threat_view.jpg),
+[preview](evidence/p2-5/p06_attack_preview.jpg), [result](evidence/p2-5/p07_result.jpg), [training](evidence/p2-5/p09_training.jpg).
+
+**Balance evidence (AI and scripted pilots, not people):** carried hull 11, any flagship position: raiders won in round 1. Hull 17,
+flagship central: AI defender beat the AI attacker (round 6), the simplistic rush (round 3) and four scripted raider plans (west flank,
+east flank, passage push, hold then strike); a defender driving its flagship forward lost in round 2. Hull 17, flagship in the east
+corner: the east-flank plan won in round 4. Automated battles last 40 to 90 orders (about 3 minutes of automated play with animations);
+human duration is unmeasured.
+
+**Known gaps:** no interactive deployment screen (curated or automatic deployment only); contracts are chosen through army data, with
+no campaign battle-preparation control yet; the slowest AI decision measured about 2 seconds (worker thread, the interface stays live);
+training lessons are guidance, not enforced steps; ship art is first-pass and unapproved; human playtesting has not happened.
 
 ## Prompt 1 plan (as written at the end of Prompt 0)
 

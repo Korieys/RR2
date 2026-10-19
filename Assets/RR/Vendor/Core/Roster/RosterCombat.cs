@@ -77,6 +77,8 @@ namespace Commandfall.Core
             if (buff > 0) { a += buff; why?.Add($"+{buff} ARM (buff)"); }
             int exp = t.RAmount(RStatusType.Exposed);
             if (exp > 0) { a -= exp; why?.Add($"−{exp} ARM (EXPOSED)"); }
+            int heat = SliceRules.HeatArmorPenalty(t);
+            if (heat > 0) { a -= heat; why?.Add($"−{heat} ARM (OVERHEATED)"); }
             return Math.Max(0, Math.Min(ArmorCap, a));
         }
 
@@ -125,7 +127,7 @@ namespace Commandfall.Core
 
         /// <summary>Resolves a basic attack by <paramref name="attacker"/> against the unit or barrier on <paramref name="targetHex"/>.
         /// Pure: never mutates the state. The returned outcome carries the roster <see cref="HitResult"/> in Roster.</summary>
-        public static AttackOutcome ResolveBasic(MatchState s, UnitState attacker, Hex targetHex, Hex? fromOverride = null, bool checkAction = true)
+        public static AttackOutcome ResolveBasic(MatchState s, UnitState attacker, Hex targetHex, Hex? fromOverride = null, bool checkAction = true, bool overclock = false)
         {
             var o = new AttackOutcome { AttackerId = attacker.Id, TargetHex = targetHex, Weapon = attacker.Weapon };
             var from = fromOverride ?? attacker.Position;
@@ -158,6 +160,8 @@ namespace Commandfall.Core
                 if (o.Distance < min) return Fail(o, $"Too close: {w.Name} needs range {min}-{max}.");
                 return Fail(o, $"Out of range: {w.Name} reaches {min}-{max}, target is {o.Distance} away.");
             }
+            var arc = SliceRules.ArcBlock(attacker, from, targetHex);
+            if (arc != null) return Fail(o, arc);
             o.Los = LosState.Clear;
             if (attacker.R.AttackNeedsLos && o.Distance > 1)
             {
@@ -168,7 +172,7 @@ namespace Commandfall.Core
 
             var hit = new HitSpec
             {
-                Attacker = attacker, Raw = w.Damage, Direct = true, Basic = true, From = from, TargetHex = targetHex, Cause = w.Name, FxKey = w.FxKey,
+                Attacker = attacker, Raw = w.Damage + (overclock ? SliceRules.OverclockDamage : 0), Direct = true, Basic = true, From = from, TargetHex = targetHex, Cause = w.Name, FxKey = w.FxKey,
             };
             if (barrier != null)
             {
@@ -183,6 +187,7 @@ namespace Commandfall.Core
                 return o;
             }
             var r = Compute(s, target, hit, fromOverride);
+            if (overclock) r.Breakdown.Insert(0, $"+{SliceRules.OverclockDamage} overclock");
             o.Roster = r;
             o.BaseDamage = w.Damage;
             o.BonusDamage = r.Raw - w.Damage;

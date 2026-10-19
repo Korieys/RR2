@@ -60,7 +60,7 @@ namespace Commandfall.Core
         /// Legal destinations for the unit's normal move (or its free 1-hex step after acting). Planning view: hidden enemies
         /// and hidden enemy mines are not considered (the caller passes the fogged view).
         /// </summary>
-        public static Dictionary<Hex, MoveOption> Reachable(MatchState s, UnitState u)
+        public static Dictionary<Hex, MoveOption> Reachable(MatchState s, UnitState u, int extra = 0)
         {
             var result = new Dictionary<Hex, MoveOption>();
             if (!u.OnBoard) return result;
@@ -74,6 +74,7 @@ namespace Commandfall.Core
             }
             int budget = Budget(s, u);
             if (budget <= 0) return result;
+            budget += extra;   // slice: overclocked move (SliceRules)
             var pattern = u.R.Pattern;
             switch (pattern)
             {

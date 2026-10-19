@@ -15,7 +15,7 @@ namespace RR.Strategy
         public const string Commandfall = "0.15.0";
         /// <summary>Slice revision of the vendored rules. Increment it with every rules-affecting change recorded in
         /// Docs/vertical-slice/VENDOR_PATCHES.md.</summary>
-        public const int SliceRevision = 1;
+        public const int SliceRevision = 2;
         public static string Id => $"commandfall-{Commandfall}+{GameContent.ContentVersion}+{RosterContent.ContentVersion}+vs-{SliceRevision}";
 
         static string _fingerprint;
@@ -80,6 +80,12 @@ namespace RR.Strategy
 
         readonly List<Command> _log = new List<Command>();
         readonly List<ulong> _hashes = new List<ulong>();
+        readonly List<string> _narration = new List<string>();
+
+        /// <summary>One plain-language line per accepted command, built from its resolved events (derived; rebuilt on restore).</summary>
+        public IReadOnlyList<string> Narration => _narration;
+        /// <summary>The order that ended the battle, explained, or null while it continues.</summary>
+        public string Decisive { get; private set; }
 
         BattleSession() { }
 
@@ -102,10 +108,20 @@ namespace RR.Strategy
                     return CommandResult.Reject(c, "Only the host can issue that command.");
             }
             var copy = c.Clone();
+            string arithmetic = null;
+            if (copy.Type == CommandType.Attack && State.Unit(copy.UnitId) is UnitState au)
+            {
+                var o = RosterCombat.ResolveBasic(State, au, copy.Target, overclock: copy.Option == SliceRules.OverclockOption);
+                if (o.Legal) arithmetic = AttackExplainer.Arithmetic(State, o);
+            }
+            var before = State.Clone();
             var r = RulesEngine.Apply(State, copy);
             if (!r.Accepted) return r;
             _log.Add(copy.Clone());
             _hashes.Add(Serialization.StateHash(State));
+            var line = BattleNarrator.Describe(before, State, copy, r.Events, arithmetic);
+            _narration.Add(line);
+            if (State.IsOver && Decisive == null) Decisive = line + " " + BattleNarrator.Ending(State);
             return r;
         }
 
@@ -176,6 +192,7 @@ namespace RR.Strategy
             {
                 ["rules"] = b.RulesVersionId, ["content"] = b.ContentFingerprint,
                 ["id"] = st.BattleId, ["engagement"] = st.EngagementId, ["playerSeat"] = st.PlayerSeat,
+                ["hotseat"] = st.Hotseat, ["scenario"] = st.Scenario, ["system"] = st.SystemId,
                 ["fleets"] = st.FleetIds.Cast<object>().ToList(),
                 ["ships"] = st.ShipUids.Select(l => (object)l.Cast<object>().ToList()).ToList(),
                 ["startHp"] = st.StartHp.Select(l => (object)l.Cast<object>().ToList()).ToList(),
@@ -196,6 +213,7 @@ namespace RR.Strategy
                 var st = new BattleSetup
                 {
                     BattleId = d.S("id"), EngagementId = d.S("engagement"), PlayerSeat = d.I("playerSeat"),
+                    Hotseat = d.B("hotseat"), Scenario = d.S("scenario"), SystemId = d.S("system"),
                     Config = Serialization.FromBytes(Convert.FromBase64String(d.S("config")), Serialization.ReadConfig),
                 };
                 var fleets = d.A("fleets");
@@ -230,5 +248,84 @@ namespace RR.Strategy
 
         static int Int(object v) => Convert.ToInt32(v, CultureInfo.InvariantCulture);
         static ulong Hex64(string s) => ulong.Parse(s, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+    }
+}
+
+namespace RR.Strategy
+{
+    /// <summary>Plain-language lines for accepted commands, from the command and its resolved events (no invented detail).</summary>
+    public static class BattleNarrator
+    {
+        static string Name(MatchState s, int id)
+        {
+            var u = s.Unit(id);
+            if (u == null) return "a ship";
+            return u.Def.Name + (s.Players[u.Owner].CommanderId == u.Id ? " (flagship)" : "");
+        }
+
+        public static string Describe(MatchState before, MatchState after, Command c, List<GameEvent> events, string arithmetic)
+        {
+            string side = c.Seat >= 0 && c.Seat < 2 ? after.Config.Players[c.Seat].DisplayName : "";
+            string who = c.UnitId != 0 ? Name(before, c.UnitId) : side;
+            string text;
+            switch (c.Type)
+            {
+                case CommandType.Move when c.Option == SliceRules.TurnOption:
+                    text = $"{who} turned to face {SliceRules.FacingNames[Math.Max(0, SliceRules.TurnFacing(before.Unit(c.UnitId), c.Target))]}.";
+                    break;
+                case CommandType.Move:
+                    text = $"{who} moved to {c.Target}{(c.Option == SliceRules.OverclockOption ? " (overclocked, +" + SliceRules.OverclockHeat + " heat)" : "")}.";
+                    break;
+                case CommandType.Attack:
+                {
+                    var target = before.UnitAt(c.Target);
+                    var u = before.Unit(c.UnitId);
+                    text = $"{who} fired {u?.Weapon.Name ?? "its weapon"}{(c.Option == SliceRules.OverclockOption ? " (overclocked)" : "")} at {(target != null ? Name(before, target.Id) : c.Target.ToString())}" +
+                           (arithmetic != null ? ": " + arithmetic : ".");
+                    break;
+                }
+                case CommandType.Ability:
+                    text = $"{who} used {before.Unit(c.UnitId)?.R.ActiveName ?? "an ability"}" + (c.Picks.Count > 0 ? $" on {string.Join(", ", c.Picks)}." : ".");
+                    break;
+                case CommandType.Pass:
+                    text = c.UnitId != 0 ? $"{who} held position." : $"{side} passed.";
+                    break;
+                case CommandType.Resign:
+                    text = $"{side} yielded the battle.";
+                    break;
+                default:
+                    text = c.ToString();
+                    break;
+            }
+            var extra = new List<string>();
+            foreach (var e in events)
+            {
+                switch (e.Type)
+                {
+                    case GameEventType.Intercepted: extra.Add($"{Name(after, e.UnitId)} intercepted it ({e.Text})."); break;
+                    case GameEventType.UnitDestroyed: extra.Add($"{Name(before, e.UnitId)} was destroyed."); break;
+                    case GameEventType.UnitArrived: extra.Add($"{Name(after, e.UnitId)} arrived under contract at {e.To}."); break;
+                    case GameEventType.ArrivalDelayed: extra.Add($"{Name(after, e.UnitId)}'s contracted arrival was blocked at {e.To}."); break;
+                    case GameEventType.HeatChanged when e.Amount >= SliceRules.OverheatAt: extra.Add($"{Name(after, e.UnitId)} is OVERHEATED (heat {e.Amount})."); break;
+                    case GameEventType.UnitCaptured: extra.Add($"{Name(after, e.TargetUnitId)} was captured."); break;
+                }
+            }
+            return extra.Count == 0 ? text : text + " " + string.Join(" ", extra);
+        }
+
+        public static string Ending(MatchState s)
+        {
+            if (!s.IsOver) return "";
+            string winner = s.Config.Players[s.Winner].DisplayName;
+            switch (s.VictoryReason)
+            {
+                case VictoryReason.CommanderEliminated:
+                    bool both = !(s.Commander(0)?.Alive ?? false) && !(s.Commander(1)?.Alive ?? false);
+                    return both ? $"Both flagships fell to the same order; the side that gave it, {winner}, wins (rule C6)." : $"A flagship was destroyed: the battle ended at once. {winner} win.";
+                case VictoryReason.RoundLimitObjectives: return $"The round limit was reached; objectives, then surviving strength, decided it for {winner}.";
+                case VictoryReason.Resignation: return $"{winner} win: the other side yielded.";
+                default: return $"{winner} win ({s.VictoryReason}).";
+            }
+        }
     }
 }

@@ -57,6 +57,7 @@ namespace RR.Game
                 Color c = o.Owner < 0 ? Look.Gold * 1.2f : o.Owner == PlayerSeat ? new Color(0.35f, 0.7f, 1f) * 1.6f : new Color(0.8f, 0.4f, 1f) * 1.6f;
                 mr.sharedMaterial.SetColor("_Color", c);
             }
+            ApplyFacings();
             RefreshCells();
         }
 
@@ -72,10 +73,10 @@ namespace RR.Game
                     foreach (var c in RosterAbilities.Candidates(S, u, Picks, AbilityOption)) if (c.Valid) codes[c.Hex] = 3;
                     foreach (var p in Picks) codes[p] = 4;
                 }
-                else
+                else if (!TurnMode)
                 {
-                    foreach (var kv in RosterMovement.Reachable(S, u)) if (kv.Key != u.Position) codes[kv.Key] = 1;
-                    foreach (var o in RosterCombat.LegalTargets(S, u)) codes[o.TargetHex] = 2;
+                    foreach (var kv in ShownReach(u)) if (kv.Key != u.Position) codes[kv.Key] = 1;
+                    foreach (var h in ShownTargets(u)) codes[h] = 2;
                 }
                 codes[u.Position] = 4;
             }
@@ -123,7 +124,7 @@ namespace RR.Game
             string why;
             if (!RulesEngine.CanActivate(S, u, out why)) { Say(why, "bad"); return; }
             Selected = unitId;
-            AbilityMode = false; Picks.Clear(); AbilityOption = 0;
+            AbilityMode = false; Picks.Clear(); AbilityOption = 0; ClearModes();
             _root.Audio.Play("ui_select");
             SyncAll(false);
         }
@@ -188,8 +189,9 @@ namespace RR.Game
                 if (at != null && at.Owner != PlayerSeat) Say(at.Def.Name + ": " + at.Hp + " of " + at.MaxHp + " hull, armor " + at.BaseArmor + ".", "ok");
                 return;
             }
-            if (at != null && at.Owner != PlayerSeat) { Submit(Command.Attack(PlayerSeat, u.Id, h)); return; }
-            if (at == null && h != u.Position) Submit(Command.Move(PlayerSeat, u.Id, h));
+            if (TurnMode) { Submit(OrderFor(u, h, false)); return; }
+            if (at != null && at.Owner != PlayerSeat) { Submit(OrderFor(u, h, true)); return; }
+            if (at == null && h != u.Position) Submit(OrderFor(u, h, false));
         }
 
         public void Hover(Commandfall.Core.Hex? h)
@@ -214,6 +216,8 @@ namespace RR.Game
                 var why = RosterAbilities.CheckPick(S, u, Picks, h, AbilityOption);
                 return why == null ? u.R.ActiveName + ": a legal target." : why;
             }
+            var slicePreview = SlicePreview(u, h);
+            if (slicePreview != null) return slicePreview;
             if (at != null && at.Owner != PlayerSeat)
             {
                 var o = RosterCombat.ResolveBasic(S, u, h);
@@ -247,7 +251,7 @@ namespace RR.Game
             var res = Session.Submit(c, PlayerSeat);
             if (!res.Accepted) { Say(res.Reason, "bad"); _root.Audio.Play("ui_invalid"); return; }
             if (c.Seat == PlayerSeat) _root.Audio.Play("order_accepted", 0.7f);
-            AbilityMode = false; Picks.Clear();
+            AbilityMode = false; Picks.Clear(); ClearModes();
             Selected = S.ActiveSeat == PlayerSeat && S.ActiveUnitId != 0 ? S.ActiveUnitId : 0;
             StartCoroutine(Play(res.Events));
         }
@@ -258,16 +262,13 @@ namespace RR.Game
             if (!Settings.ReducedMotion)
                 foreach (var v in Units.Values) if (!v.Dead) v.Model.localPosition = new Vector3(0, 0.32f + Mathf.Sin(t * 0.8f + v.Bob) * 0.03f, 0);
             if (S.IsOver || Animating) return;
-            if (S.ActiveSeat != PlayerSeat)
+            RefreshAnalysis();
+            if (AiControls(S.ActiveSeat))
             {
                 _aiDelay += Time.unscaledDeltaTime * AnimSpeed;
-                if (_aiDelay < 0.45f) return;
-                _aiDelay = 0;
-                var c = _ai.ChooseAction(S);
-                int seat = S.ActiveSeat;
-                var res = Session.Submit(c, seat);
-                if (!res.Accepted) { c = Command.Pass(seat); res = Session.Submit(c, seat); if (!res.Accepted) return; }
-                StartCoroutine(Play(res.Events));
+                if (_aiDelay < 0.45f && _aiTask == null) return;
+                StepOpponent();
+                if (_aiTask == null) _aiDelay = 0;
             }
             else if (Selected == 0 && S.ActiveUnitId != 0) Selected = S.ActiveUnitId;
         }
@@ -327,6 +328,19 @@ namespace RR.Game
                         Float(World(e.To), "Objective held", Look.GoldBright);
                         _root.Audio.Play("objective", 0.6f);
                         break;
+                    case GameEventType.HeatChanged:
+                        Float(World(e.To) + Vector3.up * 0.5f, e.Amount >= SliceRules.OverheatAt ? "OVERHEATED" : "Heat " + e.Amount, new Color(1f, 0.55f, 0.2f));
+                        break;
+                    case GameEventType.UnitArrived:
+                        SyncAll(false);
+                        Float(World(e.To), "Arrives under contract", Look.GoldBright);
+                        break;
+                    case GameEventType.ArrivalDelayed:
+                        Float(World(e.To), "Contract arrival blocked", Look.Danger);
+                        break;
+                    case GameEventType.FacingChanged:
+                        ApplyFacings();
+                        break;
                     case GameEventType.RoundStarted:
                         Say("Round " + e.Amount + " begins.", "ok");
                         break;
@@ -339,7 +353,8 @@ namespace RR.Game
             Animating = false;
             RefreshCells();
             if (S.IsOver) _root.Audio.Play(S.Winner == PlayerSeat ? "victory" : "defeat");
-            else if (S.ActiveSeat == PlayerSeat && S.ActiveUnitId == 0 && LeaderThreatened()) { Say("Your flagship is within reach of enemy guns.", "danger"); _root.Audio.Play("threat", 0.7f); }
+            else if (S.ActiveSeat == PlayerSeat && S.ActiveUnitId == 0 && CommandThreat.Assess(S, PlayerSeat).Lines.Count > 0)
+            { Say("Your flagship can be destroyed by the enemy's next activation. The Command Threat panel shows how.", "danger"); _root.Audio.Play("threat", 0.7f); }
         }
 
         bool LeaderThreatened()

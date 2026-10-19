@@ -40,6 +40,7 @@ namespace Commandfall.Core
                 foreach (var entry in p.Army.Units)
                 {
                     var u = RosterArmy.CreateUnit(s.NextUnitId++, seat, entry.UnitId, p.Caps);
+                    u.Equipment.AddRange(entry.Equipment);   // slice: fleet-contract tokens (SliceRules)
                     s.Units.Add(u);
                     if (u.R.IsLeaderRole && ps.CommanderId == 0) ps.CommanderId = u.Id;
                 }
@@ -112,15 +113,32 @@ namespace Commandfall.Core
                 case CommandType.Pass: return Validation.Success;
                 case CommandType.Move:
                 {
+                    if (c.Option == SliceRules.TurnOption)
+                    {
+                        var turn = SliceRules.ValidateTurn(s, u, c.Target);
+                        return turn == null ? Validation.Success : Validation.Fail(turn);
+                    }
+                    if (c.Option != 0 && c.Option != SliceRules.OverclockOption) return Validation.Fail("Unknown move order.");
+                    int extra = 0;
+                    if (c.Option == SliceRules.OverclockOption)
+                    {
+                        var oc = SliceRules.CanOverclock(s, u);
+                        if (oc != null) return Validation.Fail(oc);
+                        if (u.MovedThisActivation || u.ActedThisActivation) return Validation.Fail("Only a ship's main move can be overclocked.");
+                        extra = SliceRules.OverclockMove;
+                    }
                     if (c.Target == u.Position) return Validation.Fail("The unit is already there.");
                     var view = Vision.FoggedView(s, u.Owner);
                     var vu = view.Unit(u.Id);
-                    if (RosterMovement.Reachable(view, vu).ContainsKey(c.Target)) return Validation.Success;
+                    if (RosterMovement.Reachable(view, vu, extra).ContainsKey(c.Target)) return Validation.Success;
                     return Validation.Fail(RosterMovement.Explain(view, vu, c.Target));
                 }
                 case CommandType.Attack:
                 {
-                    var o = RosterCombat.ResolveBasic(s, u, c.Target);
+                    if (c.Option != 0 && c.Option != SliceRules.OverclockOption) return Validation.Fail("Unknown attack order.");
+                    bool overclock = c.Option == SliceRules.OverclockOption;
+                    if (overclock && SliceRules.CanOverclock(s, u) is string oc) return Validation.Fail(oc);
+                    var o = RosterCombat.ResolveBasic(s, u, c.Target, overclock: overclock);
                     return o.Legal ? Validation.Success : Validation.Fail(o.Reason);
                 }
                 case CommandType.Ability:
@@ -177,9 +195,17 @@ namespace Commandfall.Core
                     break;
                 case CommandType.Move:
                 {
+                    if (c.Option == SliceRules.TurnOption)
+                    {
+                        int f = SliceRules.TurnFacing(u, c.Target);
+                        SliceRules.SetFacing(u, f);
+                        u.MovedThisActivation = true; u.MovedRound = s.Round;
+                        ev.Add(new GameEvent(GameEventType.FacingChanged) { Seat = u.Owner, UnitId = u.Id, From = u.Position, To = u.Position, Amount = f, Text = "turns " + SliceRules.FacingNames[f] });
+                        break;
+                    }
                     bool free = u.ActedThisActivation || u.MovedThisActivation;
                     var view = Vision.FoggedView(s, u.Owner);
-                    var opt = RosterMovement.Reachable(view, view.Unit(u.Id))[c.Target];
+                    var opt = RosterMovement.Reachable(view, view.Unit(u.Id), c.Option == SliceRules.OverclockOption ? SliceRules.OverclockMove : 0)[c.Target];
                     bool jump = opt.Path.Count == 2 && Hex.Distance(opt.Path[0], opt.Path[1]) > 1;
                     if (free)
                     {
@@ -187,13 +213,22 @@ namespace Commandfall.Core
                         ev.Add(new GameEvent(GameEventType.FreeMove) { Seat = u.Owner, UnitId = u.Id, From = u.Position, To = c.Target });
                     }
                     MoveAlong(s, u, opt.Path, jump, ev, own: true, planned: view);
+                    if (u.Alive && u.Position == opt.Path[opt.Path.Count - 1])
+                    {
+                        int before = u.HasR(RStatusType.Facing) || SliceRules.HasArc(u) ? SliceRules.Facing(u) : -1;
+                        SliceRules.FaceAlong(u, opt.Path);
+                        if (before >= 0 && SliceRules.Facing(u) != before)
+                            ev.Add(new GameEvent(GameEventType.FacingChanged) { Seat = u.Owner, UnitId = u.Id, From = u.Position, To = u.Position, Amount = SliceRules.Facing(u) });
+                    }
+                    if (c.Option == SliceRules.OverclockOption && u.Alive) SliceRules.AddHeat(s, u, SliceRules.OverclockHeat, ev);
                     if (!free) u.MovedThisActivation = true;
                     u.MovedRound = s.Round;
                     break;
                 }
                 case CommandType.Attack:
                 {
-                    var o = RosterCombat.ResolveBasic(s, u, c.Target);
+                    bool overclock = c.Option == SliceRules.OverclockOption;
+                    var o = RosterCombat.ResolveBasic(s, u, c.Target, overclock: overclock);
                     BreakCloak(s, u, ev);
                     u.ActedThisActivation = true; u.AttackedThisActivation = true; u.AttackedRound = s.Round;
                     ev.Add(new GameEvent(GameEventType.AttackResolved)
@@ -216,6 +251,7 @@ namespace Commandfall.Core
                         }
                     }
                     else RosterCombat.Apply(s, o.Roster, ev);
+                    if (overclock && u.Alive) SliceRules.AddHeat(s, u, SliceRules.OverclockHeat, ev);
                     break;
                 }
                 case CommandType.Ability:
@@ -294,6 +330,7 @@ namespace Commandfall.Core
                 if (u.HasR(RStatusType.Cloaked) && s.Units.Any(e => e.OnBoard && e.Owner != u.Owner && Hex.Distance(e.Position, u.Position) == 1))
                     BreakCloak(s, u, ev);
                 if (!u.UsedActiveThisActivation && u.Cooldown > 0) u.Cooldown--;
+                SliceRules.Cool(u, ev);
                 for (int i = u.RStatuses.Count - 1; i >= 0; i--)
                 {
                     var st = u.RStatuses[i];
@@ -395,6 +432,7 @@ namespace Commandfall.Core
                 return;
             }
             s.Round++;
+            SliceRules.Arrivals(s, ev);
             s.KillsThisRound[0] = s.KillsThisRound[1] = 0;
             s.BoardsThisRound[0] = s.BoardsThisRound[1] = 0;
             int first = 1 - lastSeat;

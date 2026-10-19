@@ -487,6 +487,169 @@ def asteroid(sid, radius=1.0, rough=0.28):
 
 
 # =====================================================================================================
+# Pygmaei: war-foundry hulls. Riveted, stepped iron blocks, a ram or drill prow, exposed furnace stacks whose glowing
+# throats read as heat (the slice's overclock doctrine), side sponsons and stubby gun barrels. Gritty and asymmetric.
+# NEW ART INTERPRETATION for the vertical slice, pending the creator's approval (Docs/vertical-slice/DECISIONS.md).
+# =====================================================================================================
+
+def pyg_section(w, h):
+    # Chamfered iron box: flat belly, sloped shoulders, a narrow deck.
+    return [V((-w, 0, -h * 0.55)), V((-w * 0.62, 0, -h * 0.8)), V((w * 0.62, 0, -h * 0.8)), V((w, 0, -h * 0.55)),
+            V((w * 0.92, 0, h * 0.3)), V((w * 0.48, 0, h * 0.62)), V((-w * 0.48, 0, h * 0.62)), V((-w * 0.92, 0, h * 0.3))]
+
+
+def pyg_hull(b, L, W, H, y0, y1, z0=0.0, prof=None, cls=HULL, prow=0.18):
+    prof = prof or [(0.0, 0.78, 0.78), (0.06, 1.0, 1.0), (0.5, 1.0, 0.96), (0.78, 0.8, 0.78), (0.94, 0.42, 0.5)]
+    rings = []
+    for (t, sw, sh) in prof:
+        y = y0 + (y1 - y0) * t
+        rings.append([p + V((0, y, z0)) for p in pyg_section(W * sw, H * sh)])
+    return b.loft(rings, cls, 0.0, cap_start=True, point_end=V((0, y1 + L * prow * 0.2, z0 - H * 0.12)))
+
+
+def pyg_stack(b, x, y, z, r, h, glow=1.4):
+    """Furnace stack: a riveted trim collar, the iron flue, and a glowing throat at the top."""
+    b.tube([V((x, y, z)), V((x, y, z + h * 0.15))], [r * 1.35, r * 1.35], sides=8, cls=TRIM, point_end=False)
+    b.tube([V((x, y, z)), V((x, y, z + h))], [r, r * 0.86], sides=8, cls=HULL, point_end=False)
+    b.tube([V((x, y, z + h)), V((x, y, z + h * 1.06))], [r * 0.8, r * 0.7], sides=8, cls=GLASS, emis=glow, point_end=False)
+
+
+def pyg_gun(b, x, y, z, size, length, side=0):
+    b.box(V((x, y, z)), (size, size * 1.1, size * 0.55), cls=TRIM, taper=0.8)
+    for k in ((-0.4, 0.4) if size > 0.04 else (0.0,)):
+        b.tube([V((x + k * size, y + size * 0.6, z + size * 0.15)), V((x + k * size, y + size * 0.6 + length, z + size * 0.18))],
+               [size * 0.22, size * 0.18], sides=6, cls=TRIM, point_end=False)
+
+
+def pyg_engines(b, y0, W, H, n, r, z=0.0):
+    for i in range(n):
+        x = (i - (n - 1) / 2) * W * 0.62
+        b.tube([V((x, y0 + 0.02, z)), V((x, y0 - r * 1.6, z))], [r, r * 1.15], sides=10, cls=TRIM, point_end=False)
+        b.tube([V((x, y0 - r * 1.6, z)), V((x, y0 - r * 1.75, z))], [r * 0.9, r * 0.8], sides=10, cls=GLASS, emis=1.6, point_end=False)
+
+
+def pygmaei_ship(sid, p):
+    rnd = random.Random(sid)
+    b = Builder(sid)
+    L, W, H = p["L"], p["W"], p["H"]
+    y0, y1 = -L * 0.5, L * 0.5
+    pyg_hull(b, L, W, H, y0, y1)
+    # Raised rear citadel: a stepped block (taller, crowned with spikes on the command ship).
+    tower = p.get("tower", 0.0)
+    if tower > 0:
+        b.box(V((0, y0 + L * 0.3, H * 0.62 + H * tower * 0.5)), (W * 0.42, L * 0.14, H * tower * 0.5), cls=HULL, taper=0.82)
+        b.box(V((0, y0 + L * 0.33, H * 0.62 + H * tower * 1.05)), (W * 0.3, L * 0.07, H * tower * 0.12), cls=GLASS, emis=0.9, taper=0.9)
+        if p.get("crown"):
+            for k in range(5):
+                a = (k - 2) * 0.32
+                base = V((math.sin(a) * W * 0.28, y0 + L * 0.3, H * 0.62 + H * tower * 1.0))
+                b.tube([base, base + V((math.sin(a) * 0.04, 0.0, H * 0.55))], [W * 0.05, W * 0.02], sides=5, cls=TRIM)
+    # Ram or drill prow.
+    if p.get("ram"):
+        b.tube([V((0, y1 - L * 0.08, -H * 0.25)), V((0, y1 + L * p["ram"], -H * 0.3))], [W * 0.34, W * 0.08], sides=6, cls=TRIM)
+    if p.get("drill"):
+        for k in range(3):
+            a = 2 * math.pi * k / 3
+            b.tube([V((math.cos(a) * W * 0.18, y1 - L * 0.04, math.sin(a) * H * 0.18 - H * 0.1)), V((0, y1 + L * p["drill"], -H * 0.1))],
+                   [W * 0.09, W * 0.02], sides=5, cls=TRIM)
+    # Furnace stacks along the rear deck: the visible heat of the overclock doctrine.
+    n = p.get("stacks", 2)
+    for i in range(n):
+        x = (i - (n - 1) / 2) * W * 0.5 + rnd.uniform(-0.01, 0.01)
+        pyg_stack(b, x, y0 + L * (0.12 + 0.05 * (i % 2)), H * 0.45, W * 0.1, H * p.get("stack_h", 1.0))
+    # Side sponsons with guns.
+    for side in (-1, 1):
+        if p.get("sponsons"):
+            b.box(V((side * W * 1.05, y0 + L * 0.52, -H * 0.05)), (W * 0.28, L * 0.18, H * 0.3), cls=HULL, taper=0.85)
+            pyg_gun(b, side * W * 1.1, y0 + L * 0.6, H * 0.28, W * 0.14, L * 0.16)
+    # Deck guns and spinal ordnance.
+    for k in range(p.get("guns", 1)):
+        pyg_gun(b, 0, y0 + L * (0.5 + 0.12 * k), H * 0.6, W * (0.2 if p.get("heavy") else 0.15), L * (0.22 if p.get("heavy") else 0.14))
+    if p.get("spinal"):
+        b.tube([V((0, y0 + L * 0.2, -H * 0.82)), V((0, y1 + L * p["spinal"], -H * 0.82))], [W * 0.16, W * 0.12], sides=8, cls=TRIM, point_end=False)
+        b.tube([V((0, y1 + L * p["spinal"], -H * 0.82)), V((0, y1 + L * p["spinal"] + 0.02, -H * 0.82))], [W * 0.1, W * 0.08], sides=8, cls=GLASS, emis=1.0, point_end=False)
+    if p.get("barge"):
+        # Artillery barge mortar wells.
+        for k in range(p["barge"]):
+            pyg_stack(b, (k - (p["barge"] - 1) / 2) * W * 0.6, y0 + L * 0.62, H * 0.5, W * 0.16, H * 0.5, glow=0.6)
+    # Rivet bands: thin trim belts around the hull.
+    for t in p.get("belts", (0.35, 0.65)):
+        y = y0 + L * t
+        b.loft([[q + V((0, y - 0.01, 0)) for q in pyg_section(W * 1.04, H * 1.02)], [q + V((0, y + 0.01, 0)) for q in pyg_section(W * 1.04, H * 1.02)]], TRIM, 0.0)
+    # Prongs for the interceptor.
+    if p.get("prongs"):
+        for side in (-1, 1):
+            b.shard(V((side * W * 0.7, y0 + L * 0.35, 0)), V((side * 0.08, 1, 0)), L * p["prongs"], W * 0.18, H * 0.25, cls=TRIM)
+    pyg_engines(b, y0, W, H, p.get("engines", 2), W * 0.18, z=-H * 0.1)
+    return b.to_object()
+
+
+PYGMAEI = {
+    "pygmaei_rift_interceptor":      dict(L=0.85, W=0.17, H=0.12, stacks=1, stack_h=0.7, guns=0, prongs=0.62, engines=1, belts=(0.5,)),
+    "pygmaei_skirmish_frigate":      dict(L=1.15, W=0.24, H=0.17, stacks=2, guns=1, sponsons=True, ram=0.12, engines=2),
+    "pygmaei_annihilator_destroyer": dict(L=1.45, W=0.25, H=0.18, stacks=2, guns=1, heavy=True, spinal=0.22, engines=2, belts=(0.3, 0.55, 0.75)),
+    "pygmaei_furnace_cruiser":       dict(L=1.6, W=0.33, H=0.24, stacks=4, stack_h=1.25, guns=2, sponsons=True, drill=0.16, engines=3),
+    "pygmaei_revenant_command_ship": dict(L=2.15, W=0.42, H=0.3, stacks=4, stack_h=1.4, guns=2, heavy=True, sponsons=True, ram=0.2,
+                                          tower=1.6, crown=True, engines=4, belts=(0.25, 0.45, 0.65, 0.82)),
+}
+
+
+# =====================================================================================================
+# Inhumanus: low-gravity corporate hulls. Smooth pale lenticular bodies with gold trim, gravity rings standing clear of
+# the hull, detached floating segments held in place by fields, and prism emitters at the prow. Clean and symmetric.
+# NEW ART INTERPRETATION for the vertical slice, pending the creator's approval (Docs/vertical-slice/DECISIONS.md).
+# =====================================================================================================
+
+def inhumanus_ship(sid, p):
+    b = Builder(sid)
+    L, W, H = p["L"], p["W"], p["H"]
+    y0, y1 = -L * 0.5, L * 0.5
+    # Lenticular body: an elongated ellipsoid, flattened, with a slimmer upper spine.
+    b.ellipsoid(V((0, 0, 0)), (W, L * 0.5, H), u=20, v=14, cls=HULL)
+    b.ellipsoid(V((0, -L * 0.05, H * 0.55)), (W * 0.32, L * 0.36, H * 0.42), u=14, v=10, cls=HULL)
+    # Gold trim keel line.
+    b.shard(V((0, y0 + L * 0.08, -H * 0.72)), V((0, 1, 0)), L * 0.84, W * 0.08, H * 0.16, up=V((1, 0, 0)), cls=TRIM)
+    # Gravity rings, standing clear of the hull around the long axis.
+    for (t, rs) in p.get("rings", ((0.42, 1.55),)):
+        b.torus(V((0, y0 + L * t, 0)), V((0, 1, 0)), W * rs, W * 0.06, seg=40, sides=6, cls=TRIM)
+        b.torus(V((0, y0 + L * t, 0)), V((0, 1, 0)), W * rs * 0.94, W * 0.025, seg=40, sides=5, cls=GLASS, emis=0.9)
+    # Detached floating segments (low-gravity architecture): pods held beside the hull, not touching it.
+    for k in range(p.get("pods", 0)):
+        side = -1 if k % 2 == 0 else 1
+        y = y0 + L * (0.3 + 0.18 * (k // 2))
+        b.ellipsoid(V((side * W * 1.75, y, 0)), (W * 0.26, L * 0.13, H * 0.3), u=12, v=8, cls=HULL)
+        b.ellipsoid(V((side * W * 1.75, y + L * 0.1, 0)), (W * 0.08, L * 0.03, H * 0.08), u=8, v=6, cls=GLASS, emis=1.1)
+    # Prism emitter at the prow (longer on the arbitration lance and the flagship).
+    b.prism_crystal(V((0, y1 - L * 0.02, 0)), V((0, 1, 0)), L * p.get("prism", 0.12), W * 0.16, sides=6, tip=0.45, cls=GLASS, emis=1.4)
+    # Swept fins.
+    for side in (-1, 1):
+        fin = p.get("fins", 0.0)
+        if fin > 0:
+            b.shard(V((side * W * 0.6, y0 + L * 0.22, 0)), V((side * 0.9, -0.5, 0)), L * fin, W * 0.25, H * 0.06, cls=TRIM)
+    # Executive tower: a tall blade fin above the spine.
+    if p.get("tower"):
+        b.shard(V((0, y0 + L * 0.3, H * 0.75)), V((0, 0.35, 1)), H * p["tower"], W * 0.32, W * 0.06, up=V((1, 0, 0)), cls=TRIM)
+        b.ellipsoid(V((0, y0 + L * 0.38, H * (0.8 + p["tower"] * 0.45))), (W * 0.12, W * 0.12, W * 0.12), u=10, v=8, cls=GLASS, emis=1.2)
+    # Ventral hangar for escort tokens.
+    if p.get("hangar"):
+        b.box(V((0, y0 + L * 0.5, -H * 0.95)), (W * 0.55, L * 0.22, H * 0.22), cls=TRIM, taper=0.8)
+        b.box(V((0, y0 + L * 0.62, -H * 1.08)), (W * 0.4, L * 0.02, H * 0.08), cls=GLASS, emis=1.0)
+    # Drive: a glowing ring at the stern.
+    b.torus(V((0, y0 + L * 0.01, 0)), V((0, 1, 0)), W * 0.42, W * 0.08, seg=28, sides=6, cls=GLASS, emis=1.5)
+    return b.to_object()
+
+
+INHUMANUS = {
+    "token_inhumanus_escort":          dict(L=0.55, W=0.13, H=0.07, rings=(), fins=0.2, prism=0.1),
+    "inhumanus_mercator_corvette":     dict(L=0.95, W=0.2, H=0.09, rings=(), fins=0.28, prism=0.12),
+    "inhumanus_proxy_frigate":         dict(L=1.15, W=0.23, H=0.11, rings=((0.5, 1.5),), hangar=True, prism=0.1),
+    "inhumanus_arbitration_destroyer": dict(L=1.4, W=0.21, H=0.1, rings=((0.35, 1.6),), pods=2, prism=0.32),
+    "inhumanus_parallax_cruiser":      dict(L=1.55, W=0.3, H=0.15, rings=((0.3, 1.55), (0.62, 1.4)), pods=2, prism=0.14),
+    "inhumanus_executive_flagship":    dict(L=2.2, W=0.36, H=0.18, rings=((0.28, 1.7), (0.58, 1.55)), pods=4, prism=0.28, tower=1.8, fins=0.3),
+}
+
+
+# =====================================================================================================
 
 def build_all(only=None):
     jobs = []
@@ -494,6 +657,10 @@ def build_all(only=None):
         jobs.append((sid, lambda sid=sid, p=p: silex_ship(sid, p)))
     for sid, p in CRAIGON.items():
         jobs.append((sid, lambda sid=sid, p=p: craigon_ship(sid, p)))
+    for sid, p in PYGMAEI.items():
+        jobs.append((sid, lambda sid=sid, p=p: pygmaei_ship(sid, p)))
+    for sid, p in INHUMANUS.items():
+        jobs.append((sid, lambda sid=sid, p=p: inhumanus_ship(sid, p)))
     jobs.append(("token_craigon_auxiliary_orbital", lambda: craigon_auxiliary_hulk("token_craigon_auxiliary_orbital")))
     jobs.append(("station_silex_citadel", lambda: silex_citadel_station("station_silex_citadel")))
     jobs.append(("wreck_hulk_a", lambda: wreck_hulk("wreck_hulk_a")))

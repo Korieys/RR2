@@ -286,9 +286,14 @@ namespace RR.Strategy
             {
                 g.ActiveBattle = BattleSession.FromData(battle, out error);
                 if (g.ActiveBattle == null) return null;
-                var e = g.GetEngagement(g.ActiveBattle.Setup.EngagementId);
-                if (e == null || e.State != EngagementState.Pending || g.AppliedBattles.Contains(g.ActiveBattle.Setup.BattleId))
-                { error = "The save holds a battle whose engagement is no longer pending."; return null; }
+                if (g.ActiveBattle.Setup.Scenario == null)
+                {
+                    var e = g.GetEngagement(g.ActiveBattle.Setup.EngagementId);
+                    if (e == null || e.State != EngagementState.Pending || g.AppliedBattles.Contains(g.ActiveBattle.Setup.BattleId))
+                    { error = "The save holds a battle whose engagement is no longer pending."; return null; }
+                }
+                if (g.GetSystem(g.ActiveBattle.Setup.SystemId ?? g.GetEngagement(g.ActiveBattle.Setup.EngagementId)?.SystemId) == null)
+                { error = "The save holds a battle in an unknown system."; return null; }
             }
             return g;
         }

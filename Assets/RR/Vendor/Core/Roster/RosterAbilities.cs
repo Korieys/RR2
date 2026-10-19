@@ -463,7 +463,9 @@ namespace Commandfall.Core
         // ================================================================== AI enumeration
 
         /// <summary>Legal pick lists for the AI (depth-first over candidates, capped). Options are expanded too.</summary>
-        public static List<(List<Hex> picks, int option)> Enumerate(MatchState s, UnitState u, int cap = 48)
+        /// <summary><paramref name="width"/>: how many first targets to try, nearest first (12 keeps AI search small; the
+        /// slice's command-threat analysis passes a larger width so a distant lethal option is never skipped).</summary>
+        public static List<(List<Hex> picks, int option)> Enumerate(MatchState s, UnitState u, int cap = 48, int width = 12)
         {
             var result = new List<(List<Hex>, int)>();
             if (RosterRules.CanAct(s, u, attack: false) != null) return result;
@@ -472,12 +474,12 @@ namespace Commandfall.Core
             for (int opt = 0; opt < options && result.Count < cap; opt++)
             {
                 var steps = Steps(u, opt);
-                Dfs(s, u, steps, new List<Hex>(), opt, result, cap);
+                Dfs(s, u, steps, new List<Hex>(), opt, result, cap, width);
             }
             return result;
         }
 
-        static void Dfs(MatchState s, UnitState u, List<PickStep> steps, List<Hex> picks, int opt, List<(List<Hex>, int)> result, int cap)
+        static void Dfs(MatchState s, UnitState u, List<PickStep> steps, List<Hex> picks, int opt, List<(List<Hex>, int)> result, int cap, int firstWidth = 12)
         {
             if (result.Count >= cap) return;
             if (Ready(u, picks, opt) && Validate(s, u, picks, opt).Ok)
@@ -491,11 +493,11 @@ namespace Commandfall.Core
             // Keep the search small: for unit steps after the first, only extend in increasing hex order (combinations, not permutations).
             if (steps[picks.Count].Kind == PickKind.Unit && picks.Count > 0 && steps[picks.Count - 1].Kind == PickKind.Unit)
                 cands = cands.Where(h => h.CompareTo(picks[picks.Count - 1]) > 0).ToList();
-            int width = picks.Count == 0 ? 12 : 6;
+            int width = picks.Count == 0 ? firstWidth : 6;
             foreach (var h in cands.OrderBy(h => Hex.Distance(h, u.Position)).ThenBy(h => h).Take(width))
             {
                 picks.Add(h);
-                Dfs(s, u, steps, picks, opt, result, cap);
+                Dfs(s, u, steps, picks, opt, result, cap, firstWidth);
                 picks.RemoveAt(picks.Count - 1);
                 if (result.Count >= cap) return;
             }

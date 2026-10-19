@@ -18,6 +18,9 @@ namespace RR.Game
         public static readonly StringBuilder Log = new StringBuilder();
         static string _dir;
 
+        /// <summary>Write the tour log into <paramref name="dir"/> as notes arrive (other tours call this).</summary>
+        public static void UseDir(string dir) { _dir = dir; Log.Clear(); }
+
         public static void Note(string line)
         {
             Log.AppendLine(line);

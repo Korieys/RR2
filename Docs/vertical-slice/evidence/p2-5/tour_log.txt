@@ -1,0 +1,37 @@
+passage tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-2; content problems 0
+battle passage_challenge_pyg_1 on trade_passage in umbra: 5 Pygmaei against 7 Inhumanus; topology trade_passage: 111/115 traversable (97 %), 1 region(s), 0 dead end(s) (0 intentional), 0 articulation point(s), 0 mandatory / 0 narrows, approaches West flank w4, Centre w3, East flank w4, cross-links [2, 2], zone routes 11 — PASS
+shot p01_passage_start
+perf passage battle: median 6.94 ms (144 fps), p95 7.04 ms, p99 7.10 ms, max 7.26 ms over 239 frames; gen0 GCs 0; managed heap 8.3 MB
+shot p02_flank_frigate_selected
+overclock mode: True
+overclock preview at (-5,-2): Overclocked move here (4 movement). Heat 0 → 2 (overheats at 4; sheds 2 after any activation without overclocking).
+shot p03_overclock_reach
+shot p04_capital_arc
+turn mode: True; preview: 
+shot p04b_turn_preview
+command threat: No lethal strike on your flagship was found for the enemy's next activation (5 ships, 1223 possible orders checked). Later activations are not checked, so this is not a guarantee. | Focus fire: 3 enemy ships could each hit your flagship in one activation, 5 damage in all against 20 hull and shields. This assumes each enemy ship acts once and your side does nothing in between.
+opportunity: none
+shot p05_threat_view
+attack preview: Skirmish Guns: 5 raw = 5; Mercenary Escort hull 2 → 0. Modifiers: +1 Wolfpack. This destroys Mercenary Escort.
+shot p06_attack_preview
+committed: previewed hull -3, committed hull 0 (equal)
+skirmish save and load after 13 orders: restored the same battle
+skirmish over: winner seat 1 (CommanderEliminated) after round 6, 74 orders; decisive: Parallax Cruiser fired Parallax Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Inhumanus convoy escort win.
+battle played out in 186 s of automated play (pilot and AI, animations on): not a human duration
+shot p07_result
+decisive: Parallax Cruiser fired Parallax Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Inhumanus convoy escort win.
+  Mercator Corvette fired Mercator Guns at Revenant Command Ship (flagship): 3 raw − 1 armour = 2; Revenant Command Ship hull 3 → 1.
+  Executive Flagship (flagship) moved to (1,-2).
+  Revenant Command Ship (flagship) fired Revenant Salvo (overclocked) at Mercator Corvette: 9 raw − 1 armour = 8; Mercator Corvette hull 7 → 0. Mercator Corvette was destroyed.
+  Revenant Command Ship (flagship) moved to (6,0).
+  Parallax Cruiser fired Parallax Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed.
+replay from the record: identical
+shot p08_inhumanus_side
+restart: passage_challenge_inh_3 at 0 orders, player seat 1
+skirmish over: winner seat 0 (Resignation) after round 1, 1 orders; decisive: Inhumanus convoy escort yielded the battle. Pygmaei raiders win: the other side yielded.
+shot p09_training
+skirmish over: winner seat 0 (CommanderEliminated) after round 2, 16 orders; decisive: Rift Interceptor fired Rift Cannons (overclocked) at Executive Flagship (flagship): 5 raw − 2 armour = 3; Executive Flagship hull 2 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Pygmaei raiders win.
+training: A flagship was destroyed: the battle ended at once. Pygmaei raiders win. after 16 orders
+hotseat: orders given for seats 0 and 1; AI never acted: true
+shot p10_hotseat
+passage tour complete

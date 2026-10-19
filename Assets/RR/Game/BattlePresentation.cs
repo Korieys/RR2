@@ -29,7 +29,8 @@ namespace RR.Game
         public BattleSession Session { get; private set; }
         public MatchState S { get { return Session.State; } }
         public BattleSetup Setup { get { return Session.Setup; } }
-        public int PlayerSeat { get { return Setup.PlayerSeat; } }
+        /// <summary>The side the interface commands now (the side to act in a hotseat battle).</summary>
+        public int PlayerSeat { get { return CommandSeat; } }
         public bool Animating { get; private set; }
         public bool Over { get { return S.IsOver && !Animating; } }
         public event Action<string, string> Notice;          // (text, kind)
@@ -254,9 +255,10 @@ namespace RR.Game
             float scale = Mathf.Clamp(1.75f / Mathf.Max(0.4f, len), 0.5f, 1.6f) * (u.R.IsCapital ? 1.1f : u.R.IsSmallCraft ? 0.85f : 1f);
             m.transform.localScale = Vector3.one * scale;
             m.transform.localPosition = new Vector3(0, 0.32f, 0);
-            var fleetId = Setup.FleetIds[u.Owner];
-            var col = Look.PolityColor(_root.G, _root.G.GetFleet(fleetId) != null ? _root.G.GetFleet(fleetId).OwnerId : null);
+            var fleet = Setup.FleetIds[u.Owner] != null ? _root.G.GetFleet(Setup.FleetIds[u.Owner]) : null;
+            var col = fleet != null ? Look.PolityColor(_root.G, fleet.OwnerId) : FactionColor(_root.G, S.Players[u.Owner].Faction);
             var ringMat = Look.Unlit(lib.fx, col * 1.1f, "Owner ring");
+            if (u.Owner != Setup.PlayerSeat) ringMat.SetFloat("_Dash", 20);   // ownership by pattern as well as colour: enemy rings are dashed
             var ring = Mesh("Ring", MeshFactory.Circle(0.66f, 0.06f, 48), ringMat);
             ring.transform.SetParent(root, false);
             ring.transform.localPosition = new Vector3(0, 0.04f, 0);

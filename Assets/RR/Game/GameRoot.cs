@@ -122,6 +122,11 @@ namespace RR.Game
             if (sheet != null) { UI.Strategy.Root.style.display = DisplayStyle_None; StartCoroutine(Automation.ShipSheet(this, sheet)); }
             var cap = Args.Value("-rrCapture");
             if (cap != null) StartCoroutine(Automation.SystemTourFromGalaxy(this, cap));
+            var passageTour = Args.Value("-rrPassageTour");
+            if (passageTour != null) StartCoroutine(SliceAutomation.PassageTour(this, passageTour));
+            var problems = SliceRoster.Validate();
+            if (problems.Count > 0) { foreach (var p in problems) Debug.LogError("Slice content: " + p); UI.Strategy.Toast("Slice content problem: " + problems[0], "bad"); }
+            MaybeShowStartMenu();
         }
 
         static readonly UnityEngine.UIElements.StyleEnum<UnityEngine.UIElements.DisplayStyle> DisplayStyle_None = UnityEngine.UIElements.DisplayStyle.None;
@@ -208,6 +213,7 @@ namespace RR.Game
             UI.Strategy.RefreshTop();
             UI.Strategy.UpdateLabels(Rig.Cam, Settings.Overlays && !Busy && Scale != ViewScale.Battle);
             if (_battleHud != null) _battleHud.Update(Rig.Cam);
+            if (_slicePanel != null) _slicePanel.Update(Rig.Cam);
             if (Scale == ViewScale.Battle && Battle != null && Battle.Over && !_resultShown) FinishBattle();
             bool loading = Busy && !string.IsNullOrEmpty(LoadingText);
             if (loading) { UI.ShowLoading(LoadingText, LoadingProgress); _loadingShown = true; }
@@ -227,7 +233,7 @@ namespace RR.Game
             var d = Battle.StarDir;
             var p = Battle.transform.position + d * 2600;
             Shader.SetGlobalVector("_RR_StarPosWS", new Vector4(p.x, p.y, p.z, 34));
-            Shader.SetGlobalVector("_RR_StarColor", Look.StarColor(G.GetSystem(G.GetEngagement(_setup.EngagementId).SystemId).Star) * 2.1f);
+            Shader.SetGlobalVector("_RR_StarColor", Look.StarColor(G.GetSystem(BattleSystemId).Star) * 2.1f);
             Shader.SetGlobalVector("_RR_Ambient", new Vector4(0.02f, 0.024f, 0.034f, 0.35f));
         }
 

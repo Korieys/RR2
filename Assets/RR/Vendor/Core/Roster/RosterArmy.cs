@@ -97,8 +97,10 @@ namespace Commandfall.Core
                     if (def.Roster.Tier > caps.Unlock) errs.Add($"{def.Name} unlocks at tier {ArmyRules.Roman(def.Roster.Tier)} (your unlock tier is {ArmyRules.Roman(caps.Unlock)}).");
                     if (army.Faction == FactionId.Inhumanus && domain == BattleDomain.Planetary && RosterContent.InCharter(def, army.Doctrine)) charterUnits++;
                 }
-                if (entry.Equipment.Count > 0) errs.Add($"{def.Name}: Full Roster units carry no equipment (research upgrades apply automatically).");
-                int cost = RosterContent.Cost(def);
+                var contract = SliceRules.ValidateContract(army, entry, domain);
+                if (contract != null) errs.Add(contract);
+                if (SliceRules.ContractLane(entry) != null) r.Contracts++;
+                int cost = SliceRules.EntryCost(entry, RosterContent.Cost(def));
                 r.EntryCosts.Add(cost);
                 r.TotalCost += cost;
                 r.EntryErrors.Add(errs);
@@ -113,6 +115,7 @@ namespace Commandfall.Core
                 else if (charterUnits * 2 < nonLeaders)
                     r.Errors.Add($"Corporate Charter ({RosterContent.CharterName(army.Doctrine, domain)}): at least half of the non-leader units must be charter specialists ({charterUnits}/{nonLeaders}).");
             }
+            if (r.Contracts > SliceRules.MaxContracts) r.Errors.Add($"At most {SliceRules.MaxContracts} ships may be contracted ({r.Contracts} are).");
             if (r.UnitCount > maxUnits) r.Errors.Add($"Too many units: {r.UnitCount}/{maxUnits}.");
             if (r.TotalCost > budget) r.Errors.Add($"Over budget: {r.TotalCost}/{budget} points.");
             if (r.Valid && r.TotalCost < budget && r.UnitCount < maxUnits) r.Warnings.Add($"{budget - r.TotalCost} point(s) unspent.");

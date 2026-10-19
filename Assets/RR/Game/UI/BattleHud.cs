@@ -65,7 +65,7 @@ namespace RR.Game
             var S = _b.S;
             int seat = _b.PlayerSeat;
             _round.text = "Round " + S.Round + " of " + S.Config.RoundLimit;
-            bool mine = S.ActiveSeat == seat;
+            bool mine = S.ActiveSeat == seat && !S.IsOver;   // nothing stays enabled once the battle is over (D-05)
             _turn.text = S.IsOver ? "The battle is over." : mine ? (S.ActiveUnitId != 0 ? "Your activation: finish with " + S.Unit(S.ActiveUnitId).Def.Name : "Your activation: choose a ship") : "Enemy activation";
             _turn.style.color = mine ? Look.GoldBright : new Color(0.85f, 0.7f, 1f);
             int heldMine = S.Objectives.Count(o => o.Owner == seat), heldTheirs = S.Objectives.Count(o => o.Owner == 1 - seat);
@@ -152,11 +152,25 @@ namespace RR.Game
             Row("Armor", u.BaseArmor.ToString());
             Row("Movement", StrategyHud.MoveText(u.Def));
             Row("Weapon", u.Weapon.Name + ": " + u.Weapon.Damage + " at " + u.Weapon.MinRange + " to " + u.Weapon.MaxRange);
-            Row("Active", u.R.ActiveName + (u.Cooldown > 0 ? ", recharging (" + u.Cooldown + ")" : ", ready"));
+            Row("Active", u.R.ActiveName + (u.HasR(RStatusType.Disabled) ? ", DISABLED this activation" : u.HasR(RStatusType.Silenced) ? ", SILENCED this activation"
+                : u.Cooldown > 0 ? ", recharging (" + u.Cooldown + ")" : ", ready"));
             _right.Add(UIX.Text(u.R.ActiveText, "item-sub"));
             Row("Passive", u.R.PassiveName);
             _right.Add(UIX.Text(u.R.PassiveText, "item-sub"));
-            var statuses = u.RStatuses != null ? string.Join(", ", u.RStatuses.Select(x => x.Type.ToString())) : "";
+            if (RR.Strategy.SliceRoster.Classes(u.Def.Faction).Contains(u.DefId)) _right.Add(UIX.Text("Model: first-pass generated art, pending approval. Values: codex 0.1 draft.", "small"));
+            if (SliceRules.OverclockCapable(u))
+                Row("Heat", SliceRules.Heat(u) + " of " + SliceRules.OverheatAt + (SliceRules.Overheated(u) ? ": OVERHEATED, armour −" + SliceRules.OverheatArmor + ", no overclock" : ""));
+            if (SliceRules.HasArc(u)) Row("Facing", SliceRules.FacingNames[SliceRules.Facing(u)] + "; main battery blind in the 120° astern");
+            if (SliceRules.IsContracted(u)) Row("Contract", SliceRules.InReserve(u) ? "under way: " + SliceRules.ContractLane(u) + " entry " + SliceRules.EntryHex(S.Map, u.Owner, SliceRules.ContractLane(u)) + ", from round " + SliceRules.ContractArrivalRound : "arrived");
+            foreach (var st in u.RStatuses.Where(x => x.Type == RStatusType.Protected || x.Type == RStatusType.Intercepted))
+            {
+                var g = S.Unit(st.SourceId);
+                if (g == null) continue;
+                Row("Protected by", g.Def.Name + ": intercepts the next " + (st.Type == RStatusType.Intercepted ? "small-craft attack" : st.Mode == 1 ? "ranged attack" : st.Mode == 2 ? "basic attack" : "direct attack") +
+                    " within " + System.Math.Max(1, st.Range) + " hex" + (st.Range > 1 ? "es" : "") + (st.Amount > 0 ? ", −" + st.Amount + " raw" : "") + "; " + RosterCombat.InterceptsLeft(S, g) + " intercept left this round");
+            }
+            if (RosterCombat.GuardCapable(u)) Row("Intercepts", RosterCombat.InterceptsLeft(S, u) + " left this round; never chains");
+            var statuses = u.RStatuses != null ? string.Join(", ", u.RStatuses.Where(x => x.Type != RStatusType.Facing && x.Type != RStatusType.Heat).Select(x => x.Type.ToString())) : "";
             if (!string.IsNullOrEmpty(statuses)) Row("Statuses", statuses);
             if (RosterRules.Done(S, u)) _right.Add(UIX.Text("This ship has already acted this round.", "small"));
         }

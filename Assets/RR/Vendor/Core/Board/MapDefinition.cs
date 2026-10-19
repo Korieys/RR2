@@ -324,6 +324,20 @@ namespace Commandfall.Core
                 .Mirror(TerrainType.Cover, (0, 1), (3, -2), (-6, 0), (2, 2))
                 .Mirror(TerrainType.Elevated, (-5, 1), (1, -1))
                 .Mirror(TerrainType.Hazard, (6, 1)));
+
+            // Rule and Ruin vertical slice: the contested trade passage (provisional name). Two short wreck banks pinch the
+            // central lane into a three-hex passage over the centre objective; the wing objectives sit just outside the
+            // banks; asteroid fields give firing positions at the passage mouths and on the flanks; nebulae and an ion
+            // storm shape the wings. Validated like every authored map: three approaches, two cross-links, no dead ends.
+            Register(new MapDefinition("trade_passage", "The Trade Passage",
+                    "A charted trade lane pinched between two wreck banks; the passage itself is the prize, with open flanks around the banks.",
+                    BoardHalfWidth, BoardHalfDepth)
+                .Orbital()
+                .Deployment(BoardDeploymentDepth)
+                .Mirror(TerrainType.Obstacle, (-2, 0), (-3, 0))
+                .Mirror(TerrainType.Cover, (0, 1), (-5, 1), (-2, -1))
+                .Mirror(TerrainType.Elevated, (-4, -1), (-1, 2))
+                .Mirror(TerrainType.Hazard, (-6, 2)));
         }
 
         /// <summary>Validates a map's topology (repairing it deterministically if needed) and adds it to the library. A map

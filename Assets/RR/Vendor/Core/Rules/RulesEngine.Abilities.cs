@@ -12,7 +12,7 @@ namespace Commandfall.Core
         {
             if (s.Phase != MatchPhase.Deployment) return Validation.Fail("Deployment is over.");
             if (s.Players[seat].DeploymentCommitted) return Validation.Fail("Deployment already committed.");
-            var mine = s.Units.Where(u => u.Owner == seat && u.Alive).Select(u => u.Id).ToList();
+            var mine = s.Units.Where(u => u.Owner == seat && u.Alive && !SliceRules.IsContracted(u)).Select(u => u.Id).ToList();
             if (placements == null || placements.Count != mine.Count)
                 return Validation.Fail($"Deploy all {mine.Count} units before confirming.");
             var usedHexes = new HashSet<Hex>();
@@ -38,9 +38,9 @@ namespace Commandfall.Core
         {
             var zone = s.Map.DeploymentZone(seat);
             int back = seat == 0 ? s.Map.Radius : -s.Map.Radius;
-            var units = s.Units.Where(u => u.Owner == seat && u.Alive)
+            var units = s.Units.Where(u => u.Owner == seat && u.Alive && !SliceRules.IsContracted(u))
                                .OrderBy(u => DeployPriority(u.Def.Archetype)).ThenBy(u => u.Id).ToList();
-            var free = new List<Hex>(zone);
+            var free = zone.Where(h => !SliceRules.ReservedEntry(s, seat, h)).ToList();   // slice: keep contract entry hexes clear
             var result = new List<Placement>();
             foreach (var u in units)
             {

@@ -11,6 +11,8 @@ namespace Commandfall.Core
         public List<string> Warnings = new List<string>();
         public int TotalCost;
         public int UnitCount;
+        /// <summary>Slice: ships under an Inhumanus fleet contract (SliceRules).</summary>
+        public int Contracts;
         public int Budget;
         public int MaxUnits;
         public List<int> EntryCosts = new List<int>();

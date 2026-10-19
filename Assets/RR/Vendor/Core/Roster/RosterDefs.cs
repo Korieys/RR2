@@ -60,6 +60,8 @@ namespace Commandfall.Core
         FreeStep = 23,     // may make one free 1-hex step before the activation ends (War Momentum, Breakthrough Pace)
         Ignited = 24,      // (hex marker carried on the unit standing in fire; reserved)
         DashBuff = 25,     // reserved
+        Facing = 26,       // slice: a capital ship's facing (Amount = 0..11, clockwise from East); see SliceRules
+        Heat = 27,         // slice: Pygmaei overclock heat (Amount); Mode 1 = overclocked during the current activation
     }
 
     /// <summary>When a roster status ends.</summary>

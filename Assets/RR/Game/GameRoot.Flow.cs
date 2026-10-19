@@ -245,13 +245,12 @@ namespace RR.Game
         IEnumerator EnterBattleRoutine(BattleSession session)
         {
             _setup = session.Setup;
-            var e = G.GetEngagement(_setup.EngagementId);
             Busy = true;
             yield return CaptureClean();
             var frame = _frame;
             UI.FadeFrom(frame, 60f);
             LocalSystem.gameObject.SetActive(false);
-            Battle = BattlePresentation.Build(this, session, G.GetSystem(e.SystemId), WorldRoot);
+            Battle = BattlePresentation.Build(this, session, G.GetSystem(BattleSystemId), WorldRoot);
             Battle.transform.position = new Vector3(0, 0, 0);
             Scale = ViewScale.Battle;
             _resultShown = false;
@@ -263,6 +262,7 @@ namespace RR.Game
             UI.Strategy.Root.style.display = UnityEngine.UIElements.DisplayStyle.None;
             UI.Strategy.ClearLabels();
             _battleHud = new BattleHud(this, Battle, UI.HudLayer);
+            _slicePanel = new SliceBattlePanel(Battle, UI.HudLayer);
             yield return null;
             UI.FadeFrom(frame, Settings.ReducedMotion ? 0.15f : 0.55f);
             Rig.TransitionTo(pose, Settings.ReducedMotion ? 0.15f : 1.1f);
@@ -274,6 +274,7 @@ namespace RR.Game
 
         void FinishBattle()
         {
+            if (_setup.EngagementId == null) { FinishSkirmish(); return; }
             _resultShown = true;
             var o = BattleBridge.Extract(_setup, Battle.S);
             var e = G.GetEngagement(_setup.EngagementId);
@@ -300,9 +301,10 @@ namespace RR.Game
             var frame = _frame;
             UI.FadeFrom(frame, 60f);
             if (_battleHud != null) { _battleHud.Dispose(); _battleHud = null; }
+            if (_slicePanel != null) { _slicePanel.Dispose(); _slicePanel = null; }
             Destroy(Battle.gameObject); Battle = null;
             UI.Strategy.Root.style.display = UnityEngine.UIElements.DisplayStyle.Flex;
-            var sysId = G.GetEngagement(_setup.EngagementId).SystemId;
+            var sysId = BattleSystemId;
             if (LocalSystem == null || LocalSystem.Data.Id != sysId) { if (LocalSystem != null) Destroy(LocalSystem.gameObject); LocalSystem = null; }
             Scale = ViewScale.Galaxy;
             Busy = false;
@@ -364,6 +366,7 @@ namespace RR.Game
         void DiscardBattleView()
         {
             if (_battleHud != null) { _battleHud.Dispose(); _battleHud = null; }
+            if (_slicePanel != null) { _slicePanel.Dispose(); _slicePanel = null; }
             if (Battle != null) { Destroy(Battle.gameObject); Battle = null; }
             _resultShown = false; _resultDone = null;
             UI.CloseModal();
@@ -388,7 +391,7 @@ namespace RR.Game
             Scale = ViewScale.Galaxy;
             EnterGalaxyImmediate();
             Busy = false;
-            if (resume != null) sysId = G.GetEngagement(resume.Setup.EngagementId).SystemId;
+            if (resume != null) sysId = resume.Setup.SystemId ?? G.GetEngagement(resume.Setup.EngagementId).SystemId;
             if (sysId != null) yield return EnterSystemRoutine(sysId);
             if (resume != null)
             {

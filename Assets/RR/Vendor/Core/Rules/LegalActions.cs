@@ -89,7 +89,7 @@ namespace Commandfall.Core
         }
 
         /// <summary>Full Roster: every legal command for the active seat. Mid-activation, only the active unit's options.</summary>
-        public static List<Command> EnumerateRoster(MatchState s, int abilityCap = 48)
+        public static List<Command> EnumerateRoster(MatchState s, int abilityCap = 48, int abilityWidth = 12)
         {
             var list = new List<Command>();
             int seat = s.ActiveSeat;
@@ -108,7 +108,8 @@ namespace Commandfall.Core
                     foreach (var h in u.Position.Neighbors())
                         if (s.Map.Contains(h) && RosterRules.ValidateRescue(s, u, h).Ok) list.Add(Command.Rescue(seat, u.Id, h));
                 }
-                foreach (var (picks, opt) in RosterAbilities.Enumerate(s, u, abilityCap))
+                SliceRules.ExtraOrders(s, view, u, list);
+                foreach (var (picks, opt) in RosterAbilities.Enumerate(s, u, abilityCap, abilityWidth))
                     list.Add(Command.Active(seat, u.Id, picks, opt));
             }
             return list;

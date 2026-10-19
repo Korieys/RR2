@@ -67,7 +67,9 @@ namespace RR.Game
         public static Material ShipMaterial(string defId)
         {
             string key = defId == "silex_throne_ark" ? "silex_royal" : defId.StartsWith("silex") || defId.StartsWith("station_silex") ? "silex"
-                       : defId.StartsWith("craigon") || defId.StartsWith("token_craigon") ? "craigon" : defId.StartsWith("asteroid") ? "rock" : "wreck";
+                       : defId.StartsWith("craigon") || defId.StartsWith("token_craigon") ? "craigon"
+                       : defId.StartsWith("pygmaei") ? "pygmaei" : defId.StartsWith("inhumanus") || defId.StartsWith("token_inhumanus") ? "inhumanus"
+                       : defId.StartsWith("asteroid") ? "rock" : "wreck";
             if (_shipMats.TryGetValue(key, out var m) && m != null) return m;
             m = new Material(ArtLibrary.I.ship) { name = "RR_Ship_" + key };
             switch (key)
@@ -84,6 +86,19 @@ namespace RR.Game
                     m.SetColor("_TrimColor", new Color(0.5f, 0.45f, 0.4f)); m.SetFloat("_Metal", 0.0f); m.SetFloat("_TrimRough", 0.55f);
                     m.SetColor("_GlassColor", new Color(0.72f, 0.32f, 1.0f)); m.SetFloat("_GlowIntensity", 1.6f);
                     m.SetFloat("_Chitin", 1f); m.SetColor("_SheenColor", new Color(0.85f, 0.45f, 1.0f)); m.SetFloat("_HullRough", 0.3f); m.SetFloat("_DetailScale", 10f);
+                    break;
+                // Vertical slice, provisional palettes pending approval (Docs/vertical-slice/DECISIONS.md, CR-17).
+                case "pygmaei":
+                    m.SetColor("_HullColor", new Color(0.2f, 0.18f, 0.18f)); m.SetColor("_HullColor2", new Color(0.34f, 0.12f, 0.1f));
+                    m.SetColor("_TrimColor", new Color(0.46f, 0.2f, 0.12f)); m.SetFloat("_Metal", 0.6f); m.SetFloat("_TrimRough", 0.6f);
+                    m.SetColor("_GlassColor", new Color(1.0f, 0.46f, 0.12f)); m.SetFloat("_GlowIntensity", 2.6f);
+                    m.SetFloat("_HullRough", 0.62f); m.SetFloat("_DetailScale", 9f);
+                    break;
+                case "inhumanus":
+                    m.SetColor("_HullColor", new Color(0.86f, 0.85f, 0.82f)); m.SetColor("_HullColor2", new Color(0.7f, 0.7f, 0.72f));
+                    m.SetColor("_TrimColor", new Color(0.62f, 0.16f, 0.14f)); m.SetFloat("_Metal", 0.35f); m.SetFloat("_TrimRough", 0.35f);
+                    m.SetColor("_GlassColor", new Color(1.0f, 0.82f, 0.5f)); m.SetFloat("_GlowIntensity", 2.4f);
+                    m.SetFloat("_HullRough", 0.25f); m.SetFloat("_DetailScale", 6f);
                     break;
                 case "rock":
                     m.SetColor("_HullColor", new Color(0.3f, 0.28f, 0.26f)); m.SetColor("_HullColor2", new Color(0.18f, 0.17f, 0.16f));

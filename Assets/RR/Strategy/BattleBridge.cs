@@ -20,6 +20,12 @@ namespace RR.Strategy
         /// <summary>Per seat, the hex for each entry in army order, or null for Commandfall's automatic deployment.
         /// Stored with the setup so a reload can never redeploy differently.</summary>
         public List<Hex>[] Deployment = { null, null };
+        /// <summary>Both seats are commanded by people at this machine (no AI); the view follows the side to act.</summary>
+        public bool Hotseat;
+        /// <summary>Skirmish scenario id ("passage_challenge", "passage_training"), or null for a campaign battle.</summary>
+        public string Scenario;
+        /// <summary>The galaxy system whose space the battle is fought in (campaign: the engagement's system).</summary>
+        public string SystemId;
     }
 
     public sealed class ShipOutcome
@@ -117,7 +123,7 @@ namespace RR.Strategy
             cfg.MapId = sys.BattlefieldMapId ?? MapLibrary.DefaultOrbitalMapId;
             cfg.TechMode = TechMode.Balanced;
             const int playerSeat = 0;
-            var setup = new BattleSetup { BattleId = $"battle_{e.Id}_d{g.Day}", EngagementId = e.Id, Config = cfg, PlayerSeat = playerSeat };
+            var setup = new BattleSetup { BattleId = $"battle_{e.Id}_d{g.Day}", EngagementId = e.Id, Config = cfg, PlayerSeat = playerSeat, SystemId = e.SystemId };
             var fleets = new[] { player, enemy };
             var uids = new[] { playerUids.ToList(), enemyUids };
             for (int seat = 0; seat < 2; seat++)
@@ -170,7 +176,7 @@ namespace RR.Strategy
         {
             var hexes = setup.Deployment[seat];
             if (hexes == null) return Command.AutoDeploy(seat);
-            var units = s.Units.Where(u => u.Owner == seat).OrderBy(u => u.Id).ToList();
+            var units = s.Units.Where(u => u.Owner == seat && !SliceRules.IsContracted(u)).OrderBy(u => u.Id).ToList();
             return Command.Deploy(seat, units.Select((u, i) => new Placement(u.Id, i < hexes.Count ? hexes[i] : default)));
         }
 

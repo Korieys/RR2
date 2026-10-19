@@ -26,28 +26,33 @@ verified and why.
 
 | Gate item | Status | Evidence |
 |---|---|---|
-| Map validator passes | Existing for current maps | `EveryAuthoredMap_PassesTopologyValidation_AsAuthored`, `DeadEnds_AtMostTwo_AndAllIntentional` |
-| Relevant classes reach objectives | Pending | |
-| A local battle completes with ordinary controls | Pending (automation exists; needs a human-control check) | |
-| Camera and effects do not change legal actions | Pending | |
-| Runtime views: central route, flank, threat preview | Pending | |
+| Map validator passes | Pass | `TradePassage_PassesTheValidator...` (0 dead ends, 3 approaches, 2 cross-links each), vendored `EveryAuthoredMap...`, `DeadEnds_AtMostTwo...` |
+| Relevant classes reach objectives | Pass, with a recorded rule finding | `EverySliceClass_CanReachEveryObjective...`; DIAG movers reach a given objective from a third of the deployment hexes (`DiagonalMovers_AreConfined...`) |
+| A local battle completes with ordinary controls | Pass (automated through the interface entry points); not yet verified by a person | Passage tour: selection, modes, hover previews, `Submit`, result screen, rematch, restart |
+| Camera and effects do not change legal actions | Pass by construction and test | Every order goes through `BattleSession.Submit`; the facing that matters is rules state (`ApplyFacings` follows it; the fire animation's turn is cosmetic); replay from the record is identical |
+| Runtime views: central route, flank, threat preview | Pass | `evidence/p2-5/p02`, `p03`, `p05`, `p06` |
 
 ## Prompt 3: flagship protection
 
 Fixtures, each without a tutorial exception: exposed flagship loses at once; insufficient damage fails; real cover blocks a shot;
 a valid guard intercepts once; an exhausted guard fails; a legal flank defeats protection; simultaneous destruction resolves
-consistently (rule C6). Status: pending. Existing partial coverage: `LeaderElimination_EndsTheBattle...`,
+consistently (rule C6). **Status: pass** (`FlagshipProtectionTests`, 8 tests; the flank fixture also shows the threat analysis finding
+the move-then-strike line). The defeat screen shows the decisive action and the sequence (`evidence/p2-5/p07_result.jpg`). Existing partial coverage: `LeaderElimination_EndsTheBattle...`,
 `DefendedLeader_ADeclaredGuardInterceptsTheLethalShot`, `GuardRules_AreSpecific...`, `ProximityAlone_IsNotProtection`.
 
 ## Prompt 4: two fleets
 
 Both factions playable; tests for thermal boundaries, contract accounting, arrival restrictions, activation interactions, roster
-legality; two materially different legal compositions per faction with tradeoffs; no strictly superior class. Status: pending.
+legality; two materially different legal compositions per faction with tradeoffs; no strictly superior class. **Status: pass for
+everything testable** (`DoctrineTests`, `SliceRosters_AreLegal...`); "no strictly superior class" rests on the authored counters and the
+roles (each class loses something: armour, range, speed or hull), not on measured balance.
 
 ## Prompt 5: flagship encounter and AI
 
 Deployment to result to rematch; at least two viable plans; a failed unsupported rush; a defensive response; AI mirror runs for
-crashes and exploits (not called human playtesting); duration observations. Status: pending. **Checkpoint after this prompt:
+crashes and exploits (not called human playtesting); duration observations. **Status: pass, with honest limits**: the two viable plans
+win against specific defensive mistakes (a forward flagship; a flagship in the east corner) and lose against the careful AI defender;
+durations are automated-play observations only (STATE). **Checkpoint after this prompt:
 evaluate the tactical hook before adding strategic depth.**
 
 ## Prompt 6: campaign loop

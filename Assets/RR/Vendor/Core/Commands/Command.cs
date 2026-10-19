@@ -135,6 +135,15 @@ namespace Commandfall.Core
         /// <summary>A free step or free move granted by a rule (War Momentum, All Hands).</summary>
         FreeMove,
         RoundLimitReached,
+        // ---- Rule and Ruin vertical slice (SliceRules)
+        /// <summary>A capital ship (UnitId) turned to face Amount (0..11).</summary>
+        FacingChanged,
+        /// <summary>Heat of UnitId changed to Amount (overclock or cooling).</summary>
+        HeatChanged,
+        /// <summary>A contracted escort (UnitId) entered the battle at To.</summary>
+        UnitArrived,
+        /// <summary>A contracted escort's (UnitId) entry hex To was blocked; it waits for the next round.</summary>
+        ArrivalDelayed,
     }
 
     /// <summary>Typed, resolved gameplay event. Presentation (animation, VFX, audio, UI) subscribes to these; it never decides outcomes.</summary>

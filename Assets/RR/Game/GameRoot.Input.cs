@@ -29,6 +29,7 @@ namespace RR.Game
             if (kb.escapeKey.wasPressedThisFrame) { if (Scale == ViewScale.Battle && Battle != null) Battle.UndoPick(); else Back(); }
             if (kb.tabKey.wasPressedThisFrame && Scale != ViewScale.Battle) ToggleOverlays();
             if (kb.f5Key.wasPressedThisFrame) SaveGame();
+            if (kb.f6Key.wasPressedThisFrame) ShowPassageMenu();
             if (kb.f9Key.wasPressedThisFrame) LoadGame();
             if (kb.homeKey.wasPressedThisFrame) Recenter();
             if (Scale == ViewScale.Battle && Battle != null && !modal)
@@ -37,6 +38,8 @@ namespace RR.Game
                 if (kb.digit3Key.wasPressedThisFrame) Battle.ToggleAbility();
                 if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) { if (Battle.AbilityMode) Battle.ConfirmAbility(); }
                 if (kb.tKey.wasPressedThisFrame) { Battle.ShowThreat = !Battle.ShowThreat; Battle.RefreshCells(); }
+                if (kb.oKey.wasPressedThisFrame) Battle.ToggleOverclock();
+                if (kb.rKey.wasPressedThisFrame) Battle.ToggleTurn();
                 if (kb.fKey.wasPressedThisFrame && _battleHud != null) _battleHud.CycleSpeed();
             }
             else if (!modal)
@@ -77,7 +80,7 @@ namespace RR.Game
             if (Scale == ViewScale.Battle && Battle != null)
             {
                 var h = overUI ? (Commandfall.Core.Hex?)null : RayHex(pos);
-                Battle.Hover(h);
+                Battle.Hover(Battle.ForcedHover ?? h);   // automation can pin the hover to show a preview
                 if (mouse.leftButton.wasReleasedThisFrame && _leftDown && !_dragged && h.HasValue) Battle.ClickHex(h.Value);
                 if (mouse.rightButton.wasReleasedThisFrame && _rightDown && !_rightDragged) Battle.UndoPick();
             }
