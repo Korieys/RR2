@@ -29,8 +29,10 @@ namespace RR.Game
         {
             Directory.CreateDirectory(dir);
             Automation.UseDir(dir);
-            Note("campaign tour; rules " + RulesVersion.Id);
+            Note("campaign tour; rules " + RulesVersion.Id + "; save " + GameRoot.SavePath);
+            Automation.Environment();
             yield return Wait(2f);
+            yield return Automation.Measure("galaxy, idle", 300);
 
             // 1. A new passage campaign, as the Pygmaei.
             root.StartPassageCampaign(FactionId.Pygmaei);
@@ -40,6 +42,7 @@ namespace RR.Game
             var mine = g.Fleets.First(f => f.OwnerId == g.Player.Id);
             Note($"campaign: player {g.Player.Id}, fleet {mine.Name} at {mine.SystemId} with {mine.Ships.Count} ships; passage {g.Slice.Passages[0].Name}; expedition {Expeditions.Of(g)?.MapId}");
             yield return Automation.Shot(dir, "c01_campaign_start");
+            yield return Automation.Measure("galaxy with the campaign panel", 300);
 
             // 2. The hangar: the flagship, then a refit (afterburners) and its preview on the hull.
             int flag = mine.Ships.First(s => ShipCatalog.IsLeader(s.DefId)).Uid;
@@ -85,6 +88,7 @@ namespace RR.Game
                 if (b == null) { Note("BLOCKER: the campaign battle did not start"); File.WriteAllText(Path.Combine(dir, "tour_log.txt"), Automation.Log.ToString()); Application.Quit(); yield break; }
                 Note($"campaign battle {b.Setup.BattleId} on {b.S.Config.MapId}; capture policy {SliceRules.CaptureEnabled(b.S)}; player modules {string.Join(",", b.S.Units.Where(u => u.Owner == b.PlayerSeat).SelectMany(u => SliceRules.ModulesOf(u.Equipment)))}");
                 yield return Automation.Shot(dir, "c06_campaign_battle");
+                yield return Automation.Measure("campaign battle, idle on the player's turn", 300);
                 yield return SliceAutomation.Pilot(root, 6);
                 yield return Until(() => root.Battle == null || root.Battle.S.IsOver || (!root.Battle.Animating && root.Battle.PlayersTurn), 60);
                 if (root.Battle != null && !root.Battle.S.IsOver)
@@ -172,6 +176,7 @@ namespace RR.Game
                     int enemySeen = b.Seen.Units.Count(u => u.Owner != b.PlayerSeat && u.OnBoard);
                     Note($"expedition battle on {b.S.Config.MapId}, fog {b.S.Config.FogOfWar}: enemy ships on board {enemyOn}, visible to the player {enemySeen}, drawn {enemyDrawn}");
                     yield return Automation.Shot(dir, "c11_expedition_fog");
+                    yield return Automation.Measure("expedition battle under fog", 300);
                     yield return SliceAutomation.Pilot(root, 400);
                     yield return Until(() => root.ResultPending, 120);
                     yield return Wait(0.8f);
@@ -182,6 +187,68 @@ namespace RR.Game
                 }
             }
             else Note("expedition skipped: " + (mine == null ? "no fleet" : ex == null ? "no expedition" : "an engagement is pending"));
+
+            // 7. Home to the shipyard: repair, and fit the salvaged spare module (free once); then the rival's counter-offensive.
+            g = root.G;
+            mine = g.Fleets.FirstOrDefault(f => f.OwnerId == g.Player.Id);
+            if (mine != null && g.PendingEngagement == null)
+            {
+                string home = SliceCampaign.HomeOf(g.Player.Id);
+                if (mine.SystemId != home)
+                {
+                    var back = StrategyRules.OrderMove(g, mine.Id, home);
+                    Note("order home to " + home + ": " + (back.Ok ? "accepted" : back.Reason));
+                    yield return Days(root, () => !mine.Moving && mine.SystemId == home, 180);
+                }
+                var flagRec = mine.Ships.FirstOrDefault(s => ShipCatalog.IsLeader(s.DefId));
+                if (flagRec != null)
+                {
+                    int hpBefore = flagRec.Hp;
+                    var rep = SliceCampaign.Repair(g, flagRec.Uid);
+                    Note($"repair: hull {hpBefore} -> {flagRec.Hp} of {SliceCampaign.MaxHull(g, flagRec)}: " + (rep.Ok ? "repaired" : rep.Reason));
+                    var spare = SliceCampaign.RefitOptions(g, flagRec.Uid).FirstOrDefault(o => o.Module.Id == "ablative_plating");
+                    var credits = g.Player.Stock;
+                    var fitPlating = SliceCampaign.ApplyRefit(g, flagRec.Uid, "ablative_plating");
+                    PlaytestMetrics.Refit(g.Slice.Profile(flagRec.Uid).Name, "ablative_plating", fitPlating.Ok, fitPlating.Reason);
+                    Note("fit the salvaged ablative plating: " + (fitPlating.Ok ? "fitted" : fitPlating.Reason) + "; listed cost " + spare?.Cost + "; paid " + (credits - g.Player.Stock) +
+                         "; modules now " + string.Join(",", g.Slice.Profile(flagRec.Uid).Modules));
+                    root.OpenHangar(flagRec.Uid);
+                    yield return Wait(1.2f);
+                    yield return Automation.Shot(dir, "c13_hangar_after_campaign");
+                    root.UI.CloseModal();
+                }
+                Note("forecast: " + (SliceCampaign.CounterOffensiveForecast(g) ?? "none"));
+                yield return Automation.Shot(dir, "c14_forecast");
+                var go2 = StrategyRules.OrderMove(g, mine.Id, SliceCampaign.PassageSystem);
+                Note("order back to Umbra: " + (go2.Ok ? "accepted" : go2.Reason));
+                int d0 = g.Day;
+                yield return Days(root, () => false, 240);
+                Note($"after {g.Day - d0} more days: " + (g.PendingEngagement != null ? "second encounter " + g.PendingEngagement.Id + " at " + g.PendingEngagement.SystemId : "no second encounter"));
+                if (g.PendingEngagement != null)
+                {
+                    yield return Until(() => !root.Busy && root.UI.ModalOpen && root.Scale == ViewScale.System, 60);
+                    yield return Wait(1.0f);
+                    yield return Automation.Shot(dir, "c15_second_encounter_prep");
+                    root.UI.CloseModal();
+                    yield return Until(() => !root.Busy, 30);
+                    root.StartBattle(BattleBridge.AutoSelect(g, mine));
+                    yield return Until(() => root.Scale == ViewScale.Battle && root.Battle != null && !root.Busy && !root.Battle.Animating, 60);
+                    if (root.Battle != null)
+                    {
+                        Note("second battle " + root.Battle.Setup.BattleId + ": player modules " + string.Join(",", root.Battle.S.Units.Where(u => u.Owner == root.Battle.PlayerSeat).SelectMany(u => SliceRules.ModulesOf(u.Equipment))));
+                        yield return SliceAutomation.Pilot(root, 400);
+                        yield return Until(() => root.ResultPending, 300);
+                        yield return Wait(0.8f);
+                        Note("second battle decisive: " + root.Battle.Session.Decisive);
+                        yield return Automation.Shot(dir, "c16_second_result");
+                        root.CompleteResult();
+                        yield return Until(() => !root.Busy && root.Scale != ViewScale.Battle, 40);
+                        g = root.G;
+                        var p2 = g.Slice.Passages[0];
+                        Note($"after the second battle: access {p2.AccessHolderId}; history {g.Slice.History.Count} events; standing {g.Slice.RelationOf("pygmaei", "inhumanus").Opinion(g.Day)}");
+                    }
+                }
+            }
 
             var metrics = PlaytestMetrics.FilePath;
             Note("local metrics: " + (metrics != null && File.Exists(metrics) ? File.ReadAllLines(metrics).Length + " lines in " + metrics : "none"));

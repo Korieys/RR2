@@ -91,10 +91,18 @@ briefing, reconnaissance, the fogged battle with 2 of 3 enemy ships visible and 
 ## Prompt 11: premium pass
 
 Genuine before and after runtime evidence across the loop, a visual regression check, measured performance where available,
-an honest asset-gap list. Status: pending.
+an honest asset-gap list. **Status: pass, with the scope stated.** Before and after frames of the same tour steps and a visual regression
+check by eye (no regression found), measured frame times on this machine (median 1.6 to 2.6 ms uncapped, p99 at most 6.2 ms), the
+asset-gap list, and the design reference rendered from the shipped models ([STATE](STATE.md#prompt-11-result-2026-10-19-presentation-pass-honestly-scoped),
+[DESIGN_REFERENCE](DESIGN_REFERENCE.md)). The art is first-pass and is not claimed as premium.
 
 ## Prompt 12: validation and build
 
 No known blocker in the primary loop; results and saves consistent; every claimed differentiator demonstrable; STATE updated with
-implemented, verified, blocked and deferred items. Status: pending. **Checkpoint: assess the whole demonstration, not a feature
-count.**
+implemented, verified, blocked and deferred items. **Status: pass for everything a build and its tests can show.** No known blocker
+in the primary loop (the full journey ran through the game's entry points with 0 exceptions, including a second encounter); results and
+saves consistent (applied once, identical digests, records that replay exactly; damaged and tampered saves refused); every claimed
+differentiator demonstrated (deterministic previews, leader elimination, real protection, asymmetric fleets, persistent flagship,
+terms and capture, consequences, delegation to the same AI); 245/245 tests; packaged locally with its source revision. Usability and
+balance are **not verified**: no independent tester has played it ([PLAYTEST_PROTOCOL](PLAYTEST_PROTOCOL.md)). **Checkpoint: assess
+the whole demonstration, not a feature count.** See [STATE](STATE.md#status-at-the-end-of-the-pack-2026-10-19).

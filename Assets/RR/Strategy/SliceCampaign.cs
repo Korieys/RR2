@@ -210,6 +210,7 @@ namespace RR.Strategy
                 if (pol != null) pol.Stock = pol.Stock + new Resources(0, 0, p.TollPerDay, 0);
             }
             foreach (var r in s.Relations) r.Modifiers.RemoveAll(m => m.ExpiresDay <= g.Day);
+            CounterOffensives(g);
         }
 
         // ------------------------------------------------------------------ previews

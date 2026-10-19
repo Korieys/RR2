@@ -1,6 +1,6 @@
 # Vertical slice state
 
-Updated 2026-10-19, end of Prompt 0 (audit). Branch `claude/rule-ruin-vertical-slice-62633b`, based on `b23e354`.
+Updated 2026-10-19, end of Prompt 12 (the whole pack; Prompt 0 audit below). Branch `claude/rule-ruin-vertical-slice-62633b`, based on `b23e354`.
 
 | Milestone | State |
 |---|---|
@@ -8,7 +8,7 @@ Updated 2026-10-19, end of Prompt 0 (audit). Branch `claude/rule-ruin-vertical-s
 | Prompt 1: authoritative deterministic combat | Done and verified (see "Prompt 1 result"). |
 | Prompts 2 to 5: battlefield, flagship protection, two fleets, the encounter | Done and verified (see "Prompts 2 to 5 result"). Checkpoint after Prompt 5: the tactical hook works by the rules; human playtesting has not happened. |
 | Prompts 6 to 10: campaign, capital ships, negotiation and capture, consequences, the Eclipse expedition | Done and verified in tests and an automated tour (see "Prompts 6 to 10 result"). Not yet played by a person. |
-| Prompts 11 and 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
+| Prompts 11 and 12: presentation pass, validation and packaging | Done, honestly scoped (see "Prompt 11 result", "Prompt 12 result" and "Status at the end of the pack"). Human playtesting and premium art are blocked on people. |
 
 ## Verified baseline
 
@@ -221,6 +221,139 @@ the AI never proposes terms itself (it only answers); the in-battle offer is los
 (one extra offer becomes possible); a ship that fires under fog reveals where it fired from, and an order into a hex an unseen ship
 holds is refused (VS-26); fog has no hex shading, only hidden ships; the fleet's voyage to Umbra takes 29 days, which is slow at
 the default speed.
+
+## Prompt 11 result (2026-10-19): presentation pass, honestly scoped
+
+The pack asks for a premium pass. What was done is a **targeted pass on the slice's own surfaces**, driven by defects seen in runtime
+frames, not a new design system: the existing UI kit and the uncommitted Codex UI work in the main checkout are left alone while
+CR-01 is open, so a shared typography and spacing overhaul would collide with that work. The art remains first-pass.
+
+**Changed in the game:**
+* The battlefield stays dominant: the campaign panel is compact by default (passage, objective, actions; details on request) and
+  hides while a window is open; the encounter's stakes moved into battle preparation, where the decision is made.
+* A skippable **decisive-action camera** (about two seconds; click, Space, Escape or Enter skips it; reduced motion skips it): it
+  frames the already resolved decisive action, with the rules' own description, before the result screen. It never changes state.
+* Legibility: form inputs (names, terms) are light on dark; the result no longer repeats the decisive action; the top bar, key
+  systems and toasts say what is true for the current campaign; access wording says "you" or "them".
+* Modules are fitted to each hull from measured data, so a refit visibly changes the silhouette without parts floating.
+* Ownership cues stay colour-independent (dashed enemy rings, rim tint, cards); under fog, unseen ships are absent rather than
+  dimmed, and their cards say so.
+
+**Ship-design reference package:** [DESIGN_REFERENCE](DESIGN_REFERENCE.md): silhouettes to scale (top, side, and at 96 px),
+shaded views, both flagships with each module, configuration identifiers, hull and module separation, and what could inform
+miniatures. Rendered from the shipped FBX files by `Tools/Blender/rr_design_sheet.py`; not print- or manufacturing-ready.
+
+**Measured performance** (final build, `-rrCampaignTour -rrUncapped`, vsync off, no frame cap; RTX 5060, i5-14400F, 32 GB,
+Windows 11 26200, Direct3D 12, 1920x1080 windowed, quality Ultra, render scale 1.0; [log](evidence/p11-12/campaign_tour_log.txt)):
+
+| Scene | Median | p95 | p99 | Max | Notes |
+|---|---|---|---|---|---|
+| Galaxy, idle | 2.62 ms | 5.54 ms | 5.86 ms | 7.01 ms | 3 gen-0 GCs in 300 frames |
+| Galaxy with the campaign panel | 2.56 ms | 5.43 ms | 5.53 ms | 7.15 ms | 2 gen-0 GCs |
+| Campaign battle, player's turn | 1.65 ms | 5.43 ms | 6.15 ms | 6.17 ms | no GC |
+| Expedition battle under fog | 1.65 ms | 5.38 ms | 6.12 ms | 6.15 ms | no GC |
+
+The provisional target (stable 60 FPS at 1080p, 16.7 ms) is met on this machine with a large margin in these scenes; that is one
+machine, idle-frame measurements, not a claim for lower-end hardware. The passage battle with vsync on held 144 Hz (6.94 ms median),
+the same as before the pass. Not measured: frames during heavy combat effects, the AI's worker-thread decisions (about 2 s at worst,
+measured in Prompt 5), memory over a long session (the existing `-rrSoak` was not rerun). No optimisation was needed or done.
+
+**Visual regression check:** before and after pairs of the same tour steps:
+[passage start](evidence/p11-12/compare_p01_passage_start.jpg), [threat view](evidence/p11-12/compare_p05_threat_view.jpg),
+[passage result](evidence/p11-12/compare_p07_result.jpg), [campaign panel](evidence/p11-12/compare_c01_campaign_panel.jpg),
+[campaign result](evidence/p11-12/compare_c07_campaign_result.jpg). The battle views are unchanged apart from the new delegate buttons;
+the campaign panel is smaller; the campaign result no longer repeats the decisive action. No regression found by eye. (The passage
+tour's turn-preview line is empty in both runs: the tour samples it during the enemy's activation; a tour weakness, not a game change.)
+
+### Asset gaps
+
+| Gap | Severity | Note |
+|---|---|---|
+| All ten slice classes, the escort token and the modules are first-pass generated art, unapproved | High for a premium slice | Silhouettes separate the factions at 96 px; within a faction, cruiser, destroyer and frigate share one outline family ([DESIGN_REFERENCE](DESIGN_REFERENCE.md)) |
+| Modules are generic, not faction-styled; on the Inhumanus flagship they ride outboard of the gravity rings | Medium | Needs per-faction module art |
+| No destruction or wreck effect for a flagship; the decisive-action camera arrives after the ship has vanished | Medium | A wreck model and a break-up effect would make the decisive moment legible |
+| No fog-of-war hex shading; only unseen ships are hidden | Medium | Players cannot see the edge of their sensors |
+| No hangar backdrop or lighting rig; the preview renders on a flat colour | Low | |
+| No sound for refits, terms, capture or the decisive camera | Low | Existing UI sounds are reused |
+| The emblems and the faction colours are the existing provisional ones (D-09) | Low | |
+| No licensed third-party ship assets were used or bought | — | Pack: no paid purchases |
+
+## Prompt 12 result (2026-10-19)
+
+**The complete journey, through the game's own entry points** (final build, `-rrCampaignTour`; [log](evidence/p11-12/campaign_tour_log.txt),
+0 exceptions): select the Pygmaei; inspect and refit the named flagship (afterburners); commit to the passage objective; battle
+preparation shows the stakes; a mid-battle save and load restores the same battle; the rest of the battle is **delegated**; the
+decisive-action camera, then the result (Fiduciary Dawn destroyed, access won, standing −20, a wreck); history; a strategic save and
+load with an identical digest; the optional Eclipse expedition under fog (secured, a spare module); home to the shipyard (repair
+refused correctly: the hull was whole) and the spare module fitted free; the Inhumanus **counter-offensive** (it commissioned a
+replacement flagship, a new ship, and declared war to retake the passage); a **second encounter** at Umbra on day 87, lost on the
+round limit, and access passing to the Inhumanus. Frames: [delegated](evidence/p11-12/c06b_delegated.jpg),
+[decisive camera](evidence/p11-12/c06c_decisive_camera.jpg), [hangar after the campaign](evidence/p11-12/c13_hangar_after_campaign.jpg),
+[second encounter](evidence/p11-12/c15_second_encounter_prep.jpg), [second result](evidence/p11-12/c16_second_result.jpg).
+The player's orders came from the slice AI (a pilot), not a person.
+
+**Added:**
+* **Bounded delegation** (the panel's Delegate buttons, G): the same `SliceAI`, the same rules and the same fogged knowledge play the
+  player's side until the end of the round or the battle; the player can take command back at any decision; the disclosure is shown
+  whenever it is active. No autoresolve and no casualty promises exist.
+* **The rival's counter-offensive** (`SliceCampaign.Rival`, experimental): 20 days after losing the passage in battle the loser comes
+  back, commissioning a replacement flagship first if it must (and can pay); announced in advance in the campaign panel; prevented by
+  a truce; bounded by the three-attempt limit; keyed so it happens once.
+* **Local playtest metrics** (`PlaytestMetrics`): `playtest_metrics.jsonl` beside the save, labelled `automation` or `player`; time to
+  the first meaningful decision, battle duration and orders, invalid actions, previews inspected, refits, result type; `-rrNoMetrics`.
+* `-rrSavePath` now works (D-18).
+* **Cold-playtest protocol:** [PLAYTEST_PROTOCOL](PLAYTEST_PROTOCOL.md).
+
+**Failure, abuse and incentive checks** (kept as automated regressions; `ValidationTests`, 10): damaged saves (empty, truncated,
+wrong schema, newer version) refused with a reason and never an exception; a tampered battle record refused while the untouched record
+restores exactly; repeated result submission applied once; rapid repeated refits and declarations take effect once and are paid once;
+depleted resources refuse refits cleanly; contract and module duplication refused; overclocking cannot be sustained (after the first
+two, at most one activation in two, each paid for with an overheated activation); terms are not a free win at the start of a battle; a
+second encounter after a win; no counter-offensive during a truce. Already covered elsewhere: leader defeat, failed boarding
+(`LawfulCapture...`), legal retreat, rejected negotiation, simultaneous leader destruction, mid-battle reloads, salvage that cannot
+loop, guard interception once per round, the unsupported flagship rush losing to a careful defence. No dominant strategy was found in
+these checks; that is not a balance claim (see below).
+
+**Tests:** 245/245 (146 vendored Commandfall, 99 slice), run outside the editor with the command in [PROJECT_CONTRACT](PROJECT_CONTRACT.md).
+
+**Packaging:** `Builds/Release/RuleAndRuin_VerticalSlice_<revision>.zip`, built through the project's pipeline from a committed
+revision, with launch instructions, controls, reset instructions, a rules summary, known issues, test results and the source revision.
+Kept local; nothing was uploaded or published.
+
+## Status at the end of the pack (2026-10-19)
+
+**Implemented and verified** (tests and automated runtime tours): authoritative deterministic battles with records, replay and
+mid-battle saves (Prompt 1); the passage battlefield, capital arcs, flagship protection and the Command Threat analysis (2, 3); two
+asymmetric fleets with overclock and contracts (4); the encounter, its variants and the slice AI (5); the passage campaign loop with
+saves at every stage (6); named, refitted, repaired flagships with service records (7); negotiation and lawful capture (8); wrecks,
+salvage, standing and history (9); the fogged Eclipse expedition (10); the decisive-action camera, the compact panel, module fitting and
+legibility fixes (11); delegation, the counter-offensive, local metrics, abuse regressions and packaging (12).
+
+**Not verified by a person (blocked on testers):** usability, readability at play distance, whether players identify leaders and
+understand previews, whether the campaign reads as one story, balance, and session length. No independent tester has played the slice;
+[PLAYTEST_PROTOCOL](PLAYTEST_PROTOCOL.md) is ready. Automated tours are technical verification only.
+
+**Blocked:**
+* CR-01: the main checkout's uncommitted Codex work (UI kit, unit models, ground exercises) is still outside any commit; merging this
+  branch with it needs the creator's decision. Ground gameplay exists only in that uncommitted work, and online play only in the separate
+  Commandfall game, so neither has smoke tests on this branch.
+* Premium art: approved Pygmaei and Inhumanus ship designs, emblems and module art.
+
+**Deliberately deferred:**
+* An interactive deployment screen and contract choice in campaign battle preparation (curated or automatic deployment only).
+* The AI proposing terms itself; capture and settlement shown in an automated runtime tour (both are covered by tests).
+* Fog-of-war hex shading; an uncontested rival fleet taking access without a battle (it waits at the passage).
+* Porting the vendored rules patches (vs-2, vs-3) upstream to Commandfall (D-10).
+* A shared design-system pass over every surface (after CR-01).
+
+**Known issues:** listed in [KNOWN_ISSUES](KNOWN_ISSUES.md) and shipped with the package.
+
+**Checkpoint after Prompt 12, the whole demonstration:** the central proof the pack names, "I changed my ship, created a tactical
+opening, forced an outcome, and returned to a galaxy that reflected what I did", is mechanically complete in one continuous run: the
+refit is in the battle, the decisive action is named and shown, and the galaxy afterwards shows access, standing with its cause, a wreck,
+history and a rival who comes back. What is not established is that a person would say that sentence: the slice has not been played by
+anyone outside development, the art is first-pass, and balance rests on AI and scripted pilots. This slice is complete as a
+demonstration; the flagship game is not.
 
 ## Prompt 1 plan (as written at the end of Prompt 0)
 

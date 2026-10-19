@@ -1,0 +1,70 @@
+campaign tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-3; save C:\Users\jacob\AppData\Local\Temp\claude\E--ClaudeCode-RR3--claude-worktrees-rule-ruin-vertical-slice-62633b\f56dfe6b-4573-4457-9767-ea66e201dae2\scratchpad\ct4\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 0, target fps -1, UI scale 1
+perf galaxy, idle: median 2.62 ms (381 fps), p95 5.54 ms, p99 5.86 ms, max 7.01 ms over 299 frames; gen0 GCs 3; managed heap 7.6 MB
+campaign: player pygmaei, fleet Forgefall Raiders at forgefall with 8 ships; passage The Umbra passage; expedition eclipse_drift_b
+shot c01_campaign_start
+perf galaxy with the campaign panel: median 2.56 ms (391 fps), p95 5.43 ms, p99 5.53 ms, max 7.15 ms over 299 frames; gen0 GCs 2; managed heap 19.3 MB
+shot c02_hangar
+refit options: afterburners cost E10 M20 C30 I0; ablative_plating cost E0 M40 C30 I0; heavy_battery cost E10 M30 C40 I0
+refit afterburners: fitted; modules now afterburners
+shot c03_hangar_refitted
+declared; order to Umbra: accepted
+after 29 days: pending engagement eng_3 at umbra
+  stake: Forgefall Raiders (8 ships) against Convoy Escort (7 ships) at Umbra. Destroying a flagship ends the battle at once.
+  stake: The winner takes access through The Umbra passage (+3 credits a day) and a prize of 40 credits. Access is not ownership: no planet changes hands.
+  stake: The loser's surviving ships withdraw to their previous system; they are not destroyed. Destroyed ships stay destroyed.
+  stake: A battle saved part-way through reloads exactly; withdrawing now gives up the passage without losses.
+shot c04_battle_prep_stakes
+shot c05_terms_form
+campaign battle battle_eng_3_d29 on trade_passage; capture policy True; player modules afterburners
+shot c06_campaign_battle
+perf campaign battle, idle on the player's turn: median 1.65 ms (605 fps), p95 5.43 ms, p99 6.15 ms, max 6.17 ms over 299 frames; gen0 GCs 0; managed heap 10.3 MB
+campaign battle save and load after 10 orders: restored the same battle
+delegated the rest of the battle: True; player input blocked: True
+shot c06b_delegated
+shot c06c_decisive_camera
+campaign battle applied: CommanderEliminated | Decisive action: Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win. | Battle of Umbra: Forgefall Raiders (Pygmaei Sector) defeated Convoy Escort (Inhumanus Dominion). | Pygmaei Sector took access through The Umbra passage. | The Inhumanus Dominion flagship Fiduciary Dawn was destroyed at Umbra; its wreck remains.
+decisive-action camera shown before the result: True
+decisive: Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win.
+shot c07_campaign_result
+after the battle: access pygmaei; objective Secured; wrecks 1; standing -20; history 4 events
+  history: day 0: Pygmaei Sector declared war over access through The Umbra passage (Umbra).
+  history: day 29: Battle of Umbra: Forgefall Raiders (Pygmaei Sector) defeated Convoy Escort (Inhumanus Dominion). Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win.
+  history: day 29: Pygmaei Sector took access through The Umbra passage.
+  history: day 29: The Inhumanus Dominion flagship Fiduciary Dawn was destroyed at Umbra; its wreck remains.
+shot c08_after_battle
+shot c09_history
+strategic save and load: identical digest
+order to Gloam: accepted
+fleet at gloam
+shot c10_expedition_briefing
+reconnaissance: charted
+expedition battle on eclipse_drift_b, fog True: enemy ships on board 3, visible to the player 2, drawn 2
+shot c11_expedition_fog
+perf expedition battle under fog: median 1.65 ms (604 fps), p95 5.38 ms, p99 6.12 ms, max 6.15 ms over 299 frames; gen0 GCs 0; managed heap 10.5 MB
+expedition over: Secured; Secured the derelict at Gloam and recovered a damaged Ablative plating, fitted free at your next shipyard refit.
+shot c12_expedition_result
+expedition: Secured; Secured the derelict at Gloam and recovered a damaged Ablative plating, fitted free at your next shipyard refit.
+order home to forgefall: accepted
+repair: hull 18 -> 18 of 18: The hull is already at full strength.
+fit the salvaged ablative plating: fitted; listed cost E0 M0 C0 I0; paid E0 M0 C0 I0; modules now ablative_plating,afterburners
+shot c13_hangar_after_campaign
+forecast: none
+shot c14_forecast
+order back to Umbra: accepted
+after 29 more days: second encounter eng_12 at umbra
+shot c15_second_encounter_prep
+second battle battle_eng_12_d87: player modules ablative_plating,afterburners
+campaign battle applied: RoundLimitObjectives | Decisive action: Proxy Frigate fired Proxy Battery at Revenant Command Ship (flagship): 3 raw − 2 armour = 1; Revenant Command Ship hull 4 → 3. The round limit was reached; objectives, then surviving strength, decided it for Convoy Escort. | Battle of Umbra: Convoy Escort (Inhumanus Dominion) defeated Forgefall Raiders (Pygmaei Sector). | Inhumanus Dominion took access through The Umbra passage.
+second battle decisive: Proxy Frigate fired Proxy Battery at Revenant Command Ship (flagship): 3 raw − 2 armour = 1; Revenant Command Ship hull 4 → 3. The round limit was reached; objectives, then surviving strength, decided it for Convoy Escort.
+shot c16_second_result
+after the second battle: access inhumanus; history 10 events; standing -20
+local metrics: 7 lines in C:\Users\jacob\AppData\Local\Temp\claude\E--ClaudeCode-RR3--claude-worktrees-rule-ruin-vertical-slice-62633b\f56dfe6b-4573-4457-9767-ea66e201dae2\scratchpad\ct4\playtest_metrics.jsonl
+  {"t":"2026-10-19T09:31:37","source":"automation","event":"first_decision","what":"refit","seconds":"22.2"}
+  {"t":"2026-10-19T09:31:37","source":"automation","event":"refit","ship":"Ember Tyrant","module":"afterburners","ok":"true","reason":""}
+  {"t":"2026-10-19T09:33:43","source":"automation","event":"battle_end","battle":"battle_eng_3_d29","kind":"campaign","result":"CommanderEliminated","player_won":"true","seconds":"62.6","first_order_seconds":"","orders":"0","invalid_actions":"0","previews_inspected":"0","decisive":"Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win."}
+  {"t":"2026-10-19T09:35:26","source":"automation","event":"battle_end","battle":"battle_exp_gloam_d43","kind":"expedition","result":"CommanderEliminated","player_won":"true","seconds":"53.7","first_order_seconds":"5.6","orders":"23","invalid_actions":"0","previews_inspected":"0","decisive":"Revenant Command Ship (flagship) fired Revenant Salvo at Executive Flagship (flagship): 7 raw − 2 armour = 5; Executive Flagship hull 2 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win."}
+  {"t":"2026-10-19T09:35:33","source":"automation","event":"refit","ship":"Ember Tyrant","module":"ablative_plating","ok":"true","reason":""}
+  {"t":"2026-10-19T09:37:12","source":"automation","event":"battle_end","battle":"battle_eng_12_d87","kind":"campaign","result":"RoundLimitObjectives","player_won":"false","seconds":"87.0","first_order_seconds":"1.1","orders":"38","invalid_actions":"0","previews_inspected":"0","decisive":"Proxy Frigate fired Proxy Battery at Revenant Command Ship (flagship): 3 raw − 2 armour = 1; Revenant Command Ship hull 4 → 3. The round limit was reached; objectives, then surviving strength, decided it for Convoy Escort."}
+campaign tour complete

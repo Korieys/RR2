@@ -87,6 +87,18 @@ and the first shot arrives about two minutes after launch.
 ./Builds/VS/RuleAndRuin.exe -rrTour <absolute dir> -rrSavePath <absolute disposable.json> -screen-fullscreen 0 -screen-width 1920 -screen-height 1080
 ```
 
+Slice tours (same rules: absolute paths, a disposable save). `-rrSavePath` is honoured only from commit `991aafa` on (D-18); before that, tours wrote the default slot.
+
+```bash
+./Builds/VS/RuleAndRuin.exe -rrCampaignTour <absolute dir> -rrSavePath <absolute disposable.json> -screen-fullscreen 0 -screen-width 1920 -screen-height 1080
+```
+
+```bash
+./Builds/VS/RuleAndRuin.exe -rrPassageTour <absolute dir> -rrSavePath <absolute disposable.json> -screen-fullscreen 0 -screen-width 1920 -screen-height 1080
+```
+
+Add `-rrUncapped` (vsync off, no frame cap) for frame-time measurements and `-rrNoMetrics` to suppress `playtest_metrics.jsonl`. Ship-design renders and module fits: `Tools/Blender/rr_design_sheet.py`, `Tools/Blender/rr_mounts.py` ([DESIGN_REFERENCE](DESIGN_REFERENCE.md)).
+
 ## Working rules
 
 * **One integration owner** for shared simulation and saves: `Assets/RR/Vendor/Core`, `Assets/RR/Strategy` (in particular

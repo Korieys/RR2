@@ -97,6 +97,8 @@ namespace RR.Game
                 foreach (var m in rel.Modifiers.Where(x => x.ExpiresDay > g.Day))
                     _body.Add(Line($"  {m.Amount:+0;-0}: {m.Cause} ({m.ExpiresDay - g.Day} days left)", 11, Muted));
             }
+            var forecast = SliceCampaign.CounterOffensiveForecast(g);
+            if (forecast != null) _body.Add(Line(forecast, 12, new Color(1f, 0.7f, 0.55f)));
             var obj = s.Objectives.LastOrDefault(o => o.PolityId == me);
             var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.flexWrap = Wrap.Wrap;
             if (obj == null || obj.Status == ObjectiveStatus.Lost)

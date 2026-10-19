@@ -70,7 +70,7 @@ namespace RR.Game
             _turn = UIX.Btn("Turn (R)", () => _b.ToggleTurn()); row.Add(_turn);
             _board = UIX.Btn("Board (B)", () => _b.ToggleBoard()); row.Add(_board);
             _offer = UIX.Btn("Offer terms", () => OfferTerms?.Invoke()); row.Add(_offer);
-            _delegate = UIX.Btn("Delegate this round", () => { if (_b.Delegated) _b.StopDelegating(); else _b.Delegate(false); _sig = -1; }); row.Add(_delegate);
+            _delegate = UIX.Btn("Delegate this round (G)", () => { if (_b.Delegated) _b.StopDelegating(); else _b.Delegate(false); _sig = -1; }); row.Add(_delegate);
             _delegateAll = UIX.Btn("Delegate the battle", () => { _b.Delegate(true); _sig = -1; }); row.Add(_delegateAll);
             _delegation = Line("", 12, new Color(0.65f, 0.85f, 1f)); _panel.Add(_delegation);
             row.Add(UIX.Btn("Doctrine", () => { _doctrineOpen = !_doctrineOpen; _sig = -1; }));
@@ -105,7 +105,7 @@ namespace RR.Game
             _turn.text = _b.TurnMode ? "Cancel turn (R)" : "Turn (R)";
             bool canDelegate = !_b.Setup.Hotseat && !S.IsOver;
             _delegate.style.display = canDelegate ? DisplayStyle.Flex : DisplayStyle.None;
-            _delegate.text = _b.Delegated ? "Take command back" : "Delegate this round";
+            _delegate.text = _b.Delegated ? "Take command back (G)" : "Delegate this round (G)";
             _delegate.tooltip = _b.Delegated ? "Your orders return to you from the next decision." : BattlePresentation.DelegateDisclosure;
             _delegateAll.style.display = canDelegate && !_b.Delegated ? DisplayStyle.Flex : DisplayStyle.None;
             _delegateAll.tooltip = BattlePresentation.DelegateDisclosure;

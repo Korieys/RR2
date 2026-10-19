@@ -139,5 +139,50 @@ namespace RR.Tests
             Assert.IsTrue(v.Valid, v.Reason);
             Assert.IsFalse(v.Accepted, "with no pressure on its flagship, the other side does not hand over the passage: " + v.Reason);
         }
+
+        [Test]
+        public void AfterAWin_TheRivalReplacesItsFlagshipAndComesBack_ForASecondEncounter()
+        {
+            var g = Camp.New();
+            Camp.ToContact(g);
+            var (setup, b) = Camp.Begin(g);
+            Camp.Play(b, s => new SliceAI().Choose(s), Camp.Idle);
+            Assert.AreEqual(setup.PlayerSeat, b.State.Winner, "the player's side wins against an idle defender");
+            Assert.IsTrue(BattleBridge.Apply(g, setup, BattleBridge.Extract(setup, b)).Ok);
+            var p = g.Slice.Passage(SliceCampaign.PassageSystem);
+            Assert.AreEqual(g.Player.Id, p.AccessHolderId);
+            var day = SliceCampaign.CounterOffensiveDay(g, p);
+            Assert.IsNotNull(day, "the loser will come back, and the player is told when");
+            StringAssert.Contains("day " + day, SliceCampaign.CounterOffensiveForecast(g));
+            for (int i = 0; i < 120 && g.PendingEngagement == null; i++)
+            {
+                StrategyRules.AdvanceDay(g);
+                if (i == 10) g = Camp.Reload(g);   // a save part-way through changes nothing
+            }
+            Assert.IsNotNull(g.PendingEngagement, "a second encounter at the passage");
+            Assert.AreEqual(SliceCampaign.PassageSystem, g.PendingEngagement.SystemId);
+            Assert.GreaterOrEqual(g.Day, day.Value);
+            var rival = Camp.Theirs(g);
+            var flag = rival.Ships.Single(s => ShipCatalog.IsLeader(s.DefId));
+            var prof = g.Slice.Profile(flag.Uid);
+            Assert.IsNotNull(prof, "the replacement has its own record");
+            Assert.IsNull(prof.Name, "a replacement is a new ship, not the old one renamed");
+            Assert.AreEqual(1, g.Slice.Objectives.Count(o => o.PolityId != g.Player.Id), "declared once");
+            Camp.NoDuplicateShips(g);
+        }
+
+        [Test]
+        public void ASettlement_BringsATruce_AndNoCounterOffensive()
+        {
+            var g = Camp.New();
+            var e = Camp.ToContact(g);
+            var o = new Offer { Id = "yield", FromSeat = 0, ConcederSeat = 1 };   // the rival yields the passage
+            Assert.IsTrue(SliceCampaign.SettleBeforeBattle(g, e.Id, o).Ok);
+            var p = g.Slice.Passage(SliceCampaign.PassageSystem);
+            Assert.IsNull(SliceCampaign.CounterOffensiveDay(g, p), "a truce holds");
+            for (int i = 0; i < 60; i++) StrategyRules.AdvanceDay(g);
+            Assert.IsNull(g.PendingEngagement);
+            Assert.IsFalse(g.Slice.Objectives.Any(x => x.PolityId != g.Player.Id), "no counter-declaration during the truce");
+        }
     }
 }

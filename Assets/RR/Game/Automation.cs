@@ -110,7 +110,7 @@ namespace RR.Game
                 System.GC.CollectionCount(0) - gc0, System.GC.GetTotalMemory(false) / 1048576.0));
         }
 
-        static void Environment()
+        internal static void Environment()
         {
             Note("device " + SystemInfo.graphicsDeviceName + ", " + SystemInfo.graphicsDeviceType + ", " + SystemInfo.processorType + ", " + SystemInfo.systemMemorySize + " MB RAM, " + SystemInfo.operatingSystem);
             var root = GameRoot.I;
