@@ -199,6 +199,7 @@ namespace RR.Strategy
                     ["state"] = e.State.ToString(), ["battle"] = e.BattleId, ["summary"] = e.ResultSummary,
                 }).ToList(),
                 ["appliedBattles"] = g.AppliedBattles.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
+                ["battle"] = g.ActiveBattle == null ? null : BattleSession.ToData(g.ActiveBattle),
                 ["log"] = g.Log.Skip(Math.Max(0, g.Log.Count - 200)).Select(l => (object)new Dictionary<string, object> { ["day"] = l.Day, ["kind"] = l.Kind, ["text"] = l.Text }).ToList(),
             };
             return Json.Write(root);
@@ -279,6 +280,16 @@ namespace RR.Strategy
                     Day = e.I("day"), State = En<EngagementState>(e.S("state")), BattleId = e.S("battle"), ResultSummary = e.S("summary") });
             foreach (var b in r.A("appliedBattles")) g.AppliedBattles.Add((string)b);
             foreach (IDictionary<string, object> l in r.A("log")) g.Log.Add(new LogEntry { Day = l.I("day"), Kind = l.S("kind"), Text = l.S("text") });
+            // A battle in progress arrived without a version bump: it is optional, and older saves have none.
+            var battle = r.O("battle");
+            if (battle != null)
+            {
+                g.ActiveBattle = BattleSession.FromData(battle, out error);
+                if (g.ActiveBattle == null) return null;
+                var e = g.GetEngagement(g.ActiveBattle.Setup.EngagementId);
+                if (e == null || e.State != EngagementState.Pending || g.AppliedBattles.Contains(g.ActiveBattle.Setup.BattleId))
+                { error = "The save holds a battle whose engagement is no longer pending."; return null; }
+            }
             return g;
         }
 

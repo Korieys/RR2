@@ -202,6 +202,9 @@ namespace RR.Strategy
         public List<Engagement> Engagements = new List<Engagement>();
         public HashSet<string> AppliedBattles = new HashSet<string>(StringComparer.Ordinal);
         public List<LogEntry> Log = new List<LogEntry>();
+        /// <summary>A battle in progress when the game was saved (setup, accepted commands and hashes), or null. Optional
+        /// in the version 1 format: older saves have none.</summary>
+        public BattleSnapshot ActiveBattle;
 
         public Polity GetPolity(string id) => Polities.FirstOrDefault(p => p.Id == id);
         public Polity Player => Polities.First(p => p.PlayerControlled);

@@ -234,16 +234,24 @@ namespace RR.Game
             string err;
             _setup = BattleBridge.Prepare(G, e, selection, out err);
             if (_setup == null) { UI.Strategy.Toast(err, "bad"); Audio.Play("ui_invalid"); yield break; }
-            var state = BattleBridge.CreateState(_setup, out err);
-            if (state == null) { UI.Strategy.Toast(err, "bad"); yield break; }
-            Busy = true;
+            var session = BattleSession.Begin(_setup, out err);
+            if (session == null) { UI.Strategy.Toast(err, "bad"); yield break; }
             UI.CloseModal();
             Audio.Play("battle_commit");
+            yield return EnterBattleRoutine(session);
+        }
+
+        /// <summary>Shows a battle session in the current system: a new battle or one restored from a save.</summary>
+        IEnumerator EnterBattleRoutine(BattleSession session)
+        {
+            _setup = session.Setup;
+            var e = G.GetEngagement(_setup.EngagementId);
+            Busy = true;
             yield return CaptureClean();
             var frame = _frame;
             UI.FadeFrom(frame, 60f);
             LocalSystem.gameObject.SetActive(false);
-            Battle = BattlePresentation.Build(this, _setup, state, G.GetSystem(e.SystemId), WorldRoot);
+            Battle = BattlePresentation.Build(this, session, G.GetSystem(e.SystemId), WorldRoot);
             Battle.transform.position = new Vector3(0, 0, 0);
             Scale = ViewScale.Battle;
             _resultShown = false;
@@ -310,35 +318,65 @@ namespace RR.Game
 
         public void SaveGame()
         {
-            if (Scale == ViewScale.Battle) { UI.Strategy.Toast("Finish the battle before saving.", "bad"); return; }
+            bool inBattle = Scale == ViewScale.Battle && Battle != null;
+            if (inBattle && (Busy || Battle.Animating || _resultShown)) { Battle_Notice("Wait for the current action to finish before saving.", "bad"); return; }
             try
             {
+                // A battle in progress is saved as its setup, accepted commands and hashes, never as presentation state.
+                if (inBattle) G.ActiveBattle = Battle.Session.Snapshot();
                 Directory.CreateDirectory(Path.GetDirectoryName(SavePath));
                 File.WriteAllText(SavePath, SaveGame_Json());
-                UI.Strategy.Toast("Saved. " + GalaxyState.DateLabel(G.Day) + ".", "ok");
+                if (inBattle) Battle_Notice("Saved during the battle, after " + Battle.History.Count + " orders.", "ok");
+                else UI.Strategy.Toast("Saved. " + GalaxyState.DateLabel(G.Day) + ".", "ok");
                 Audio.Play("ui_select", 0.6f);
             }
-            catch (Exception ex) { UI.Strategy.Toast("The game could not be saved: " + ex.Message, "bad"); }
+            catch (Exception ex) { Battle_Notice("The game could not be saved: " + ex.Message, "bad"); }
+            finally { G.ActiveBattle = null; }
+        }
+
+        void Battle_Notice(string text, string kind)
+        {
+            if (Scale == ViewScale.Battle && Battle != null) Battle.Announce(text, kind); else UI.Strategy.Toast(text, kind);
         }
 
         string SaveGame_Json() => RR.Strategy.SaveGame.ToJson(G);
 
         public void LoadGame()
         {
-            if (Scale == ViewScale.Battle || Busy) { UI.Strategy.Toast("Finish the current action before loading.", "bad"); return; }
-            if (!File.Exists(SavePath)) { UI.Strategy.Toast("There is no saved game yet.", "bad"); return; }
+            if (Busy || (Scale == ViewScale.Battle && (Battle == null || Battle.Animating || _resultShown)))
+            { Battle_Notice("Finish the current action before loading.", "bad"); return; }
+            if (!File.Exists(SavePath)) { Battle_Notice("There is no saved game yet.", "bad"); return; }
             string err;
             var loaded = RR.Strategy.SaveGame.FromJson(File.ReadAllText(SavePath), out err);
-            if (loaded == null) { UI.Strategy.Toast(err, "bad"); return; }
-            StartCoroutine(ReplaceState(loaded));
+            if (loaded == null) { Battle_Notice(err, "bad"); return; }
+            BattleSession resume = null;
+            if (loaded.ActiveBattle != null)
+            {
+                // Rebuilt by replay under the current rules; a record that does not replay exactly is refused, never rerolled.
+                resume = BattleSession.Restore(loaded.ActiveBattle, out err);
+                if (resume == null) { Battle_Notice(err, "bad"); return; }
+                loaded.ActiveBattle = null;
+            }
+            StartCoroutine(ReplaceState(loaded, resume));
         }
 
-        IEnumerator ReplaceState(GalaxyState loaded)
+        /// <summary>Removes the battle view without resolving the battle (used when a save replaces it).</summary>
+        void DiscardBattleView()
+        {
+            if (_battleHud != null) { _battleHud.Dispose(); _battleHud = null; }
+            if (Battle != null) { Destroy(Battle.gameObject); Battle = null; }
+            _resultShown = false; _resultDone = null;
+            UI.CloseModal();
+            UI.Strategy.Root.style.display = UnityEngine.UIElements.DisplayStyle.Flex;
+        }
+
+        IEnumerator ReplaceState(GalaxyState loaded, BattleSession resume = null)
         {
             Busy = true;
             yield return CaptureClean();
             var frame = _frame;
             UI.FadeFrom(frame, 60f);
+            DiscardBattleView();
             G = loaded;
             Clock.Paused = true; Clock.Fraction = 0;
             string sysId = LocalSystem != null && Scale != ViewScale.Galaxy ? LocalSystem.Data.Id : null;
@@ -350,7 +388,14 @@ namespace RR.Game
             Scale = ViewScale.Galaxy;
             EnterGalaxyImmediate();
             Busy = false;
+            if (resume != null) sysId = G.GetEngagement(resume.Setup.EngagementId).SystemId;
             if (sysId != null) yield return EnterSystemRoutine(sysId);
+            if (resume != null)
+            {
+                yield return EnterBattleRoutine(resume);
+                Battle_Notice("Loaded the battle in progress, after " + resume.Log.Count + " orders.", "ok");
+                yield break;
+            }
             UI.FadeFrom(frame, 0.4f);
             UI.Strategy.Toast("Loaded the save from " + GalaxyState.DateLabel(G.Day) + ".", "ok");
             UI.Strategy.RefreshAll();

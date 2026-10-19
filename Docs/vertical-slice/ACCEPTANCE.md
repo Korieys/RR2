@@ -11,16 +11,16 @@ verified and why.
 | Verified baseline | Pass | 167/167 tests in this worktree; a full `-rrTour` of the newest build with leader elimination, replay identity, exactly-once result and equal save digests ([STATE](STATE.md#verified-baseline), `baseline/`). |
 | Implementation map | Pass | [STATE](STATE.md#implementation-map) |
 | Conflict register | Pass | [DECISIONS](DECISIONS.md#conflict-register), 20 entries |
-| Concrete next step for Prompt 1 | Pass | [STATE](STATE.md#next-step-prompt-1) |
+| Concrete next step for Prompt 1 | Pass | [STATE](STATE.md#prompt-1-plan-as-written-at-the-end-of-prompt-0) |
 | Enlargement and dead-end requirements recorded | Pass | CR-03 (already tripled, do not repeat), CR-04 (validator exists, all authored maps pass) |
 
 ## Prompt 1: authoritative deterministic combat
 
 | Gate item | Status | Evidence |
 |---|---|---|
-| Tests: movement, blocked paths, range and LOS, defences, activation limits, cooldowns, invalid commands, round changes | Pending | |
-| Replay of the same start and commands reproduces the same authoritative state | Partly existing | Slice test `Battle_IsDeterministic...`; tour replay identity. Needs the orbital matrix. |
-| Preview equals commit, including after save and load | Partly existing | `Preview_EqualsResolution_NoDiceAnywhere`; no mid-battle save yet (D-07). |
+| Tests: movement, blocked paths, range and LOS, defences, activation limits, cooldowns, invalid commands, round changes | Pass | `OrbitalRulesMatrixTests` (7), `BattleSessionTests.Stale_Duplicate_Unauthorized_AndIllegalCommands...`; 183/183 |
+| Replay of the same start and commands reproduces the same authoritative state | Pass | `AFullBattle_ReplaysFromItsRecord...`, `TheSameStartAndCommands_GiveTheSameBattle...` (hash after every command); tour: replay identical, hash at order 24 identical across two runs |
+| Preview equals commit, including after save/load | Pass | `MidBattleSave_ReloadsTheSameBattle_AndPreviewsStillEqualResults`; tour: F5/F9 mid-battle, previews identical for 12 hexes ([log](evidence/p1/tour_log.txt)) |
 
 ## Prompt 2: battlefield and controls
 

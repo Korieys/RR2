@@ -25,8 +25,10 @@ namespace RR.Game
     public sealed partial class BattlePresentation : MonoBehaviour
     {
         public const float Hex = 1.0f;
-        public MatchState S { get; private set; }
-        public BattleSetup Setup { get; private set; }
+        /// <summary>The authoritative battle: every command, the player's and the AI's, goes through it.</summary>
+        public BattleSession Session { get; private set; }
+        public MatchState S { get { return Session.State; } }
+        public BattleSetup Setup { get { return Session.Setup; } }
         public int PlayerSeat { get { return Setup.PlayerSeat; } }
         public bool Animating { get; private set; }
         public bool Over { get { return S.IsOver && !Animating; } }
@@ -38,7 +40,7 @@ namespace RR.Game
         public bool AbilityMode { get; private set; }
         public bool ShowThreat;
         public float AnimSpeed = 1f;
-        public readonly List<Command> History = new List<Command>();
+        public IReadOnlyList<Command> History { get { return Session.Log; } }
         public Commandfall.Core.Hex? HoverHex { get; private set; }
         public string PreviewText { get; private set; }
 
@@ -66,12 +68,12 @@ namespace RR.Game
             return new Commandfall.Core.Hex(rq, rr);
         }
 
-        public static BattlePresentation Build(GameRoot root, BattleSetup setup, MatchState s, StarSystem sys, Transform parent)
+        public static BattlePresentation Build(GameRoot root, BattleSession session, StarSystem sys, Transform parent)
         {
             var go = new GameObject("Orbital battle");
             go.transform.SetParent(parent, false);
             var b = go.AddComponent<BattlePresentation>();
-            b._root = root; b.Setup = setup; b.S = s; b._sys = sys;
+            b._root = root; b.Session = session; b._sys = sys;
             b._ai = new RosterAI(AIDifficulty.Tactical, 1729);
             b.Construct();
             return b;

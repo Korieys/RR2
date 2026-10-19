@@ -17,6 +17,9 @@ namespace RR.Strategy
         /// <summary>Hull points carried in from earlier battles, per seat and entry index.</summary>
         public List<int>[] StartHp = { new List<int>(), new List<int>() };
         public string[] FleetIds = new string[2];
+        /// <summary>Per seat, the hex for each entry in army order, or null for Commandfall's automatic deployment.
+        /// Stored with the setup so a reload can never redeploy differently.</summary>
+        public List<Hex>[] Deployment = { null, null };
     }
 
     public sealed class ShipOutcome
@@ -156,11 +159,19 @@ namespace RR.Strategy
                 foreach (int seat in new[] { setup.Config.FirstSeat, 1 - setup.Config.FirstSeat })
                     if (!s.Players[seat].DeploymentCommitted)
                     {
-                        var r = RulesEngine.Apply(s, Command.AutoDeploy(seat));
+                        var r = RulesEngine.Apply(s, DeployCommand(setup, s, seat));
                         if (!r.Accepted) { error = "Deployment failed: " + r.Reason; return null; }
                     }
             }
             return s;
+        }
+
+        static Command DeployCommand(BattleSetup setup, MatchState s, int seat)
+        {
+            var hexes = setup.Deployment[seat];
+            if (hexes == null) return Command.AutoDeploy(seat);
+            var units = s.Units.Where(u => u.Owner == seat).OrderBy(u => u.Id).ToList();
+            return Command.Deploy(seat, units.Select((u, i) => new Placement(u.Id, i < hexes.Count ? hexes[i] : default)));
         }
 
         public static int ShipUidFor(BattleSetup setup, MatchState s, int unitId)
@@ -239,6 +250,7 @@ namespace RR.Strategy
                               $"{loser.Name} {lost[1 - o.WinnerSeat] + captured[1 - o.WinnerSeat]}" +
                               (captured[0] + captured[1] > 0 ? $" ({captured[0] + captured[1]} captured)." : ".");
             g.AppliedBattles.Add(o.BattleId);
+            if (g.ActiveBattle?.Setup?.BattleId == o.BattleId) g.ActiveBattle = null;
             g.Note(winner.OwnerId == g.Player.Id ? "result" : "danger", e.ResultSummary);
             if (sys.Blockaded) g.Note("danger", $"{g.GetPolity(sys.OrbitalControlId).Name} holds the orbit of {sys.Name}. Its worlds are blockaded but not conquered.");
             g.Fleets.RemoveAll(f => f.Ships.Count == 0);

@@ -305,14 +305,38 @@ namespace RR.Game
                     b.Submit(c);
                     acts++;
                     if (acts == 6 || acts == 16) { yield return Until(() => !b.Animating, 10); yield return Shot(dir, "b0" + (3 + shots) + "_battle_" + acts); shots++; }
+                    if (acts == 10 && !b.S.IsOver)
+                    {
+                        // Save in the middle of the battle and load it again through the normal F5 and F9 paths.
+                        yield return Until(() => !b.Animating && b.PlayersTurn, 20);
+                        if (!b.S.IsOver)
+                        {
+                            var probe = b.S.ActiveUnitId != 0 ? b.S.ActiveUnitId : b.S.Units.Where(x => x.Owner == b.PlayerSeat && Commandfall.Core.RosterRules.Eligible(b.S, x)).Select(x => x.Id).FirstOrDefault();
+                            b.Select(probe);
+                            var hexes = b.S.Units.Where(x => x.OnBoard).Select(x => x.Position).ToList();
+                            var previewsBefore = hexes.Select(h => b.PreviewAt(h)).ToList();
+                            ulong hb = b.Session.Hash; int nb = b.History.Count;
+                            root.SaveGame();
+                            root.LoadGame();
+                            yield return Until(() => root.Battle != null && root.Battle != b && root.Scale == ViewScale.Battle && !root.Busy, 40);
+                            b = root.Battle;
+                            G = root.G;   // the load replaced the galaxy state; keep checking the live one
+                            yield return Until(() => !b.Animating, 10);
+                            b.Select(probe);
+                            var previewsAfter = hexes.Select(h => b.PreviewAt(h)).ToList();
+                            Note("mid-battle save and load after " + nb + " orders: " + (b.Session.Hash == hb && b.History.Count == nb ? "restored the same battle" : "DIFFERENT BATTLE") +
+                                 " (hash " + hb.ToString("x16") + "); previews " + (previewsBefore.SequenceEqual(previewsAfter) ? "identical" : "DIFFERENT") + " for " + hexes.Count + " hexes");
+                            yield return Wait(0.4f);
+                            yield return Shot(dir, "b06_after_midbattle_load");
+                        }
+                    }
                 }
                 yield return null;
             }
             Note("battle over: winner seat " + b.S.Winner + " (" + b.S.VictoryReason + ") after round " + b.S.Round + ", " + b.History.Count + " commands");
-            ulong h1 = Serialization.StateHash(b.S);
-            var replay = BattleBridge.CreateState(root.CurrentSetup, out var rerr);
-            foreach (var c in b.History) RulesEngine.Apply(replay, c.Clone());
-            Note("replay of the battle from its setup and command log: " + (Serialization.StateHash(replay) == h1 ? "identical final state" : "DIVERGED"));
+            var divergence = BattleSession.FindDivergence(b.Session.Snapshot(), out var replayed);
+            Note("replay of the battle from its setup and command log: " + (divergence == null && replayed.Hash == Serialization.StateHash(b.S) ? "identical final state" : "DIVERGED: " + divergence) +
+                 " (rules " + RulesVersion.Id + ")");
             yield return Until(() => root.ResultPending, 20);
             yield return Wait(0.5f);
             yield return Shot(dir, "b07_result");

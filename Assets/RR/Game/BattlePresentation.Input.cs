@@ -129,6 +129,7 @@ namespace RR.Game
         }
 
         void Say(string text, string kind) { if (Notice != null) Notice(text, kind); }
+        public void Announce(string text, string kind) { Say(text, kind); }
 
         public void ToggleAbility()
         {
@@ -198,6 +199,9 @@ namespace RR.Game
             PreviewText = h.HasValue && S.Map.Contains(h.Value) ? Preview(h.Value) : null;
         }
 
+        /// <summary>The preview text the interface would show for a hex with the current selection (automation and checks).</summary>
+        public string PreviewAt(Commandfall.Core.Hex h) { return Preview(h); }
+
         // Preview through the same rules functions that resolve the action.
         string Preview(Commandfall.Core.Hex h)
         {
@@ -240,11 +244,8 @@ namespace RR.Game
         public void Submit(Command c)
         {
             if (Animating) return;
-            var v = RulesEngine.Validate(S, c);
-            if (!v.Ok) { Say(v.Reason, "bad"); _root.Audio.Play("ui_invalid"); return; }
-            var res = RulesEngine.Apply(S, c);
+            var res = Session.Submit(c, PlayerSeat);
             if (!res.Accepted) { Say(res.Reason, "bad"); _root.Audio.Play("ui_invalid"); return; }
-            History.Add(c.Clone());
             if (c.Seat == PlayerSeat) _root.Audio.Play("order_accepted", 0.7f);
             AbilityMode = false; Picks.Clear();
             Selected = S.ActiveSeat == PlayerSeat && S.ActiveUnitId != 0 ? S.ActiveUnitId : 0;
@@ -263,9 +264,9 @@ namespace RR.Game
                 if (_aiDelay < 0.45f) return;
                 _aiDelay = 0;
                 var c = _ai.ChooseAction(S);
-                var res = RulesEngine.Apply(S, c);
-                if (!res.Accepted) { c = Command.Pass(S.ActiveSeat); res = RulesEngine.Apply(S, c); if (!res.Accepted) return; }
-                History.Add(c.Clone());
+                int seat = S.ActiveSeat;
+                var res = Session.Submit(c, seat);
+                if (!res.Accepted) { c = Command.Pass(seat); res = Session.Submit(c, seat); if (!res.Accepted) return; }
                 StartCoroutine(Play(res.Events));
             }
             else if (Selected == 0 && S.ActiveUnitId != 0) Selected = S.ActiveUnitId;

@@ -5,8 +5,8 @@ Updated 2026-10-19, end of Prompt 0 (audit). Branch `claude/rule-ruin-vertical-s
 | Milestone | State |
 |---|---|
 | Prompt 0: contract and audit | Done (this document, [PROJECT_CONTRACT](PROJECT_CONTRACT.md), [DECISIONS](DECISIONS.md), [ACCEPTANCE](ACCEPTANCE.md)) |
-| Prompt 1: authoritative deterministic combat | Next. Rules work can start; see "Next step". |
-| Prompts 2 to 12 | Not started. Prompt 2 is blocked on CR-01 (the uncommitted presentation work in the main checkout). |
+| Prompt 1: authoritative deterministic combat | Done and verified (see "Prompt 1 result"). |
+| Prompts 2 to 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
 
 ## Verified baseline
 
@@ -62,7 +62,9 @@ What exists today, against what each prompt needs. File paths are under `Assets/
 | D-04 | No ship models for Pygmaei or Inhumanus. | High for Prompts 4, 11 | 4 (temporary), 11 |
 | D-05 | After the battle ends, the action bar still shows enabled ability buttons and the "Your flagship is within reach" toast stays up (`baseline/b07_result.jpg`). | Medium | 2/3 |
 | D-06 | The result screen cannot show the decisive action. | Gate item | 3 |
-| D-07 | No mid-battle save (CR-15). | Gate item | 1 |
+| D-07 | No mid-battle save (CR-15). | Fixed in Prompt 1 | 1 |
+| D-11 | Inspector shows an active as "ready" while the ship is DISABLED. | Low | 2/3 |
+| D-12 | AI recreated after a mid-battle reload may break ties differently (CR-14). | Low | 5 |
 | D-08 | The generated catalog repeats the `LEADER` tag on both flagships (`RosterCatalog.g.cs`, Pygmaei and Inhumanus flagship entries). Harmless today; content validation should catch it. | Low | 4 |
 | D-09 | HANDOFF known weaknesses remain (Inhumanus title under the inspector at the default overview framing, provisional emblems, transition double image). | Low | 11 |
 | D-10 | Vendored patches will diverge from Commandfall upstream (VS-02); an upstream port is not scheduled. | Medium, deferred | 12 |
@@ -83,7 +85,34 @@ P12 validation and build: last.
 Parallel work that is safe: Blender ship art (after P4 fixes the classes), audio, documentation. Not safe in parallel: anything in
 `Vendor/Core`, `Strategy`, `SaveGame`, `BattleBridge`, `BattlePresentation*`, `BattleHud`, `UIRoot`, `StrategyHud`.
 
-## Next step: Prompt 1
+## Prompt 1 result (2026-10-19)
+
+**Implemented.** `Assets/RR/Strategy/BattleSession.cs`: the authoritative battle session (VS-07) with `Submit(command, controller)`,
+`Preview(command)`, the accepted command log and per-command state hashes, `Snapshot()`, `Restore()` (replay under the current rules,
+refused on any rules, content or hash difference), `FindDivergence()` (first differing command) and `DescribeLog()`. `RulesVersion`
+(VS-03): `commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-1` plus a content fingerprint. `BattleSetup.Deployment` stores explicit
+deployment. The save carries a battle in progress under an optional `battle` key (VS-09). The battle view, the AI and the tour submit
+through the session; F5 and F9 work during a battle. No vendored rules file changed ([VENDOR_PATCHES](VENDOR_PATCHES.md), vs-1).
+
+**Tests.** 183/183 (146 vendored, 37 slice). New: `OrbitalRulesMatrixTests` (movement and blocked paths, range and line of sight,
+armour, shields and cover exactly, one move and one action per activation with no second attack through an ability, cooldowns,
+round changes, no dice) and `BattleSessionTests` (full replay, identical hashes after every command in two independent games, divergence
+at the right index for a tampered hash, a forged command and a changed setup, mid-battle save and load with previews equal before and
+after and equal to the committed result, stored deployment, stale, duplicate, wrong-seat, host-only, off-board and enemy-unit commands
+rejected without changing state or log, refusal of other rules, other content, damaged and orphaned records, exactly-once clearing).
+
+**Runtime** (`Builds/VS`, 1920x1080 windowed, disposable save; [log](evidence/p1/tour_log.txt)): raid contact on day 16; F5 then F9
+after 24 orders restored the same battle (hash `276538a3860c7eab`, identical in two separate runs) with identical previews for all 12
+occupied hexes ([frame](evidence/p1/b06_after_midbattle_load.jpg)); leader elimination in round 9 after 105 commands; replay from the
+record identical; result applied once; save and load digests equal. A first run reported a digest mismatch and "applied battles 0":
+the tour itself kept a reference to the galaxy state that the mid-battle load replaced. The tour now re-reads it; the game was right
+(the applied count after load was 1 in both runs).
+
+**Found, not yet fixed.** D-11: the battle inspector shows an active ability as "ready" while the ship is DISABLED
+([frame](evidence/p1/b06_after_midbattle_load.jpg), Throne Ark). D-12: after a mid-battle reload the opponent AI is recreated, so its
+seeded tie-break may choose differently than without the reload (state never diverges; CR-14, Prompt 5).
+
+## Prompt 1 plan (as written at the end of Prompt 0)
 
 Most of the rules foundation exists; Prompt 1 is verification and gap-filling, not a new engine.
 1. Add the rules-version id (VS-03) to `MatchConfig`-adjacent setup, battle snapshots and the save, and reject a snapshot whose
