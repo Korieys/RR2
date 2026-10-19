@@ -91,7 +91,7 @@ namespace RR.Strategy
                           : g.PendingEngagement != null ? "Resolve the engagement before issuing new projects." : null;
             if (p.HasShipyard)
             {
-                foreach (var (defId, cost, days) in ShipCatalog.Commissionable)
+                foreach (var (defId, cost, days) in SliceCampaign.Commissionable(g, player.Id) ?? ShipCatalog.Commissionable)
                 {
                     string why = common ?? (player.Stock.Covers(cost) ? null : "Not enough resources.");
                     list.Add(new ProjectOption { Kind = ProjectKind.CommissionShip, ShipDefId = defId, Label = "Commission " + ShipCatalog.Name(defId),
@@ -220,6 +220,7 @@ namespace RR.Strategy
 
             // 1. Economy
             foreach (var pol in g.Polities.Where(p => p.Playable)) pol.Stock = pol.Stock + DailyIncome(g, pol.Id);
+            SliceCampaign.OnDay(g);   // passage tolls, expiring political modifiers
 
             // 2. Projects
             foreach (var s in g.Systems)
@@ -280,7 +281,9 @@ namespace RR.Strategy
                 fleet = new Fleet { Id = "fleet_" + g.NextId++, Name = s.Name + " Guard", OwnerId = p.OwnerId, SystemId = s.Id, HomeSystemId = s.Id, LastSystemId = s.Id };
                 g.Fleets.Add(fleet);
             }
-            fleet.Ships.Add(new ShipRecord { Uid = g.NextUid++, DefId = proj.ShipDefId, Hp = ShipCatalog.MaxHp(proj.ShipDefId) });
+            var built = new ShipRecord { Uid = g.NextUid++, DefId = proj.ShipDefId, Hp = ShipCatalog.MaxHp(proj.ShipDefId) };
+            fleet.Ships.Add(built);
+            SliceCampaign.OnCommissioned(g, fleet, built, s);
             g.Note("build", $"{ShipCatalog.Name(proj.ShipDefId)} commissioned at {p.Name} and joined {fleet.Name}.");
         }
 

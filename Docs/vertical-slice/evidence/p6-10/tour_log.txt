@@ -1,0 +1,39 @@
+campaign tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-3
+campaign: player pygmaei, fleet Forgefall Raiders at forgefall with 8 ships; passage The Umbra passage; expedition eclipse_drift_b
+shot c01_campaign_start
+shot c02_hangar
+refit options: afterburners cost E10 M20 C30 I0; ablative_plating cost E0 M40 C30 I0; heavy_battery cost E10 M30 C40 I0
+refit afterburners: fitted; modules now afterburners
+shot c03_hangar_refitted
+declared; order to Umbra: accepted
+after 29 days: pending engagement eng_3 at umbra
+  stake: Forgefall Raiders (8 ships) against Convoy Escort (7 ships) at Umbra. Destroying a flagship ends the battle at once.
+  stake: The winner takes access through The Umbra passage (+3 credits a day) and a prize of 40 credits. Access is not ownership: no planet changes hands.
+  stake: The loser's surviving ships withdraw to their previous system; they are not destroyed. Destroyed ships stay destroyed.
+  stake: A battle saved part-way through reloads exactly; withdrawing now gives up the passage without losses.
+shot c04_battle_prep_stakes
+shot c05_terms_form
+campaign battle battle_eng_3_d29 on trade_passage; capture policy True; player modules afterburners
+shot c06_campaign_battle
+campaign battle save and load after 10 orders: restored the same battle
+campaign battle applied: CommanderEliminated | Decisive action: Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win. | Battle of Umbra: Forgefall Raiders (Pygmaei Sector) defeated Convoy Escort (Inhumanus Dominion). Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win. | Pygmaei Sector took access through The Umbra passage. | The Inhumanus Dominion flagship Fiduciary Dawn was destroyed at Umbra; its wreck remains.
+decisive: Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win.
+shot c07_campaign_result
+after the battle: access pygmaei; objective Secured; wrecks 1; standing -20; history 4 events
+  history: day 0: Pygmaei Sector declared war over access through The Umbra passage (Umbra).
+  history: day 29: Battle of Umbra: Forgefall Raiders (Pygmaei Sector) defeated Convoy Escort (Inhumanus Dominion). Skirmish Frigate fired Skirmish Guns (overclocked) at Executive Flagship (flagship): 6 raw − 2 armour = 4; Executive Flagship hull 4 → 0. Executive Flagship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Forgefall Raiders win.
+  history: day 29: Pygmaei Sector took access through The Umbra passage.
+  history: day 29: The Inhumanus Dominion flagship Fiduciary Dawn was destroyed at Umbra; its wreck remains.
+shot c08_after_battle
+shot c09_history
+strategic save and load: identical digest
+order to Gloam: accepted
+fleet at gloam
+shot c10_expedition_briefing
+reconnaissance: charted
+expedition battle on eclipse_drift_b, fog True: enemy ships on board 3, visible to the player 2, drawn 2
+shot c11_expedition_fog
+expedition over: Secured; Secured the derelict at Gloam and recovered a damaged Ablative plating, fitted free at your next shipyard refit.
+shot c12_expedition_result
+expedition: Secured; Secured the derelict at Gloam and recovered a damaged Ablative plating, fitted free at your next shipyard refit.
+campaign tour complete

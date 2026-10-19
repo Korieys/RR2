@@ -184,7 +184,8 @@ namespace RR.Strategy
     public sealed class GalaxyState
     {
         public const string Schema = "rr.slice.galaxy";
-        public const int CurrentVersion = 1;
+        /// <summary>2: the vertical-slice campaign container (<see cref="Slice"/>); version 1 saves migrate with none.</summary>
+        public const int CurrentVersion = 2;
 
         public int Version = CurrentVersion;
         public string ScenarioId = "eclipse_frontier";
@@ -205,6 +206,9 @@ namespace RR.Strategy
         /// <summary>A battle in progress when the game was saved (setup, accepted commands and hashes), or null. Optional
         /// in the version 1 format: older saves have none.</summary>
         public BattleSnapshot ActiveBattle;
+        /// <summary>The passage campaign's state (objectives, passages, relations, ship profiles, history, wrecks, settlements,
+        /// expeditions), or null in the original Aurelith campaign.</summary>
+        public SliceCampaignState Slice;
 
         public Polity GetPolity(string id) => Polities.FirstOrDefault(p => p.Id == id);
         public Polity Player => Polities.First(p => p.PlayerControlled);

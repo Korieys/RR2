@@ -200,6 +200,7 @@ namespace RR.Strategy
                 }).ToList(),
                 ["appliedBattles"] = g.AppliedBattles.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
                 ["battle"] = g.ActiveBattle == null ? null : BattleSession.ToData(g.ActiveBattle),
+                ["slice"] = SliceSave.ToData(g.Slice),
                 ["log"] = g.Log.Skip(Math.Max(0, g.Log.Count - 200)).Select(l => (object)new Dictionary<string, object> { ["day"] = l.Day, ["kind"] = l.Kind, ["text"] = l.Text }).ToList(),
             };
             return Json.Write(root);
@@ -222,7 +223,8 @@ namespace RR.Strategy
             int version = r.I("version");
             if (version > GalaxyState.CurrentVersion) { error = $"This save was written by a newer build (version {version})."; return null; }
             if (version < 1) { error = "This save version is not supported."; return null; }
-            // Version 1 is the first format; future migrations go here, one step per version.
+            // Migrations, one step per version. 1 -> 2: the slice campaign container was added; a version 1 save has none.
+            if (version < 2) { /* nothing to convert: Slice stays null and the Aurelith campaign is unchanged */ }
             var g = new GalaxyState
             {
                 Version = GalaxyState.CurrentVersion, ScenarioId = r.S("scenario"), Seed = r.I("seed"), Day = r.I("day"), Rng = (uint)r.L("rng"),
@@ -280,6 +282,8 @@ namespace RR.Strategy
                     Day = e.I("day"), State = En<EngagementState>(e.S("state")), BattleId = e.S("battle"), ResultSummary = e.S("summary") });
             foreach (var b in r.A("appliedBattles")) g.AppliedBattles.Add((string)b);
             foreach (IDictionary<string, object> l in r.A("log")) g.Log.Add(new LogEntry { Day = l.I("day"), Kind = l.S("kind"), Text = l.S("text") });
+            var slice = r.O("slice");
+            if (slice != null) g.Slice = SliceSave.FromData(slice);
             // A battle in progress arrived without a version bump: it is optional, and older saves have none.
             var battle = r.O("battle");
             if (battle != null)

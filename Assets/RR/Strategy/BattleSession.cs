@@ -15,7 +15,7 @@ namespace RR.Strategy
         public const string Commandfall = "0.15.0";
         /// <summary>Slice revision of the vendored rules. Increment it with every rules-affecting change recorded in
         /// Docs/vertical-slice/VENDOR_PATCHES.md.</summary>
-        public const int SliceRevision = 2;
+        public const int SliceRevision = 3;
         public static string Id => $"commandfall-{Commandfall}+{GameContent.ContentVersion}+{RosterContent.ContentVersion}+vs-{SliceRevision}";
 
         static string _fingerprint;

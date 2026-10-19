@@ -14,8 +14,8 @@ namespace RR.Game
     // functional evidence, not a human playtest.
     public static class SliceAutomation
     {
-        static IEnumerator Wait(float s) { float t = 0; while (t < s) { t += Time.unscaledDeltaTime; yield return null; } }
-        static IEnumerator Until(Func<bool> cond, float timeout) { float t = 0; while (!cond() && t < timeout) { t += Time.unscaledDeltaTime; yield return null; } }
+        internal static IEnumerator Wait(float s) { float t = 0; while (t < s) { t += Time.unscaledDeltaTime; yield return null; } }
+        internal static IEnumerator Until(Func<bool> cond, float timeout) { float t = 0; while (!cond() && t < timeout) { t += Time.unscaledDeltaTime; yield return null; } }
         static void Note(string s) => Automation.Note(s);
 
         static IEnumerator Ready(GameRoot root)
@@ -25,7 +25,7 @@ namespace RR.Game
         }
 
         /// <summary>The pilot plays the player's side until <paramref name="orders"/> orders have been given or the battle ends.</summary>
-        static IEnumerator Pilot(GameRoot root, int orders, Action<BattlePresentation, int> each = null)
+        internal static IEnumerator Pilot(GameRoot root, int orders, Action<BattlePresentation, int> each = null)
         {
             var ai = new SliceAI();
             var b = root.Battle;

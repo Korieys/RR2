@@ -61,7 +61,7 @@ A lower source never silently overrides a higher one. Every conflict goes into t
 | Rules | Commandfall 0.15.0 Full Roster, vendored unmodified from Commandfall commit `5a31053` (repository `C:\Users\jacob\Documents\ClaudeCodeProj\Commandfall`, branch `claude/rule-ruin-commandfall-units-e88455`) |
 | Roster source | codex 0.1, generated into `Assets/RR/Vendor/Core/Roster/RosterCatalog.g.cs` (156 units); executable parameters in `RosterSpecs.*.cs` |
 | Orbital battlefields | `orbital_gate`, `orbital_wreckfield`: 115 hexes each, validated by `TopologyValidator` on registration |
-| Save | `rr.slice.galaxy` version 1 JSON: campaign and engagement state. There is no mid-battle save. |
+| Save | `rr.slice.galaxy` version 2 JSON: campaign and engagement state, an optional battle in progress (`battle`, its record; VS-09) and the passage campaign (`slice`; VS-20). Version 1 saves still load. |
 | Networking | None in this project. The vendored core keeps its host-authority fields (`ExpectedRevision`, `Nonce`, `Seat`). Online play exists only in the separate Commandfall game. |
 | Machine | RTX 5060 8 GB, i5-14400F, 32 GB, Windows 11 26200; both displays 1080p (1440p only offscreen) |
 

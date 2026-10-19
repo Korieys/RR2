@@ -58,28 +58,35 @@ evaluate the tactical hook before adding strategic depth.**
 ## Prompt 6: campaign loop
 
 Galaxy to battle to galaxy for success and failure; save and load before commitment, during battle, and after results without
-duplicated fleets, lost identities or changed outcomes. Status: pending.
+duplicated fleets, lost identities or changed outcomes. **Status: pass.** `PassageCampaignTests` (success and failure, a save at every
+stage reloading to the same digest, no duplicated ships, retreat); tour: galaxy to battle to galaxy, a mid-battle save restored the same
+battle, the strategic save after the result reloaded to an identical digest ([STATE](STATE.md#prompts-6-to-10-result-2026-10-19)).
 
 ## Prompt 7: capital ships
 
 Rename, fit a sidegrade, fight, return with the right condition and history, repair, save and load, deploy again with a stable
-id; illegal and unaffordable refits fail cleanly; destruction neither duplicates modules nor erases history. Status: pending.
+id; illegal and unaffordable refits fail cleanly; destruction neither duplicates modules nor erases history. **Status: pass** (`CapitalShipTests`, 3 tests; tour: hangar before and
+after a refit, the module in the battle's army entry and on the model).
 
 ## Prompt 8: negotiation and capture
 
 Destruction, accepted settlement, rejected offer then combat, lawful capture; insufficient funds, invalid custody, stale offers,
-repeated confirmation, save and load; each ending changes campaign state differently. Status: pending. **Checkpoint: encounter,
-persistent ship and political consequences form one connected experience.**
+repeated confirmation, save and load; each ending changes campaign state differently. **Status: pass in tests** (`NegotiationTests`, 6
+tests); the tour shows the terms form and battle preparation's terms button but its battle ended by destruction, so settlement and
+capture are not yet shown at runtime. **Checkpoint: encounter, persistent ship and political consequences form one connected
+experience.** Mechanically yes (STATE); not yet confirmed by a person.
 
 ## Prompt 9: consequences
 
 Two outcomes from separate saves give different histories, markers, salvage and political consequences; both reload; every
-visible change has a supporting event; exhausted salvage stays exhausted. Status: pending.
+visible change has a supporting event; exhausted salvage stays exhausted. **Status: pass** (`ConsequenceTests`, 3 tests; tour: four
+history events after the battle, the wreck marker, standing −20 with its cause and expiry).
 
 ## Prompt 10: Eclipse expedition
 
 Reconnaissance changes knowledge or planning, not a hidden percentage; success and withdrawal both return coherent outcomes;
-reloads preserve the encounter; optional and never blocking the primary slice. Status: pending.
+reloads preserve the encounter; optional and never blocking the primary slice. **Status: pass** (`ExpeditionTests`, 5 tests; tour:
+briefing, reconnaissance, the fogged battle with 2 of 3 enemy ships visible and drawn, secured).
 
 ## Prompt 11: premium pass
 

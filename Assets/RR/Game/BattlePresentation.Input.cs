@@ -20,7 +20,7 @@ namespace RR.Game
                 if (!u.Alive && !v.Dead) { v.Dead = true; v.T.gameObject.SetActive(false); continue; }
                 if (u.Alive && u.OnBoard)
                 {
-                    v.T.gameObject.SetActive(true);
+                    v.T.gameObject.SetActive(Visible(u));   // under fog of war, enemy ships out of sight are not drawn
                     if (snap) v.T.localPosition = World(u.Position);
                     var block = new MaterialPropertyBlock();
                     float dmg = 1f - u.Hp / (float)Mathf.Max(1, u.MaxHp);
@@ -99,9 +99,10 @@ namespace RR.Game
         public HashSet<Commandfall.Core.Hex> ThreatHexes()
         {
             var set = new HashSet<Commandfall.Core.Hex>();
-            foreach (var e in S.Units.Where(x => x.Owner != PlayerSeat && x.OnBoard && !RosterRules.Inert(x)))
+            var seen = Seen;
+            foreach (var e in seen.Units.Where(x => x.Owner != PlayerSeat && x.OnBoard && !RosterRules.Inert(x)))
             {
-                var from = RosterMovement.Reachable(S, e).Keys.ToList();
+                var from = RosterMovement.Reachable(seen, e).Keys.ToList();
                 from.Add(e.Position);
                 int max = e.Weapon.MaxRange, min = e.Weapon.MinRange;
                 foreach (var f in from)
@@ -114,7 +115,7 @@ namespace RR.Game
             return set;
         }
 
-        public bool PlayersTurn { get { return !S.IsOver && S.Phase == MatchPhase.Battle && S.ActiveSeat == PlayerSeat && !Animating; } }
+        public bool PlayersTurn { get { return !S.IsOver && S.Phase == MatchPhase.Battle && S.ActiveSeat == PlayerSeat && !Animating && !Delegated; } }
 
         public void Select(int unitId)
         {
@@ -163,6 +164,7 @@ namespace RR.Game
 
         public void Wait()
         {
+            if (S.IsOver || !PlayersTurn) return;
             var u = Selected != 0 ? S.Unit(Selected) : (S.ActiveUnitId != 0 ? S.Unit(S.ActiveUnitId) : null);
             if (u == null) { Say("Select a ship to hold position with.", "bad"); return; }
             Submit(Command.Wait(PlayerSeat, u.Id));
@@ -171,7 +173,7 @@ namespace RR.Game
         public void ClickHex(Commandfall.Core.Hex h)
         {
             if (!PlayersTurn) return;
-            var at = S.UnitAt(h);
+            var at = Seen.UnitAt(h);
             var u = Selected != 0 ? S.Unit(Selected) : null;
             if (AbilityMode && u != null)
             {
@@ -196,9 +198,11 @@ namespace RR.Game
 
         public void Hover(Commandfall.Core.Hex? h)
         {
+            bool moved = HoverHex != h;
             HoverHex = h;
             _gridMat.SetVector("_Hover", h.HasValue ? new Vector4(h.Value.Q, h.Value.R, 1, 0) : Vector4.zero);
             PreviewText = h.HasValue && S.Map.Contains(h.Value) ? Preview(h.Value) : null;
+            if (moved && Selected != 0 && PreviewText != null && PlayersTurn) PlaytestMetrics.Preview();
         }
 
         /// <summary>The preview text the interface would show for a hex with the current selection (automation and checks).</summary>
@@ -208,7 +212,7 @@ namespace RR.Game
         string Preview(Commandfall.Core.Hex h)
         {
             var u = Selected != 0 ? S.Unit(Selected) : null;
-            var at = S.UnitAt(h);
+            var at = Seen.UnitAt(h);
             if (u == null || !PlayersTurn)
                 return at != null ? at.Def.Name + (S.Players[at.Owner].CommanderId == at.Id ? " (leader)" : "") + ": " + at.Hp + " of " + at.MaxHp + " hull, armor " + at.BaseArmor + "." : TerrainText(S.Map.Terrain(h));
             if (AbilityMode)
@@ -220,7 +224,7 @@ namespace RR.Game
             if (slicePreview != null) return slicePreview;
             if (at != null && at.Owner != PlayerSeat)
             {
-                var o = RosterCombat.ResolveBasic(S, u, h);
+                var o = RosterCombat.ResolveBasic(Seen, Seen.Unit(u.Id), h);
                 if (!o.Legal) return o.Reason;
                 string s = u.Weapon.Name + " hits " + at.Def.Name + " for " + o.FinalDamage + (o.Breakdown.Count > 0 ? " (" + string.Join(", ", o.Breakdown) + ")" : "") + ". Hull " + o.TargetHpBefore + " to " + o.TargetHpAfter + ".";
                 if (o.Roster != null && o.Roster.GuardianId != 0 && o.Roster.GuardianId != at.Id && S.Unit(o.Roster.GuardianId) != null) s += " " + S.Unit(o.Roster.GuardianId).Def.Name + " will intercept this attack.";
@@ -231,8 +235,8 @@ namespace RR.Game
             if (at == null)
             {
                 MoveOption mo;
-                if (RosterMovement.Reachable(S, u).TryGetValue(h, out mo)) return "Move here (" + mo.Cost + " movement). " + TerrainText(S.Map.Terrain(h));
-                return RosterMovement.Explain(S, u, h);
+                if (RosterMovement.Reachable(Seen, Seen.Unit(u.Id)).TryGetValue(h, out mo)) return "Move here (" + mo.Cost + " movement). " + TerrainText(S.Map.Terrain(h));
+                return RosterMovement.Explain(Seen, Seen.Unit(u.Id), h);
             }
             return null;
         }
@@ -249,6 +253,7 @@ namespace RR.Game
         {
             if (Animating) return;
             var res = Session.Submit(c, PlayerSeat);
+            PlaytestMetrics.Order(res.Accepted, res.Reason);
             if (!res.Accepted) { Say(res.Reason, "bad"); _root.Audio.Play("ui_invalid"); return; }
             if (c.Seat == PlayerSeat) _root.Audio.Play("order_accepted", 0.7f);
             AbilityMode = false; Picks.Clear(); ClearModes();

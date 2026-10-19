@@ -38,6 +38,11 @@ namespace RR.Strategy
 
     public sealed class BattleOutcome
     {
+        /// <summary>The ship (uid) whose order ended the battle, and that order explained (from the session's narration).</summary>
+        public int DecisiveUid;
+        public string DecisiveText;
+        /// <summary>Accepted terms that ended the battle, or null.</summary>
+        public Offer Settlement;
         public string BattleId;
         public string EngagementId;
         public int WinnerSeat = -1;
@@ -71,7 +76,10 @@ namespace RR.Strategy
             foreach (var uid in uids)
             {
                 var ship = f.Ships.First(s => s.Uid == uid);
-                army.Units.Add(new RosterEntry(ship.DefId));
+                var entry = new RosterEntry(ship.DefId);
+                var prof = g.Slice?.Profile(uid);
+                if (prof != null) foreach (var m in prof.Modules) entry.Equipment.Add(SliceRules.ModuleToken + m);   // the same ship, as fitted
+                army.Units.Add(entry);
             }
             return army;
         }
@@ -140,6 +148,11 @@ namespace RR.Strategy
                     setup.StartHp[seat].Add(fleets[seat].Ships.First(s => s.Uid == uid).Hp);
                 }
             }
+            // Passage battles in the slice campaign run under a declared capture policy (Prompt 8): flagships may be boarded.
+            if (g.Slice != null && g.Slice.Active && g.Slice.Passage(e.SystemId) != null)
+                for (int seat = 0; seat < 2; seat++)
+                    foreach (var entry in cfg.Players[seat].Army.Units.Where(u => ShipCatalog.IsLeader(u.UnitId)))
+                        entry.Equipment.Add(SliceRules.CapturePolicyToken);
             // The arriving fleet takes the first activation.
             int attackerSeat = att == player ? playerSeat : 1 - playerSeat;
             cfg.FirstSeat = attackerSeat;
@@ -187,6 +200,17 @@ namespace RR.Strategy
             var units = s.Units.Where(x => x.Owner == u.Owner).OrderBy(x => x.Id).ToList();
             int i = units.IndexOf(u);
             return i >= 0 && i < setup.ShipUids[u.Owner].Count ? setup.ShipUids[u.Owner][i] : 0;   // tokens map to 0
+        }
+
+        /// <summary>The outcome, with the decisive order taken from the session's record when one is given.</summary>
+        public static BattleOutcome Extract(BattleSetup setup, BattleSession session, Offer settlement = null)
+        {
+            var o = Extract(setup, session.State);
+            o.DecisiveText = session.Decisive;
+            var last = session.Log.Count > 0 ? session.Log[session.Log.Count - 1] : null;
+            if (last != null && last.UnitId != 0 && settlement == null) o.DecisiveUid = ShipUidFor(setup, session.State, last.UnitId);
+            if (settlement != null) { o.Settlement = settlement; o.Reason = "Settlement"; o.WinnerSeat = 1 - settlement.ConcederSeat; }
+            return o;
         }
 
         public static BattleOutcome Extract(BattleSetup setup, MatchState s)
@@ -249,12 +273,27 @@ namespace RR.Strategy
                 "CommanderEliminated" => "a flagship was destroyed",
                 "RoundLimitObjectives" => "the round limit was reached and objectives decided it",
                 "Resignation" => "the other side yielded",
+                "Settlement" => "terms were agreed",
+                "LeaderCaptured" => "a flagship was boarded and captured",
                 _ => o.Reason,
             };
             e.State = EngagementState.Resolved;
             e.ResultSummary = $"{winner.Name} won at {sys.Name} ({why}). Losses: {winner.Name} {lost[o.WinnerSeat] + captured[o.WinnerSeat]}, " +
                               $"{loser.Name} {lost[1 - o.WinnerSeat] + captured[1 - o.WinnerSeat]}" +
                               (captured[0] + captured[1] > 0 ? $" ({captured[0] + captured[1]} captured)." : ".");
+            // Captured capital ships change custody: the record moves to the captor's fleet (never in two inventories).
+            for (int seat = 0; seat < 2; seat++)
+                foreach (var so in o.Ships[seat].Where(x => x.Captured))
+                {
+                    var prof = g.Slice?.Profile(so.Uid);
+                    if (prof == null) continue;
+                    var captor = fleets[1 - seat];
+                    if (captor.Ships.All(x => x.Uid != so.Uid))
+                        captor.Ships.Add(new ShipRecord { Uid = so.Uid, DefId = prof.DefId, Hp = Math.Max(1, so.Hp) });
+                    prof.OwnerId = captor.OwnerId;
+                }
+            if (o.Settlement != null) Negotiation.ApplyTerms(g, setup, o, o.Settlement, sys);
+            SliceCampaign.OnBattleApplied(g, setup, o, winner, loser, sys);
             g.AppliedBattles.Add(o.BattleId);
             if (g.ActiveBattle?.Setup?.BattleId == o.BattleId) g.ActiveBattle = null;
             g.Note(winner.OwnerId == g.Player.Id ? "result" : "danger", e.ResultSummary);

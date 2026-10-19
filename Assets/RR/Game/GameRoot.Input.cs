@@ -40,6 +40,8 @@ namespace RR.Game
                 if (kb.tKey.wasPressedThisFrame) { Battle.ShowThreat = !Battle.ShowThreat; Battle.RefreshCells(); }
                 if (kb.oKey.wasPressedThisFrame) Battle.ToggleOverclock();
                 if (kb.rKey.wasPressedThisFrame) Battle.ToggleTurn();
+                if (kb.bKey.wasPressedThisFrame) Battle.ToggleBoard();
+                if (kb.gKey.wasPressedThisFrame) { if (Battle.Delegated) Battle.StopDelegating(); else Battle.Delegate(false); }
                 if (kb.fKey.wasPressedThisFrame && _battleHud != null) _battleHud.CycleSpeed();
             }
             else if (!modal)

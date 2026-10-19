@@ -40,7 +40,9 @@ namespace RR.Game
         bool _loadingShown;
         public string LoadingText;
         public float LoadingProgress;
-        public static string SavePath => Path.Combine(Application.persistentDataPath, "saves", "slot1.json");
+        /// <summary>The save slot: -rrSavePath <file> overrides it (automation and playtests use a disposable file, so the
+        /// player's own slot is never touched).</summary>
+        public static string SavePath => Args.Value("-rrSavePath") ?? Path.Combine(Application.persistentDataPath, "saves", "slot1.json");
 
         void Awake()
         {
@@ -114,6 +116,7 @@ namespace RR.Game
             EnterGalaxyImmediate();
             Selection.SelectFleet(G, SliceScenario.PlayerFleet);
             Audio.Bed("amb_galaxy");
+            PlaytestMetrics.Init(SavePath);
             var tour = Args.Value("-rrTour");
             if (tour != null) StartCoroutine(Automation.FullTour(this, tour));
             var soak = Args.Value("-rrSoak");
@@ -124,6 +127,8 @@ namespace RR.Game
             if (cap != null) StartCoroutine(Automation.SystemTourFromGalaxy(this, cap));
             var passageTour = Args.Value("-rrPassageTour");
             if (passageTour != null) StartCoroutine(SliceAutomation.PassageTour(this, passageTour));
+            var campaignTour = Args.Value("-rrCampaignTour");
+            if (campaignTour != null) StartCoroutine(CampaignAutomation.Tour(this, campaignTour));
             var problems = SliceRoster.Validate();
             if (problems.Count > 0) { foreach (var p in problems) Debug.LogError("Slice content: " + p); UI.Strategy.Toast("Slice content problem: " + problems[0], "bad"); }
             MaybeShowStartMenu();
@@ -210,11 +215,12 @@ namespace RR.Game
                 if (pv != null && !Rig.Transitioning) Rig.Target.Focus = pv.Root.position;
             }
             HandleInput();
+            CampaignUpdate();
             UI.Strategy.RefreshTop();
             UI.Strategy.UpdateLabels(Rig.Cam, Settings.Overlays && !Busy && Scale != ViewScale.Battle);
             if (_battleHud != null) _battleHud.Update(Rig.Cam);
             if (_slicePanel != null) _slicePanel.Update(Rig.Cam);
-            if (Scale == ViewScale.Battle && Battle != null && Battle.Over && !_resultShown) FinishBattle();
+            if (Scale == ViewScale.Battle && Battle != null && Battle.Over && !_resultShown && ReviewDone()) FinishBattle();
             bool loading = Busy && !string.IsNullOrEmpty(LoadingText);
             if (loading) { UI.ShowLoading(LoadingText, LoadingProgress); _loadingShown = true; }
             else if (_loadingShown) { UI.HideLoading(); _loadingShown = false; }

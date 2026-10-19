@@ -18,7 +18,7 @@ namespace RR.Game
         ScrollView _insp;
         readonly Dictionary<IconKind, Label> _res = new Dictionary<IconKind, Label>();
         readonly Dictionary<IconKind, Label> _inc = new Dictionary<IconKind, Label>();
-        Label _date, _speedLabel;
+        Label _date, _speedLabel, _playerName;
         Button _pause, _s1, _s2, _s3, _overlayBtn;
         readonly List<(VisualElement label, Func<Vector3?> pos, int priority, float minD, float maxD)> _worldLabels = new List<(VisualElement, Func<Vector3?>, int, float, float)>();
         GalaxyState G => _root.G;
@@ -55,6 +55,7 @@ namespace RR.Game
             var name = UIX.Text(G.Player.Name.ToUpperInvariant(), "emblem-name");
             UIRoot.Display(name);
             _top.Add(name);
+            _playerName = name;
             foreach (var (k, col, tip) in new[] { (IconKind.Energy, new Color(1f, 0.85f, 0.4f), "Energy"), (IconKind.Materials, new Color(0.7f, 0.82f, 0.95f), "Materials"),
                          (IconKind.Credits, new Color(0.95f, 0.78f, 0.45f), "Credits"), (IconKind.Influence, new Color(0.78f, 0.65f, 1f), "Influence") })
             {
@@ -85,6 +86,8 @@ namespace RR.Game
         {
             var st = G.Player.Stock;
             var inc = StrategyRules.DailyIncome(G, G.Player.Id);
+            string who = G.Player.Name.ToUpperInvariant();
+            if (_playerName.text != who) _playerName.text = who;
             _res[IconKind.Energy].text = st.Energy.ToString(); _inc[IconKind.Energy].text = "+" + inc.Energy;
             _res[IconKind.Materials].text = st.Materials.ToString(); _inc[IconKind.Materials].text = "+" + inc.Materials;
             _res[IconKind.Credits].text = st.Credits.ToString(); _inc[IconKind.Credits].text = "+" + inc.Credits;
@@ -114,7 +117,11 @@ namespace RR.Game
                 foreach (var f in threats) _outliner.Add(FleetItem(f));
             }
             _outliner.Add(Section("KEY SYSTEMS"));
-            foreach (var s in G.Systems.Where(s => s.Detail != SystemDetail.Distant))
+            var keys = G.Slice != null && G.Slice.Active
+                ? new[] { SliceCampaign.HomeOf(G.Player.Id), SliceCampaign.PassageSystem, Expeditions.System, SliceCampaign.HomeOf(G.Player.Id == "pygmaei" ? "inhumanus" : "pygmaei") }
+                    .Select(G.GetSystem).Where(s => s != null)
+                : G.Systems.Where(s => s.Detail != SystemDetail.Distant);
+            foreach (var s in keys)
             {
                 var it = Item(s.Name, SystemStatus(s), _root.Selection.SystemId == s.Id && _root.Selection.FleetId == null && _root.Selection.PlanetId == null);
                 it.RegisterCallback<ClickEvent>(e => _root.SelectAndFocusSystem(s.Id));

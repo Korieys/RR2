@@ -160,8 +160,11 @@ namespace RR.Game
                     var nameCol = UIX.Div("col-name");
                     var nm = UIX.Div("row");
                     if (ShipCatalog.IsLeader(s.DefId)) { var c = new Icon(IconKind.Crown, Look.GoldBright, 13); c.style.marginRight = 5; nm.Add(c); }
-                    nm.Add(UIX.Text(d.Name, "item-title"));
+                    var prof = G.Slice?.Profile(s.Uid);
+                    nm.Add(UIX.Text(prof?.Name != null ? prof.Name + " (" + d.Name + ")" : d.Name, "item-title"));
                     nameCol.Add(nm);
+                    if (prof != null && prof.Modules.Count > 0)
+                        nameCol.Add(UIX.Text("Fitted: " + string.Join(", ", prof.Modules.Select(x => Commandfall.Core.SliceRules.Module(x).Name)) + ".", "item-sub"));
                     nameCol.Add(UIX.Text(StrategyHud.RoleText(d) + ", tier " + d.Roster.Tier + (ShipCatalog.IsLeader(s.DefId) ? ". Leader: its loss ends the battle." : ""), "item-sub"));
                     row.Add(nameCol);
                     row.Add(Stat("HULL", s.Hp + "/" + d.MaxHp));
@@ -190,6 +193,11 @@ namespace RR.Game
             };
             left.Add(UIX.Text("YOUR FORCE: " + mine.Name.ToUpperInvariant(), "h-section"));
             var sv = new ScrollView(ScrollViewMode.Vertical); sv.style.flexGrow = 1; sv.style.flexShrink = 1; sv.Add(rows); left.Add(sv);
+            if (G.Slice != null && G.Slice.Active)
+            {
+                right.Add(UIX.Text("WHAT IS AT STAKE", "h-section"));
+                foreach (var l in SliceCampaign.PreviewEncounter(G, e)) right.Add(UIX.Text(l, "item-sub"));
+            }
             right.Add(UIX.Text("SCOUTED ENEMY LINE", "h-section"));
             foreach (var uid in enemyLine)
             {
@@ -210,6 +218,7 @@ namespace RR.Game
             var info = UIX.Div(); info.style.flexShrink = 1; info.Add(budget); info.Add(errors); foot.Add(info);
             foot.Add(UIX.Div("spacer"));
             foot.Add(UIX.Btn("Suggest a line", () => { selection.Clear(); selection.AddRange(BattleBridge.AutoSelect(G, mine)); rebuild(); }));
+            if (G.Slice != null && G.Slice.Active) foot.Add(UIX.Btn("Offer terms instead", () => _game.CampaignOfferBeforeBattle()));
             foot.Add(UIX.Btn("Withdraw without fighting", () => withdraw(), "btn-danger"));
             go = UIX.Btn("Commit to battle", () => commit(new List<int>(selection)), "btn-primary");
             foot.Add(go);

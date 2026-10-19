@@ -650,6 +650,52 @@ INHUMANUS = {
 
 
 # =====================================================================================================
+# Capital-ship modules (Prompt 7): separate assemblies attached to a hull at run time, sized for a hull of length 1
+# (the game scales them to the ship). The base hull and its optional modules stay separate meshes, so a fit can be
+# described by configuration ids: <hull id> + module:<id>, ... NEW ART, pending approval.
+# =====================================================================================================
+
+def module_afterburners(sid):
+    # Side pods along the stern quarter, just proud of a hull 0.4 lengths wide (measured on both flagships).
+    b = Builder(sid)
+    for side in (-1, 1):
+        x = side * 0.18
+        b.tube([V((x, -0.44, 0.0)), V((x, -0.14, 0.0))], [0.035, 0.03], sides=10, cls=HULL, point_end=False)
+        b.tube([V((x, -0.44, 0.0)), V((x, -0.5, 0.0))], [0.04, 0.045], sides=10, cls=TRIM, point_end=False)
+        b.tube([V((x, -0.5, 0.0)), V((x, -0.512, 0.0))], [0.036, 0.032], sides=10, cls=GLASS, emis=1.8, point_end=False)
+        b.box(V((side * 0.15, -0.3, 0.0)), (0.03, 0.05, 0.015), cls=TRIM)
+    return b.to_object()
+
+
+def module_ablative_plating(sid):
+    # Overlapping plates on the flanks amidships, where both flagships are widest.
+    b = Builder(sid)
+    for side in (-1, 1):
+        for k in range(3):
+            y = -0.24 + k * 0.13
+            b.box(V((side * 0.2, y, 0.0)), (0.018, 0.06, 0.06), rot=rot_z(side * 4), cls=TRIM, taper=0.85)
+    return b.to_object()
+
+
+def module_heavy_battery(sid):
+    # A twin-barrel turret on the dorsal spine amidships, firing forward over the prow.
+    b = Builder(sid)
+    b.box(V((0, -0.06, 0.2)), (0.055, 0.065, 0.03), cls=TRIM, taper=0.8)
+    b.box(V((0, -0.07, 0.235)), (0.04, 0.05, 0.025), cls=HULL, taper=0.85)
+    for x in (-0.02, 0.02):
+        b.tube([V((x, -0.03, 0.24)), V((x, 0.2, 0.245))], [0.011, 0.009], sides=8, cls=TRIM, point_end=False)
+        b.tube([V((x, 0.2, 0.245)), V((x, 0.215, 0.245))], [0.009, 0.008], sides=8, cls=GLASS, emis=1.0, point_end=False)
+    return b.to_object()
+
+
+MODULES = {
+    "module_afterburners": module_afterburners,
+    "module_ablative_plating": module_ablative_plating,
+    "module_heavy_battery": module_heavy_battery,
+}
+
+
+# =====================================================================================================
 
 def build_all(only=None):
     jobs = []
@@ -661,6 +707,8 @@ def build_all(only=None):
         jobs.append((sid, lambda sid=sid, p=p: pygmaei_ship(sid, p)))
     for sid, p in INHUMANUS.items():
         jobs.append((sid, lambda sid=sid, p=p: inhumanus_ship(sid, p)))
+    for sid, fn in MODULES.items():
+        jobs.append((sid, lambda sid=sid, fn=fn: fn(sid)))
     jobs.append(("token_craigon_auxiliary_orbital", lambda: craigon_auxiliary_hulk("token_craigon_auxiliary_orbital")))
     jobs.append(("station_silex_citadel", lambda: silex_citadel_station("station_silex_citadel")))
     jobs.append(("wreck_hulk_a", lambda: wreck_hulk("wreck_hulk_a")))

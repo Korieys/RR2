@@ -22,7 +22,7 @@ namespace RR.Game
 
         public void MaybeShowStartMenu()
         {
-            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour")) return;
+            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour")) return;
             _startMenuShown = true;
             ShowPassageMenu();
         }
@@ -48,6 +48,8 @@ namespace RR.Game
             Option("Battle as the Inhumanus escort", () => StartPassage(PassageVariant.Challenge, FactionId.Inhumanus, false));
             Option("Two players at this machine", () => StartPassage(PassageVariant.Challenge, FactionId.Pygmaei, true));
             Option("Training: three lessons", () => StartPassage(PassageVariant.Training, FactionId.Pygmaei, false));
+            Option("Campaign: the passage, as the Pygmaei", () => StartPassageCampaign(FactionId.Pygmaei));
+            Option("Campaign: the passage, as the Inhumanus", () => StartPassageCampaign(FactionId.Inhumanus));
             Option("Continue the Aurelith campaign", () => UI.CloseModal());
             m.Add(Para(PassageScenario.Briefing(PassageVariant.Challenge, FactionId.Pygmaei), 13, new Color(0.75f, 0.77f, 0.8f)));
             var fleets = UIX.Div("row"); fleets.style.alignItems = Align.FlexStart; m.Add(fleets);

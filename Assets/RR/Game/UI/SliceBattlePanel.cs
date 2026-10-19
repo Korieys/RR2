@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Commandfall.Core;
@@ -17,7 +18,10 @@ namespace RR.Game
         public VisualElement Root { get; private set; }
         readonly VisualElement _panel, _lesson, _labels;
         readonly Label _threat, _opportunity, _exposure, _doctrine, _contracts, _ai, _lessonText;
-        readonly Button _overclock, _turn, _lessonNext;
+        readonly Button _overclock, _turn, _board, _offer, _delegate, _delegateAll, _lessonNext;
+        readonly Label _delegation;
+        /// <summary>Set by GameRoot: opens the terms form (campaign battles only).</summary>
+        public Action OfferTerms;
         readonly List<Label> _worldLabels = new List<Label>();
         int _lesson_ = 0, _sig = -1;
         bool _doctrineOpen;
@@ -64,6 +68,11 @@ namespace RR.Game
             var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.flexWrap = Wrap.Wrap; _panel.Add(row);
             _overclock = UIX.Btn("Overclock (O)", () => _b.ToggleOverclock()); row.Add(_overclock);
             _turn = UIX.Btn("Turn (R)", () => _b.ToggleTurn()); row.Add(_turn);
+            _board = UIX.Btn("Board (B)", () => _b.ToggleBoard()); row.Add(_board);
+            _offer = UIX.Btn("Offer terms", () => OfferTerms?.Invoke()); row.Add(_offer);
+            _delegate = UIX.Btn("Delegate this round", () => { if (_b.Delegated) _b.StopDelegating(); else _b.Delegate(false); _sig = -1; }); row.Add(_delegate);
+            _delegateAll = UIX.Btn("Delegate the battle", () => { _b.Delegate(true); _sig = -1; }); row.Add(_delegateAll);
+            _delegation = Line("", 12, new Color(0.65f, 0.85f, 1f)); _panel.Add(_delegation);
             row.Add(UIX.Btn("Doctrine", () => { _doctrineOpen = !_doctrineOpen; _sig = -1; }));
             _doctrine = Line("", 12, new Color(0.8f, 0.82f, 0.86f)); _panel.Add(_doctrine);
             _ai = Line("", 11, new Color(0.6f, 0.62f, 0.66f)); _panel.Add(_ai);
@@ -94,6 +103,21 @@ namespace RR.Game
             _turn.style.display = u != null && SliceRules.HasArc(u) ? DisplayStyle.Flex : DisplayStyle.None;
             _turn.SetEnabled(_b.PlayersTurn);
             _turn.text = _b.TurnMode ? "Cancel turn (R)" : "Turn (R)";
+            bool canDelegate = !_b.Setup.Hotseat && !S.IsOver;
+            _delegate.style.display = canDelegate ? DisplayStyle.Flex : DisplayStyle.None;
+            _delegate.text = _b.Delegated ? "Take command back" : "Delegate this round";
+            _delegate.tooltip = _b.Delegated ? "Your orders return to you from the next decision." : BattlePresentation.DelegateDisclosure;
+            _delegateAll.style.display = canDelegate && !_b.Delegated ? DisplayStyle.Flex : DisplayStyle.None;
+            _delegateAll.tooltip = BattlePresentation.DelegateDisclosure;
+            _delegation.style.display = _b.Delegated ? DisplayStyle.Flex : DisplayStyle.None;
+            _delegation.text = _b.Delegated ? (_b.DelegatedForBattle ? "Delegated for the rest of the battle. " : $"Delegated until the end of round {S.Round}. ") + BattlePresentation.DelegateDisclosure : "";
+            _board.style.display = u != null && SliceRules.CaptureEnabled(S) ? DisplayStyle.Flex : DisplayStyle.None;
+            _board.SetEnabled(_b.PlayersTurn);
+            _board.text = _b.BoardMode ? "Cancel boarding (B)" : "Board (B)";
+            _offer.style.display = _b.Setup.EngagementId != null && OfferTerms != null ? DisplayStyle.Flex : DisplayStyle.None;
+            var whyNot = Negotiation.CanOffer(S, _b.Offers, me);
+            _offer.SetEnabled(_b.PlayersTurn && whyNot == null);
+            _offer.tooltip = whyNot ?? "Propose terms to end the battle now. They are bound to this exact position.";
 
             int sig = S.Revision * 31 + _b.AnalysisRevision * 17 + (_doctrineOpen ? 1 : 0) + _lesson_ * 7 + (_b.MyThreat != null ? _b.MyThreat.Lines.Count * 3 : 0) + (_b.AiThinking ? 5 : 0);
             if (sig != _sig)
@@ -124,7 +148,8 @@ namespace RR.Game
             _doctrine.text = _doctrineOpen ? SliceRoster.DoctrineCard(S.Players[me].Faction) + " " + SliceRoster.DoctrineCard(S.Players[1 - me].Faction) +
                 " Capital ships (flagships, battleships, bastions) cannot fire their main battery into the 120° arc astern; turning in place uses the move." : "";
             _doctrine.style.display = _doctrineOpen ? DisplayStyle.Flex : DisplayStyle.None;
-            _ai.text = _b.AiThinking ? "The opponent is considering its order." : string.IsNullOrEmpty(_b.AiReason) ? "" : "Opponent's last decision: " + _b.AiReason + ".";
+            _ai.text = _b.AiThinking ? (_b.Delegated && S.ActiveSeat == me ? "The delegate is considering your order." : "The opponent is considering its order.")
+                     : string.IsNullOrEmpty(_b.AiReason) ? "" : "Last AI decision: " + _b.AiReason + ".";
             if (_b.Training)
             {
                 _lesson.style.display = DisplayStyle.Flex;
@@ -138,7 +163,7 @@ namespace RR.Game
         {
             var S = _b.S;
             var items = new List<(Vector3 pos, string text, Color col)>();
-            foreach (var u in S.Units.Where(x => x.OnBoard && SliceRules.Heat(x) > 0))
+            foreach (var u in S.Units.Where(x => x.OnBoard && SliceRules.Heat(x) > 0 && _b.Visible(x)))
             {
                 var p = _b.ViewPosition(u.Id);
                 if (p.HasValue) items.Add((p.Value + Vector3.up * 1.0f, SliceRules.Overheated(u) ? $"OVERHEATED {SliceRules.Heat(u)}" : $"heat {SliceRules.Heat(u)}",

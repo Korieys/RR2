@@ -255,6 +255,7 @@ namespace RR.Game
             float scale = Mathf.Clamp(1.75f / Mathf.Max(0.4f, len), 0.5f, 1.6f) * (u.R.IsCapital ? 1.1f : u.R.IsSmallCraft ? 0.85f : 1f);
             m.transform.localScale = Vector3.one * scale;
             m.transform.localPosition = new Vector3(0, 0.32f, 0);
+            ShipModules.Attach(m, SliceRules.ModulesOf(u.Equipment), u.DefId);   // fitted modules are visible on the hull
             var fleet = Setup.FleetIds[u.Owner] != null ? _root.G.GetFleet(Setup.FleetIds[u.Owner]) : null;
             var col = fleet != null ? Look.PolityColor(_root.G, fleet.OwnerId) : FactionColor(_root.G, S.Players[u.Owner].Faction);
             var ringMat = Look.Unlit(lib.fx, col * 1.1f, "Owner ring");

@@ -40,7 +40,8 @@ namespace Commandfall.Core
                 foreach (var entry in p.Army.Units)
                 {
                     var u = RosterArmy.CreateUnit(s.NextUnitId++, seat, entry.UnitId, p.Caps);
-                    u.Equipment.AddRange(entry.Equipment);   // slice: fleet-contract tokens (SliceRules)
+                    u.Equipment.AddRange(entry.Equipment);   // slice: contract, module and policy tokens (SliceRules)
+                    if (entry.Equipment.Count > 0) { RosterArmy.Recompute(u, p.Caps); u.Hp = u.MaxHp; }
                     s.Units.Add(u);
                     if (u.R.IsLeaderRole && ps.CommanderId == 0) ps.CommanderId = u.Id;
                 }
@@ -135,6 +136,11 @@ namespace Commandfall.Core
                 }
                 case CommandType.Attack:
                 {
+                    if (c.Option == SliceRules.BoardOption)
+                    {
+                        var board = SliceRules.ValidateBoarding(s, u, c.Target);
+                        return board == null ? Validation.Success : Validation.Fail(board);
+                    }
                     if (c.Option != 0 && c.Option != SliceRules.OverclockOption) return Validation.Fail("Unknown attack order.");
                     bool overclock = c.Option == SliceRules.OverclockOption;
                     if (overclock && SliceRules.CanOverclock(s, u) is string oc) return Validation.Fail(oc);
@@ -227,6 +233,7 @@ namespace Commandfall.Core
                 }
                 case CommandType.Attack:
                 {
+                    if (c.Option == SliceRules.BoardOption) { SliceRules.ApplyBoarding(s, u, c.Target, ev); break; }
                     bool overclock = c.Option == SliceRules.OverclockOption;
                     var o = RosterCombat.ResolveBasic(s, u, c.Target, overclock: overclock);
                     BreakCloak(s, u, ev);

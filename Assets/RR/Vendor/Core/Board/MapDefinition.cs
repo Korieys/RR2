@@ -338,6 +338,39 @@ namespace Commandfall.Core
                 .Mirror(TerrainType.Cover, (0, 1), (-5, 1), (-2, -1))
                 .Mirror(TerrainType.Elevated, (-4, -1), (-1, 2))
                 .Mirror(TerrainType.Hazard, (-6, 2)));
+
+            // The trade passage after a capital ship was destroyed there (Prompt 9): the same layout with the new wreckage
+            // across the passage mouths, through the same validator (still no dead ends).
+            Register(new MapDefinition("trade_passage_wrecked", "The Trade Passage, among the wreckage",
+                    "The trade passage after a flagship died in it: fresh wreckage lies across both central approaches.",
+                    BoardHalfWidth, BoardHalfDepth)
+                .Orbital()
+                .Deployment(BoardDeploymentDepth)
+                .Mirror(TerrainType.Obstacle, (-2, 0), (-3, 0), (1, -3))
+                .Mirror(TerrainType.Cover, (0, 1), (-5, 1), (-2, -1))
+                .Mirror(TerrainType.Elevated, (-4, -1))
+                .Mirror(TerrainType.Hazard, (-6, 2)));
+
+            // The Eclipse expedition drifts (Prompt 10): two layouts; which one the derelict lies in is fixed when the
+            // expedition is created. Nebula banks everywhere (sensor ranges are short in fog of war).
+            Register(new MapDefinition("eclipse_drift_a", "The broken drift",
+                    "A broken drift on the edge of The Eclipse Sector: ion storms on both flanks, nebula banks and a silent derelict.",
+                    BoardHalfWidth, BoardHalfDepth)
+                .Orbital()
+                .Deployment(BoardDeploymentDepth)
+                .Mirror(TerrainType.Obstacle, (0, -2), (3, -1))
+                .Mirror(TerrainType.Cover, (-2, 1), (1, -1), (-6, 2))
+                .Mirror(TerrainType.Elevated, (-3, 0), (2, 1), (-1, -1))
+                .Mirror(TerrainType.Hazard, (-6, 1), (-4, -1)));
+            Register(new MapDefinition("eclipse_drift_b", "The dense drift",
+                    "A dense drift on the edge of The Eclipse Sector: ion storms close around the derelict at the centre.",
+                    BoardHalfWidth, BoardHalfDepth)
+                .Orbital()
+                .Deployment(BoardDeploymentDepth)
+                .Mirror(TerrainType.Obstacle, (-4, 0), (5, -1))
+                .Mirror(TerrainType.Cover, (-6, 1), (3, 1))
+                .Mirror(TerrainType.Elevated, (0, -2), (-3, 2), (2, -3))
+                .Mirror(TerrainType.Hazard, (1, -1), (-2, 1)));
         }
 
         /// <summary>Validates a map's topology (repairing it deterministically if needed) and adds it to the library. A map

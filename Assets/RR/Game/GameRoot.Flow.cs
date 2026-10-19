@@ -233,6 +233,7 @@ namespace RR.Game
             var e = G.PendingEngagement;
             string err;
             _setup = BattleBridge.Prepare(G, e, selection, out err);
+            if (_setup != null) PlaytestMetrics.Decision("committed to battle");
             if (_setup == null) { UI.Strategy.Toast(err, "bad"); Audio.Play("ui_invalid"); yield break; }
             var session = BattleSession.Begin(_setup, out err);
             if (session == null) { UI.Strategy.Toast(err, "bad"); yield break; }
@@ -254,6 +255,8 @@ namespace RR.Game
             Battle.transform.position = new Vector3(0, 0, 0);
             Scale = ViewScale.Battle;
             _resultShown = false;
+            ResetReview();
+            PlaytestMetrics.BattleStart(session.Setup.BattleId, session.Setup.Scenario ?? (session.Setup.EngagementId != null ? "campaign" : "skirmish"));
             Rig.Limits = new CamLimits { MinDistance = 9, MaxDistance = 52, MinPitch = 24, MaxPitch = 82, FocusBounds = new Bounds(Vector3.zero, new Vector3(26, 2, 18)) };
             Rig.Near = 0.1f; Rig.Far = 9000;
             var pose = BattlePose();
@@ -263,6 +266,7 @@ namespace RR.Game
             UI.Strategy.ClearLabels();
             _battleHud = new BattleHud(this, Battle, UI.HudLayer);
             _slicePanel = new SliceBattlePanel(Battle, UI.HudLayer);
+            if (Battle.Setup.EngagementId != null) _slicePanel.OfferTerms = OfferInBattle;
             yield return null;
             UI.FadeFrom(frame, Settings.ReducedMotion ? 0.15f : 0.55f);
             Rig.TransitionTo(pose, Settings.ReducedMotion ? 0.15f : 1.1f);
@@ -274,15 +278,27 @@ namespace RR.Game
 
         void FinishBattle()
         {
+            if (_setup.Scenario == "expedition") { FinishExpedition(); return; }
             if (_setup.EngagementId == null) { FinishSkirmish(); return; }
             _resultShown = true;
-            var o = BattleBridge.Extract(_setup, Battle.S);
+            var o = BattleBridge.Extract(_setup, Battle.Session, _pendingSettlement);
+            _pendingSettlement = null;
             var e = G.GetEngagement(_setup.EngagementId);
             var sys = G.GetSystem(e.SystemId);
+            int historyBefore = G.Slice?.History.Count ?? 0;
             var r = BattleBridge.Apply(G, _setup, o);     // applied once, keyed by battle id
             if (!r.Ok) Automation.Note("battle result rejected: " + r.Reason);
+            _campaign?.Invalidate();
             string consequence;
-            if (sys.Blockaded) consequence = G.GetPolity(sys.OrbitalControlId).Name + " now holds the orbit of " + sys.Name + ". Its worlds are blockaded but remain " + G.GetPolity(sys.OwnerId).Name + "; a conquest would still need landing and ground campaigns.";
+            if (G.Slice != null && G.Slice.Active)
+            {
+                // The passage campaign states its own consequences: access, standing, wrecks, custody, objectives.
+                var lines = G.Slice.History.Skip(historyBefore).Select(h => o.DecisiveText != null ? h.Text.Replace(o.DecisiveText, "").Replace("  ", " ").Trim() : h.Text).ToList();
+                consequence = (o.DecisiveText != null ? "Decisive action: " + o.DecisiveText + "\n" : "") +
+                              (lines.Count > 0 ? string.Join("\n", lines) : "Nothing changed hands.");
+                Automation.Note("campaign battle applied: " + o.Reason + " | " + consequence.Replace("\n", " | "));
+            }
+            else if (sys.Blockaded) consequence = G.GetPolity(sys.OrbitalControlId).Name + " now holds the orbit of " + sys.Name + ". Its worlds are blockaded but remain " + G.GetPolity(sys.OwnerId).Name + "; a conquest would still need landing and ground campaigns.";
             else if (sys.OwnerId == G.Player.Id) consequence = "The orbit of " + sys.Name + " remains in Silex hands. The surviving raiders are falling back.";
             else consequence = "The surviving ships of the defeated fleet are withdrawing from " + sys.Name + ".";
             _resultDone = () => { _resultDone = null; StartCoroutine(EndBattleRoutine()); };
@@ -373,7 +389,7 @@ namespace RR.Game
             UI.Strategy.Root.style.display = UnityEngine.UIElements.DisplayStyle.Flex;
         }
 
-        IEnumerator ReplaceState(GalaxyState loaded, BattleSession resume = null)
+        IEnumerator ReplaceState(GalaxyState loaded, BattleSession resume = null, string toast = null)
         {
             Busy = true;
             yield return CaptureClean();
@@ -387,7 +403,8 @@ namespace RR.Game
             Destroy(Galaxy.gameObject);
             Galaxy = GalaxyPresentation.Build(G, WorldRoot);
             var old = UI.Strategy.Root;
-            Selection.SelectFleet(G, G.GetFleet(SliceScenario.PlayerFleet) != null ? SliceScenario.PlayerFleet : null);
+            Selection.SelectFleet(G, G.GetFleet(SliceScenario.PlayerFleet) != null ? SliceScenario.PlayerFleet
+                                     : G.Fleets.FirstOrDefault(f => f.OwnerId == G.Player.Id)?.Id);
             Scale = ViewScale.Galaxy;
             EnterGalaxyImmediate();
             Busy = false;
@@ -400,7 +417,7 @@ namespace RR.Game
                 yield break;
             }
             UI.FadeFrom(frame, 0.4f);
-            UI.Strategy.Toast("Loaded the save from " + GalaxyState.DateLabel(G.Day) + ".", "ok");
+            UI.Strategy.Toast(toast ?? "Loaded the save from " + GalaxyState.DateLabel(G.Day) + ".", "ok");
             UI.Strategy.RefreshAll();
             
         }

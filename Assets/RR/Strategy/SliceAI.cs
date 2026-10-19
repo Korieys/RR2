@@ -28,13 +28,26 @@ namespace RR.Strategy
 
         public static int StableSeed(MatchState s) => (int)(Serialization.StateHash(s) & 0x7fffffff);
 
+        /// <summary>What <paramref name="me"/> knows: under fog of war, only visible enemy ships (the planning view). The
+        /// planning view takes hidden ships off the board but keeps their positions; they are parked on one fixed hex here
+        /// so nothing derived from the view (the state-hash seed included) can depend on where an unseen ship is.</summary>
+        static MatchState Known(MatchState s, int me)
+        {
+            if (!s.Config.FogOfWar) return s;
+            var v = Vision.PlanningView(s, me);
+            if (ReferenceEquals(v, s)) return s;
+            foreach (var u in v.Units)
+                if (u.Owner != me && !u.OnBoard && s.Unit(u.Id).OnBoard) u.Position = default;
+            return v;
+        }
+
         public Command Choose(MatchState s)
         {
             LastEvaluations = 0;
             int me = s.ActiveSeat, enemy = 1 - me;
 
             // 1. A legal lethal line on the enemy leader: take it (its first order; the next call finishes the activation).
-            var win = CommandThreat.Assess(s, enemy);
+            var win = CommandThreat.Assess(Known(s, me), enemy);
             LastEvaluations += win.CommandsChecked;
             if (win.Lines.Count > 0)
             {
@@ -43,10 +56,10 @@ namespace RR.Strategy
                 return (line.Move ?? line.Action).Clone();
             }
 
-            var baseline = new RosterAI(AIDifficulty.Tactical, StableSeed(s)).ChooseAction(s);
+            var baseline = new RosterAI(AIDifficulty.Tactical, StableSeed(Known(s, me))).ChooseAction(s);
 
             // 2. Our leader can be killed by the enemy's next activation: defend first.
-            var danger = CommandThreat.Assess(s, me);
+            var danger = CommandThreat.Assess(Known(s, me), me);
             LastEvaluations += danger.CommandsChecked;
             if (danger.Lines.Count > 0)
             {
@@ -55,7 +68,7 @@ namespace RR.Strategy
             }
 
             // 3. Our ships could destroy their leader over this round if all of them chose it: focus fire.
-            var ours = CommandThreat.RoundExposure(s, enemy);
+            var ours = CommandThreat.RoundExposure(Known(s, me), enemy);
             LastEvaluations += ours.CommandsChecked;
             if (ours.Critical)
             {
@@ -64,7 +77,7 @@ namespace RR.Strategy
             }
 
             // 4. Their ships could do the same to ours: reduce the exposure.
-            var theirs = CommandThreat.RoundExposure(s, me);
+            var theirs = CommandThreat.RoundExposure(Known(s, me), me);
             LastEvaluations += theirs.CommandsChecked;
             if (theirs.Critical)
             {
@@ -80,7 +93,8 @@ namespace RR.Strategy
         /// firing position); null when no ship of ours can reach it.</summary>
         Command Focus(MatchState s, int me)
         {
-            var leader = s.Commander(1 - me);
+            var leader = Known(s, me).Commander(1 - me);
+            if (leader == null || !leader.Alive) return null;
             int hull = leader.Hp + leader.ShieldHp;
             Command best = null; int bestDmg = 0;
             var legal = LegalActions.EnumerateRoster(s, 64, 24);
@@ -116,8 +130,8 @@ namespace RR.Strategy
         Command Defend(MatchState s, int me, Command baseline)
         {
             var leaderId = s.Players[me].CommanderId;
-            var danger = CommandThreat.Assess(s, me);
-            var exposure = CommandThreat.RoundExposure(s, me);
+            var danger = CommandThreat.Assess(Known(s, me), me);
+            var exposure = CommandThreat.RoundExposure(Known(s, me), me);
             var threatening = new HashSet<int>(danger.Lines.Select(l => l.AttackerId).Concat(exposure.ByShip.Select(x => x.unitId)));
             var legal = LegalActions.EnumerateRoster(s, 128, 24);
             var candidates = new List<Command>();
@@ -133,8 +147,8 @@ namespace RR.Strategy
 
             (int lines, int over, int total) Score(MatchState st)
             {
-                var d = CommandThreat.Assess(st, me);
-                var x = CommandThreat.RoundExposure(st, me);
+                var d = CommandThreat.Assess(Known(st, me), me);
+                var x = CommandThreat.RoundExposure(Known(st, me), me);
                 LastEvaluations += d.CommandsChecked + x.CommandsChecked;
                 return (d.Lines.Count, Math.Max(0, x.Total - x.LeaderHull + 1), x.Total);
             }

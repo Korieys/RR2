@@ -7,7 +7,8 @@ Updated 2026-10-19, end of Prompt 0 (audit). Branch `claude/rule-ruin-vertical-s
 | Prompt 0: contract and audit | Done (this document, [PROJECT_CONTRACT](PROJECT_CONTRACT.md), [DECISIONS](DECISIONS.md), [ACCEPTANCE](ACCEPTANCE.md)) |
 | Prompt 1: authoritative deterministic combat | Done and verified (see "Prompt 1 result"). |
 | Prompts 2 to 5: battlefield, flagship protection, two fleets, the encounter | Done and verified (see "Prompts 2 to 5 result"). Checkpoint after Prompt 5: the tactical hook works by the rules; human playtesting has not happened. |
-| Prompts 6 to 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
+| Prompts 6 to 10: campaign, capital ships, negotiation and capture, consequences, the Eclipse expedition | Done and verified in tests and an automated tour (see "Prompts 6 to 10 result"). Not yet played by a person. |
+| Prompts 11 and 12 | In progress. The creator authorised working through the whole pack on 2026-10-19; CR-01 is still open, so presentation changes stay small and are listed for the eventual merge. |
 
 ## Verified baseline
 
@@ -69,6 +70,7 @@ What exists today, against what each prompt needs. File paths are under `Assets/
 | D-08 | The generated catalog repeats the `LEADER` tag on both flagships (`RosterCatalog.g.cs`, Pygmaei and Inhumanus flagship entries). Harmless today; content validation should catch it. | Low | 4 |
 | D-09 | HANDOFF known weaknesses remain (Inhumanus title under the inspector at the default overview framing, provisional emblems, transition double image). | Low | 11 |
 | D-10 | Vendored patches will diverge from Commandfall upstream (VS-02); an upstream port is not scheduled. | Medium, deferred | 12 |
+| D-18 | `-rrSavePath`, documented in Prompt 0 as the way to keep automation away from the player's save, was never implemented: every automated tour this session (the Prompt 0 baseline on the main build, Prompts 1 to 10 on `Builds/VS`) saved to the real slot `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\Rule and Ruin Slice\saves\slot1.json`. Whatever save was there before 2026-10-19 was overwritten and cannot be recovered; the file now holds a tour's campaign. Fixed: `GameRoot.SavePath` honours `-rrSavePath`, and local metrics follow it. | High (data loss, reported to the creator) | Fixed in Prompt 12 |
 
 ## Milestone dependencies
 
@@ -154,6 +156,71 @@ human duration is unmeasured.
 **Known gaps:** no interactive deployment screen (curated or automatic deployment only); contracts are chosen through army data, with
 no campaign battle-preparation control yet; the slowest AI decision measured about 2 seconds (worker thread, the interface stays live);
 training lessons are guidance, not enforced steps; ship art is first-pass and unapproved; human playtesting has not happened.
+
+## Prompts 6 to 10 result (2026-10-19)
+
+**Rules** (vendored patch vs-3, [VENDOR_PATCHES](VENDOR_PATCHES.md); decisions VS-19 to VS-26): capital-ship modules applied by the
+vendored stat computation; lawful capture by boarding under a scenario policy (`VictoryReason.LeaderCaptured`); the wrecked passage
+and the two expedition drifts, all through the ordinary validator. Rules version `...+vs-3`; battles recorded under vs-2 are refused.
+
+**Strategy layer:** `SliceCampaign` (campaign start, objectives, access and toll, relations with bounded timed modifiers, ship
+profiles and service records, refit, repair, rename, wrecks, salvage, history, commissioning a replacement as a new ship),
+`Negotiation` (offers bound to a battle revision, the pressure-versus-cost verdict with every factor listed, settlement as one rules
+command), `Expeditions` (fixed conditions from the seed, reconnaissance, withdrawal, a fogged battle), save format version 2.
+
+**Game:** the passage campaign from the F6 menu (either faction); a compact campaign panel (passage, objective, actions; details on
+request); the hangar with a live 3D view of the actual hull and its modules, rename, repair, refit with preview; battle preparation
+with the campaign's stakes, the named flagship and its modules, and "Offer terms instead"; terms in battle (Offer terms, once per
+round) and boarding mode (B); the campaign result with the decisive action and every resulting history event; history and service
+records; salvage; the expedition briefing and its fogged battle (unseen ships are not drawn, their cards say "out of sight", every
+preview and the threat analysis use the fogged view). Modules are separate meshes fitted to each hull from measured data
+([DESIGN_REFERENCE](DESIGN_REFERENCE.md)).
+
+**Defects found and fixed while verifying:**
+* D-13 (fixed): the slice AI seeded its planner from the full state's hash, so under fog of war an unseen ship's position could change
+  its decision. Hidden ships are now parked on one hex in the AI's view (`SliceAI.Known`); `ExpeditionTests.UnderFog_...` covers it.
+* D-14 (fixed): `Negotiation.Decide` read the full state when the other side offered to yield; it now reads the decider's view.
+* D-15 (fixed): the top bar kept the previous player's name after a new campaign; key systems listed the Aurelith systems; a new
+  campaign announced "Loaded the save"; the hangar name field and the terms dropdown were unreadable (light text on a light field).
+* D-16 (fixed): modules were sized for the hull's bounds, so they floated off the narrower Pygmaei spine and stood off the Inhumanus
+  rings; they are now fitted per hull from ray-cast measurements (`ShipMounts.g.cs`).
+* D-17 (fixed): the campaign result repeated the decisive action inside the battle's history line; the campaign panel overlapped the
+  fleet outliner and stayed up behind open windows.
+
+**Tests:** 235/235 before the Prompt 12 additions (146 vendored, 89 slice). New in `CampaignTests`: `PassageCampaignTests`
+(start from the existing galaxy; success and failure galaxy to battle to galaxy with saves at every stage; a bounded recovery route;
+retreat), `CapitalShipTests` (rename, refit, fight, return, repair, save, deploy again as the same ship; illegal and unaffordable refits;
+destruction keeps the record, never duplicates modules, and a replacement is a new ship), `NegotiationTests` (accepted settlement
+applied atomically and once; stale, impossible and invalid-custody offers refused; a rejected offer followed by combat with the
+verdict explained; the AI conceding under pressure; lawful capture's preconditions; each ending changing the campaign differently),
+`ConsequenceTests` (two endings from separate saves; finite, previewed, reload-proof salvage; bounded once-only reactions),
+`ExpeditionTests` (conditions fixed at creation; reconnaissance changes knowledge, not odds; withdrawal; the fogged battle resolves
+once; the AI plans only from what it can see).
+
+**Runtime** (`Builds/VS`, 1920x1080, `-rrCampaignTour`; [log](evidence/p6-10/tour_log.txt), 0 exceptions): a new Pygmaei campaign;
+the hangar before and after fitting afterburners (hull 20 to 18, module visible); war declared and the fleet sent; contact at Umbra on
+day 29 with the stakes in battle preparation; the terms form; the campaign battle on `trade_passage` with the capture policy and the
+afterburners in the army; save and load after 10 orders restored the same battle; the Executive Flagship destroyed by an overclocked
+Skirmish Frigate (the decisive action); access to the Pygmaei, the objective secured, standing −20 (flagship loss, 60 days), the wreck
+of Fiduciary Dawn at Umbra, four history events; strategic save and load gave an identical digest; the fleet sailed to Gloam, scouted
+the drift and fought the fogged expedition (3 enemy ships on the board, 2 visible to the player, exactly 2 drawn) and secured the
+derelict (a spare Ablative plating). Frames: [start](evidence/p6-10/c01_campaign_start.jpg),
+[hangar](evidence/p6-10/c03_hangar_refitted.jpg), [battle preparation](evidence/p6-10/c04_battle_prep_stakes.jpg),
+[terms](evidence/p6-10/c05_terms_form.jpg), [battle](evidence/p6-10/c06_campaign_battle.jpg), [result](evidence/p6-10/c07_campaign_result.jpg),
+[after](evidence/p6-10/c08_after_battle.jpg), [history](evidence/p6-10/c09_history.jpg), [expedition](evidence/p6-10/c10_expedition_briefing.jpg),
+[fog](evidence/p6-10/c11_expedition_fog.jpg), [expedition result](evidence/p6-10/c12_expedition_result.jpg). These frames predate
+the D-15 to D-17 fixes; the Prompt 11 evidence shows the result.
+
+**Checkpoint after Prompt 8** (encounter, persistent ship and political consequences as one experience): in the tour, the refit the
+player chose (afterburners) went into the battle, the battle's decisive action is the one the result screen and the history both
+quote, and the galaxy afterwards shows access, standing with its cause, and a wreck that can be salvaged once. The chain
+holds mechanically. Whether a person experiences it as one story is unverified (no human playtest).
+
+**Known gaps:** captures and settlements are exercised in tests, not in the automated tour (the tour's battle ended by destruction);
+the AI never proposes terms itself (it only answers); the in-battle offer is lost if the battle is saved and reloaded in the same round
+(one extra offer becomes possible); a ship that fires under fog reveals where it fired from, and an order into a hex an unseen ship
+holds is refused (VS-26); fog has no hex shading, only hidden ships; the fleet's voyage to Umbra takes 29 days, which is slow at
+the default speed.
 
 ## Prompt 1 plan (as written at the end of Prompt 0)
 

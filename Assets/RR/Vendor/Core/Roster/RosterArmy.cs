@@ -43,6 +43,7 @@ namespace Commandfall.Core
             var w = def.Weapon.Clone();
             if (research) w.Damage += WeaponBonus(caps.Weapon);
             u.Weapon = w;
+            SliceRules.ApplyModules(u);   // slice: fitted capital-ship modules
         }
 
         /// <summary>Tech for a Full Roster army: Balanced = printed codex stats (unlock tier III, no research upgrades);

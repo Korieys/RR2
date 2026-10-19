@@ -15,6 +15,10 @@ namespace RR.Game
     {
         public bool OverclockMode { get; private set; }
         public bool TurnMode { get; private set; }
+        /// <summary>Boarding mode (Prompt 8): an attack order becomes a boarding action against a disabled flagship.</summary>
+        public bool BoardMode { get; private set; }
+        /// <summary>Terms offered in this battle (Negotiation.CanOffer allows one per side per round).</summary>
+        public readonly List<Offer> Offers = new List<Offer>();
         /// <summary>Lethal lines the enemy has on the player's flagship (as if the enemy acted next).</summary>
         public ThreatReport MyThreat { get; private set; }
         /// <summary>Lethal lines the player has on the enemy flagship this activation.</summary>
@@ -34,7 +38,49 @@ namespace RR.Game
         /// <summary>The seat whose orders the interface issues: fixed, or the side to act in a hotseat battle.</summary>
         int CommandSeat => Setup.Hotseat && !S.IsOver ? S.ActiveSeat : Setup.PlayerSeat;
 
-        bool AiControls(int seat) => !Setup.Hotseat && seat != Setup.PlayerSeat;
+        bool AiControls(int seat) => !Setup.Hotseat && (seat != Setup.PlayerSeat || Delegated);
+
+        int _delegateUntilRound = -1;
+        /// <summary>The player's side is being played by the delegate (the same slice AI and rules as the opponent).</summary>
+        public bool Delegated => _delegateUntilRound >= S.Round && !S.IsOver;
+        public bool DelegatedForBattle => _delegateUntilRound == int.MaxValue;
+        public const string DelegateDisclosure = "The delegate is the same AI your opponent uses, playing your ships by the same rules with only what your side can see. Its orders are its own decisions, not guaranteed best play.";
+
+        /// <summary>Hands the player's orders to the delegate until the end of this round, or for the rest of the battle.</summary>
+        public void Delegate(bool restOfBattle)
+        {
+            if (Setup.Hotseat || S.IsOver) return;
+            _delegateUntilRound = restOfBattle ? int.MaxValue : S.Round;
+            Selected = 0; ClearModes(); AbilityMode = false; Picks.Clear();
+            Say((restOfBattle ? "Delegated for the rest of the battle. " : "Delegated until the end of round " + S.Round + ". ") + DelegateDisclosure, "ok");
+            SyncAll(false);
+        }
+
+        public void StopDelegating()
+        {
+            if (_delegateUntilRound < 0) return;
+            _delegateUntilRound = -1;
+            Say("You have command again.", "ok");
+        }
+
+        MatchState _seen; int _seenRevision = -1, _seenSeat = -1;
+        /// <summary>What the commanding seat knows: under fog of war, enemy ships out of its sight are off the board.
+        /// Hover, previews, reach, targets and the threat analysis all read this, so the interface never leaks them.</summary>
+        public MatchState Seen
+        {
+            get
+            {
+                if (!S.Config.FogOfWar) return S;
+                if (_seen == null || _seenRevision != S.Revision || _seenSeat != CommandSeat)
+                {
+                    _seen = Vision.FoggedView(S, CommandSeat); _seenRevision = S.Revision; _seenSeat = CommandSeat;
+                }
+                return _seen;
+            }
+        }
+
+        /// <summary>True if the commanding seat can see this unit (always, without fog of war).</summary>
+        public bool Visible(UnitState u) => !S.Config.FogOfWar || u.Owner == CommandSeat || !u.OnBoard || Seen.Unit(u.Id).OnBoard;
 
         public void ToggleOverclock()
         {
@@ -45,7 +91,21 @@ namespace RR.Game
                 var why = SliceRules.CanOverclock(S, u);
                 if (why != null) { Say(why, "bad"); _root.Audio.Play("ui_invalid"); return; }
             }
-            OverclockMode = !OverclockMode; TurnMode = false;
+            OverclockMode = !OverclockMode; TurnMode = false; BoardMode = false;
+            RefreshCells();
+        }
+
+        public void ToggleBoard()
+        {
+            var u = Selected != 0 ? S.Unit(Selected) : null;
+            if (!BoardMode)
+            {
+                if (u == null) { Say("Select a ship first.", "bad"); return; }
+                var leader = Seen.Commander(1 - u.Owner);
+                var why = leader == null || !leader.OnBoard ? "You cannot see their flagship." : SliceRules.ValidateBoarding(Seen, u, leader.Position);
+                if (why != null) { Say(why, "bad"); _root.Audio.Play("ui_invalid"); return; }
+            }
+            BoardMode = !BoardMode; OverclockMode = false; TurnMode = false;
             RefreshCells();
         }
 
@@ -60,11 +120,11 @@ namespace RR.Game
                 var why = SliceRules.ValidateTurn(S, u, probe);
                 if (why != null) { Say(why, "bad"); _root.Audio.Play("ui_invalid"); return; }
             }
-            TurnMode = !TurnMode; OverclockMode = false;
+            TurnMode = !TurnMode; OverclockMode = false; BoardMode = false;
             RefreshCells();
         }
 
-        void ClearModes() { OverclockMode = false; TurnMode = false; }
+        void ClearModes() { OverclockMode = false; TurnMode = false; BoardMode = false; }
 
         /// <summary>The order a click on <paramref name="h"/> issues for <paramref name="u"/> in the current mode.</summary>
         Command OrderFor(UnitState u, Commandfall.Core.Hex h, bool attack)
@@ -75,18 +135,22 @@ namespace RR.Game
                 int f = SliceRules.NearestFacing(h - u.Position);
                 return SliceRules.Order(CommandType.Move, seat, u.Id, u.Position + SliceRules.FacingVector(f), SliceRules.TurnOption);
             }
+            if (BoardMode && attack) return SliceRules.Order(CommandType.Attack, seat, u.Id, h, SliceRules.BoardOption);
             int opt = OverclockMode ? SliceRules.OverclockOption : 0;
             return SliceRules.Order(attack ? CommandType.Attack : CommandType.Move, seat, u.Id, h, opt);
         }
 
         /// <summary>Reach shown in gold: the overclocked reach in overclock mode.</summary>
         Dictionary<Commandfall.Core.Hex, MoveOption> ShownReach(UnitState u) =>
-            RosterMovement.Reachable(S, u, OverclockMode && SliceRules.CanOverclock(S, u) == null && !u.MovedThisActivation ? SliceRules.OverclockMove : 0);
+            BoardMode ? new Dictionary<Commandfall.Core.Hex, MoveOption>() :
+            RosterMovement.Reachable(Seen, Seen.Unit(u.Id), OverclockMode && SliceRules.CanOverclock(S, u) == null && !u.MovedThisActivation ? SliceRules.OverclockMove : 0);
 
         IEnumerable<Commandfall.Core.Hex> ShownTargets(UnitState u)
         {
-            foreach (var e in S.Units.Where(x => x.OnBoard && x.Owner != u.Owner))
-                if (RosterCombat.ResolveBasic(S, u, e.Position, overclock: OverclockMode).Legal) yield return e.Position;
+            var v = Seen; var me = v.Unit(u.Id);
+            foreach (var e in v.Units.Where(x => x.OnBoard && x.Owner != u.Owner))
+                if (BoardMode ? SliceRules.ValidateBoarding(v, me, e.Position) == null : RosterCombat.ResolveBasic(v, me, e.Position, overclock: OverclockMode).Legal)
+                    yield return e.Position;
         }
 
         /// <summary>Preview lines for the slice modes (null = use the ordinary preview).</summary>
@@ -98,10 +162,13 @@ namespace RR.Game
                 var why = SliceRules.ValidateTurn(S, u, u.Position + SliceRules.FacingVector(f));
                 return why ?? $"Turn to face {SliceRules.FacingNames[f]}. This uses the move; the ship can still fire, into its new arc.";
             }
-            var at = S.UnitAt(h);
+            var v = Seen;
+            var at = v.UnitAt(h);
+            if (BoardMode)
+                return at != null && at.Owner != u.Owner ? SliceRules.BoardingPreview(v, v.Unit(u.Id), h) : "Boarding: choose their disabled flagship, adjacent to this ship.";
             if (at != null && at.Owner != u.Owner)
             {
-                var lines = AttackExplainer.Explain(S, u, h, OverclockMode);
+                var lines = AttackExplainer.Explain(v, v.Unit(u.Id), h, OverclockMode);
                 if (OverclockMode) lines.Add(HeatLine(u));
                 return string.Join(" ", lines);
             }
@@ -129,9 +196,10 @@ namespace RR.Game
             if (S.Revision == _analysisRevision || Animating) return;
             _analysisRevision = S.Revision;
             int me = Setup.PlayerSeat;
-            MyThreat = CommandThreat.Assess(S, me);
-            MyExposure = CommandThreat.RoundExposure(S, me);
-            Opportunity = S.ActiveSeat == me ? CommandThreat.Assess(S, 1 - me) : null;
+            var v = S.Config.FogOfWar ? Vision.FoggedView(S, me) : S;   // only threats from ships the player can see
+            MyThreat = CommandThreat.Assess(v, me);
+            MyExposure = CommandThreat.RoundExposure(v, me);
+            Opportunity = S.ActiveSeat == me ? CommandThreat.Assess(v, 1 - me) : null;
         }
 
         // ------------------------------------------------------------------ AI on a worker thread
@@ -141,7 +209,7 @@ namespace RR.Game
         void StepOpponent()
         {
             int seat = S.ActiveSeat;
-            if (Training)
+            if (Training && seat != Setup.PlayerSeat)
             {
                 var id = S.ActiveUnitId != 0 ? S.ActiveUnitId : S.Units.Where(x => x.Owner == seat && RosterRules.Eligible(S, x)).Select(x => x.Id).FirstOrDefault();
                 var wait = id != 0 ? Command.Wait(seat, id) : Command.Pass(seat);
@@ -187,6 +255,7 @@ namespace RR.Game
             {
                 UnitView v;
                 if (!u.OnBoard || !SliceRules.HasArc(u) || !Units.TryGetValue(u.Id, out v)) continue;
+                if (!Visible(u)) continue;
                 v.T.localRotation = Quaternion.LookRotation(FacingDir(SliceRules.Facing(u)), Vector3.up);
             }
             UpdateArcFan();
@@ -196,7 +265,7 @@ namespace RR.Game
         /// <summary>The selected (or hovered) capital ship's forward arc, drawn on the board: 240° out to its weapon range.</summary>
         void UpdateArcFan()
         {
-            var u = Selected != 0 ? S.Unit(Selected) : HoverHex.HasValue ? S.UnitAt(HoverHex.Value) : null;
+            var u = Selected != 0 ? S.Unit(Selected) : HoverHex.HasValue ? Seen.UnitAt(HoverHex.Value) : null;
             if (u == null || !u.OnBoard || !SliceRules.HasArc(u)) { if (_arcFan != null) _arcFan.SetActive(false); return; }
             if (_arcFan == null)
             {

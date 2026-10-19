@@ -53,6 +53,8 @@ namespace Commandfall.Core
         ActivationLimitTiebreak = 6,
         /// <summary>Full Roster round limit: decided on objectives held, then surviving army value.</summary>
         RoundLimitObjectives = 8,
+        /// <summary>Slice: the enemy flagship was boarded and captured under a capture-enabled scenario policy.</summary>
+        LeaderCaptured = 9,
         /// <summary>Defender denial broken: at the activation limit the attacker held no-man's land (only its units there).</summary>
         ActivationLimitHeldGround = 7,
     }

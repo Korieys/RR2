@@ -103,7 +103,7 @@ namespace RR.Game
                 _left.Add(Card(u, false));
             _right.Clear();
             var sel = _b.Selected != 0 ? S.Unit(_b.Selected) : null;
-            if (sel == null && _b.HoverHex.HasValue) sel = S.UnitAt(_b.HoverHex.Value);
+            if (sel == null && _b.HoverHex.HasValue) sel = _b.Seen.UnitAt(_b.HoverHex.Value);
             if (sel == null) { _right.style.display = DisplayStyle.None; }
             else { _right.style.display = DisplayStyle.Flex; Detail(sel); }
             _options.Clear();
@@ -131,9 +131,10 @@ namespace RR.Game
             name.style.fontSize = 13;
             row.Add(name);
             row.Add(UIX.Div("spacer"));
-            row.Add(UIX.Text(u.Alive ? u.Hp + "/" + u.MaxHp : (u.HasR(RStatusType.Captured) ? "captured" : "lost"), "small"));
+            bool seen = mine || _b.Visible(u);   // under fog of war an unseen enemy ship shows only that it exists
+            row.Add(UIX.Text(!seen ? "out of sight" : u.Alive ? u.Hp + "/" + u.MaxHp : (u.HasR(RStatusType.Captured) ? "captured" : "lost"), "small"));
             c.Add(row);
-            if (u.Alive)
+            if (u.Alive && seen)
             {
                 float f = u.Hp / (float)Mathf.Max(1, u.MaxHp);
                 c.Add(UIX.Bar(f, f < 0.4f ? "bar-hp-low" : "bar-hp"));

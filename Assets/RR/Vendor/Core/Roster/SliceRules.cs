@@ -10,6 +10,13 @@ namespace Commandfall.Core
     /// All state lives in roster statuses on <see cref="UnitState"/> and in roster equipment tokens, so it is serialized,
     /// hashed, replayed and previewed by the existing machinery.
     /// </summary>
+    /// <summary>A capital-ship module (see <see cref="SliceRules.Modules"/>).</summary>
+    public sealed class ModuleDef
+    {
+        public string Id, Name, Slot, Summary;
+        public int Move, Armor, Hull, Damage, Range;
+    }
+
     public static class SliceRules
     {
         // ================================================================== capital firing arcs (Prompt 2)
@@ -124,6 +131,9 @@ namespace Commandfall.Core
                     var t = u.Position + FacingVector(f);
                     if (ValidateTurn(s, u, t) == null) list.Add(Order(CommandType.Move, seat, u.Id, t, TurnOption));
                 }
+            var enemyLeader = s.Commander(1 - seat);
+            if (enemyLeader != null && enemyLeader.OnBoard && ValidateBoarding(s, u, enemyLeader.Position) == null)
+                list.Add(Order(CommandType.Attack, seat, u.Id, enemyLeader.Position, BoardOption));
             if (oc && RosterRules.CanAct(s, u, attack: true) == null)
                 foreach (var e in s.Units.Where(x => x.OnBoard && x.Owner != seat).OrderBy(x => x.Id))
                     if (RosterCombat.ResolveBasic(s, u, e.Position, overclock: true).Legal)
@@ -176,6 +186,92 @@ namespace Commandfall.Core
         /// <summary>Armour lost while overheated (shown in every attack preview).</summary>
         public static int HeatArmorPenalty(UnitState t) => Overheated(t) ? OverheatArmor : 0;
 
+        // ================================================================== capital-ship modules (Prompt 7)
+
+        /// <summary>Army-entry token for a fitted module ("module:afterburners").</summary>
+        public const string ModuleToken = "module:";
+
+        /// <summary>Three slot-compatible sidegrades for capital ships: each gains one thing and pays for it with another.
+        /// Experimental values. They are applied by <see cref="ApplyModules"/> whenever a unit's stats are computed, so
+        /// previews, the AI and replays all see them.</summary>
+        public static readonly ModuleDef[] Modules =
+        {
+            new ModuleDef { Id = "afterburners", Name = "Afterburner stacks", Slot = "propulsion", Move = 1, Hull = -2,
+                Summary = "+1 movement, −2 maximum hull. Reach and escape at the cost of staying power." },
+            new ModuleDef { Id = "ablative_plating", Name = "Ablative plating", Slot = "protection", Armor = 1, Move = -1,
+                Summary = "+1 armour, −1 movement (never below 1). Harder to kill, easier to flank." },
+            new ModuleDef { Id = "heavy_battery", Name = "Heavy battery", Slot = "firepower", Damage = 1, Range = -1,
+                Summary = "+1 weapon damage, −1 maximum range (never below its minimum). Hits harder from closer in." },
+        };
+
+        public static ModuleDef Module(string id) => Modules.FirstOrDefault(m => m.Id == id);
+        public static IEnumerable<string> ModulesOf(IEnumerable<string> equipment) =>
+            equipment.Where(x => x.StartsWith(ModuleToken, StringComparison.Ordinal)).Select(x => x.Substring(ModuleToken.Length));
+
+        /// <summary>Applies fitted modules to derived stats (called at the end of <see cref="RosterArmy.Recompute"/>).</summary>
+        public static void ApplyModules(UnitState u)
+        {
+            foreach (var id in ModulesOf(u.Equipment))
+            {
+                var m = Module(id);
+                if (m == null) continue;
+                u.MaxHp = Math.Max(1, u.MaxHp + m.Hull);
+                u.BaseArmor = Math.Max(0, Math.Min(RosterCombat.ArmorCap, u.BaseArmor + m.Armor));
+                if (m.Damage != 0) u.Weapon.Damage = Math.Max(1, u.Weapon.Damage + m.Damage);
+                if (m.Range != 0) u.Weapon.MaxRange = Math.Max(u.Weapon.MinRange, u.Weapon.MaxRange + m.Range);
+            }
+        }
+
+        /// <summary>Movement change from modules (added in <see cref="RosterMovement.Budget"/>, never below 1 in total).</summary>
+        public static int ModuleMove(UnitState u) => ModulesOf(u.Equipment).Sum(id => Module(id)?.Move ?? 0);
+
+        // ================================================================== capture by boarding (Prompt 8)
+
+        /// <summary>Scenario policy token, carried on each side's flagship entry: capture is allowed in this battle.</summary>
+        public const string CapturePolicyToken = "policy:capture";
+        /// <summary>Attack option: a boarding action against the enemy flagship.</summary>
+        public const int BoardOption = 3;
+        /// <summary>A flagship can be boarded only when DISABLED and at or below this share of its hull (in thirds).</summary>
+        public const int BoardHullThirds = 1;
+        public const int BoarderExposed = 2;
+
+        public static bool CaptureEnabled(MatchState s) => s.Units.Any(u => u.Equipment.Contains(CapturePolicyToken));
+
+        /// <summary>Why <paramref name="u"/> cannot board the ship on <paramref name="target"/> now (null = it can). Every
+        /// condition is stated; low hull or a disabled engine alone never counts as capture.</summary>
+        public static string ValidateBoarding(MatchState s, UnitState u, Hex target)
+        {
+            if (!CaptureEnabled(s)) return "Capture is not allowed in this battle (no capture policy).";
+            var t = s.UnitAt(target);
+            if (t == null || t.Owner == u.Owner) return "Board an enemy ship.";
+            if (s.Players[t.Owner].CommanderId != t.Id) return "Only the enemy flagship can be boarded.";
+            if (u.R.IsToken) return "Tokens cannot board.";
+            var why = RosterRules.CanAct(s, u, attack: true);
+            if (why != null) return why;
+            if (Hex.Distance(u.Position, target) != 1) return "The boarding ship must be adjacent to the flagship.";
+            if (!t.HasR(RStatusType.Disabled)) return $"{t.Def.Name} must be DISABLED first (an Injunction, a Hostile Merger or similar).";
+            if (t.Hp * 3 > t.MaxHp * BoardHullThirds) return $"{t.Def.Name} must be at or below a third of its hull ({t.Hp} of {t.MaxHp}).";
+            return null;
+        }
+
+        public static string BoardingPreview(MatchState s, UnitState u, Hex target)
+        {
+            var why = ValidateBoarding(s, u, target);
+            var t = s.UnitAt(target);
+            if (why != null) return "Boarding: " + why;
+            return $"Board {t.Def.Name}: it is captured with its crew and modules intact, and the battle ends at once. {u.Def.Name} spends its action and is EXPOSED (armour −{BoarderExposed}) until its next activation. Destroying it instead would be certain but leave only a wreck.";
+        }
+
+        public static void ApplyBoarding(MatchState s, UnitState u, Hex target, List<GameEvent> ev)
+        {
+            var t = s.UnitAt(target);
+            u.ActedThisActivation = true; u.AttackedThisActivation = true; u.AttackedRound = s.Round;
+            u.RStatuses.Add(new RStatus { Type = RStatusType.Exposed, Amount = BoarderExposed, Expire = RExpire.AfterOwnActivation, ExpireAt = u.Activations + 2, SourceId = u.Id });
+            t.RStatuses.Add(new RStatus { Type = RStatusType.Captured, SourceId = u.Id, Expire = RExpire.Battle });
+            ev.Add(new GameEvent(GameEventType.UnitCaptured) { Seat = u.Owner, UnitId = u.Id, TargetUnitId = t.Id, From = u.Position, To = t.Position, Text = "boarded" });
+            RulesEngine.EndMatchInternal(s, u.Owner, VictoryReason.LeaderCaptured, ev);
+        }
+
         // ================================================================== Inhumanus fleet contracts (Prompt 4)
 
         public const string ContractToken = "contract@";
@@ -190,13 +286,20 @@ namespace Commandfall.Core
         /// <summary>Contracted escorts are paid one point less (minimum 1); the price of arriving late and in the open.</summary>
         public static int EntryCost(RosterEntry e, int printed) => ContractLane(e) != null ? Math.Max(1, printed - ContractDiscount) : printed;
 
-        /// <summary>Errors for a contract token in an army entry (null = no token or a valid one).</summary>
+        /// <summary>Errors for slice tokens in an army entry (contracts and modules); null when there are none or all are valid.</summary>
         public static string ValidateContract(ArmyRoster army, RosterEntry e, BattleDomain domain)
         {
-            var extra = e.Equipment.Where(x => !x.StartsWith(ContractToken, StringComparison.Ordinal)).ToList();
-            var lane = ContractLane(e);
             var def = RosterContent.Unit(e.UnitId);
+            var extra = e.Equipment.Where(x => !x.StartsWith(ContractToken, StringComparison.Ordinal) && !x.StartsWith(ModuleToken, StringComparison.Ordinal) && x != CapturePolicyToken).ToList();
             if (extra.Count > 0) return $"{def?.Name ?? e.UnitId}: Full Roster units carry no equipment (research upgrades apply automatically).";
+            var mods = ModulesOf(e.Equipment).ToList();
+            if (mods.Count > 0)
+            {
+                if (domain != BattleDomain.Orbital || def == null || !def.Roster.IsLeaderRole) return "Modules fit only capital ships (the flagship).";
+                if (mods.Any(m => Module(m) == null)) return $"Unknown module on {def.Name}.";
+                if (mods.Select(m => Module(m).Slot).Distinct().Count() != mods.Count) return $"{def.Name} has two modules in one slot.";
+            }
+            var lane = ContractLane(e);
             if (lane == null) return null;
             if (army.Faction != FactionId.Inhumanus || domain != BattleDomain.Orbital) return "Fleet contracts are an Inhumanus orbital doctrine.";
             if (def.Roster.IsLeaderRole) return "The flagship cannot be contracted; it must deploy at the start.";

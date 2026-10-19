@@ -48,6 +48,8 @@ namespace Commandfall.Core
             if (!u.OnBoard) return 0;
             if (u.HasR(RStatusType.Rooted) || u.HasR(RStatusType.Captured) || u.HasR(RStatusType.Boarded)) return 0;
             int move = u.R.MoveHexes + u.RAmount(RStatusType.MoveBuff) + RosterPassives.MoveBonus(s, u);
+            int moduleMove = SliceRules.ModuleMove(u);
+            if (moduleMove != 0) move = Math.Max(1, move + moduleMove);   // slice: modules never stop a ship entirely
             int minus = 0;
             var sup = u.GetR(RStatusType.Suppressed);
             if (sup.HasValue) minus += sup.Value.Amount;
