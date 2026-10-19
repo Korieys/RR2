@@ -1,0 +1,77 @@
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+tour plan hold
+shot g01_galaxy_overview
+perf galaxy overview: median 6.95 ms (144 fps), p95 12.73 ms, p99 12.94 ms, max 13.83 ms over 299 frames; gen0 GCs 3; managed heap 7.8 MB
+shot g02_galaxy_overview_no_overlay
+shot g00_map_frame
+shot g00_map_frame_no_overlay
+shot g03_eclipse_sector
+shot g04_eclipse_sector_no_overlay
+shot g05_frontier_approach
+shot g06_fleet_selected_galaxy
+shot g06b_fleet_zoomed
+shot cv_galaxy_pan_0
+shot cv_galaxy_pan_1
+shot cv_galaxy_pan_2
+shot cv_galaxy_orbit_0
+shot cv_galaxy_orbit_1
+shot cv_galaxy_orbit_2
+camera feel: zooming from 720 to 147 moved pitch from 62.0 to 42.8 degrees
+camera feel: after a drag ends the focus glides on 19.5 units
+ui capture: pointer over inspector blocks world input = True; open space passes through = True
+camera cancellation: interrupted transition lands on its target = True
+shot t_enter_00
+shot t_enter_01
+shot t_enter_02
+shot t_enter_03
+shot t_enter_04
+shot t_enter_05
+shot t_enter_06
+shot s01_hero_system
+perf hero system: median 6.94 ms (144 fps), p95 7.06 ms, p99 7.15 ms, max 7.22 ms over 299 frames; gen0 GCs 1; managed heap 9.3 MB
+shot s02_hero_system_no_overlay
+shot cv_system_orbit_0
+shot cv_system_orbit_1
+shot cv_system_orbit_2
+shot cv_system_pan_0
+shot cv_system_pan_1
+shot p01_planet_inspection
+perf planet inspection: median 6.94 ms (144 fps), p95 7.07 ms, p99 7.19 ms, max 7.52 ms over 239 frames; gen0 GCs 1; managed heap 9.9 MB
+commissioned silex_lattice_corvette: stock E120 M180 C140 I30 -> E60 M40 C90 I30
+shot p02_project_started
+shot p03_planet_orbit_1
+shot p03_planet_orbit_2
+shot f01_fleet_inspection
+perf fleet close: median 6.96 ms (144 fps), p95 12.62 ms, p99 13.82 ms, max 13.95 ms over 199 frames; gen0 GCs 0; managed heap 11.1 MB
+shot t_exit_00
+shot t_exit_01
+shot t_exit_02
+shot t_exit_03
+shot t_exit_04
+player holds the First Crown Fleet at Aurelith
+shot g08_raid_inbound
+engagement on day 16 at aurelith
+PASS battle preparation finishes loading before commitment
+shot b01_battle_preparation
+battle line: silex_throne_ark, silex_obelisk_cruiser, silex_pillar_destroyer, silex_tessera_frigate, silex_lattice_corvette, silex_prism_escort (cost 29)
+PASS battle presentation is ready before animation review
+shot b02_battle_start
+PASS vertical combat panels have no horizontal scrollbar
+perf orbital battle: median 6.95 ms (144 fps), p95 12.42 ms, p99 12.73 ms, max 16.88 ms over 239 frames; gen0 GCs 0; managed heap 10.5 MB
+shot b03_ship_selected
+shot b04_battle_6
+shot b05_battle_16
+battle over: winner seat 0 (CommanderEliminated) after round 10, 114 commands
+replay of the battle from its setup and command log: identical final state
+PASS animated combat replay is identical to authoritative final state
+shot b07_result
+shot r01_after_battle_system
+after battle: applied battles 1, system Aurelith orbit silex, owner silex, conquest None
+  fleet First Crown Fleet at aurelith: silex_throne_ark 7, silex_obelisk_cruiser 12, silex_facet_surveyor 7, silex_lattice_corvette 9
+  fleet Shalecrest Picket at shalecrest: silex_prism_escort 7, silex_facet_surveyor 7
+  fleet Origin Guard at origin_brood: craigon_ascendant_ark 18, craigon_evolutionary_bastion 19, craigon_chrysalis_carrier 14
+shot r02_after_battle_galaxy
+save digest c21758289e4600fe, after more days 6d9ba3bc3a19dbf5, after load c21758289e4600fe: load restored the saved state
+applied battles after load: 1
+shot r03_after_load

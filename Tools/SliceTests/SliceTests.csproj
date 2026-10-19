@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Fast out-of-editor runner: vendored Commandfall rules + AI + their EditMode tests, the slice's Strategy code and its tests. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0649;CS0414;CS0168;CS0219</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/RR/Vendor/Core/**/*.cs" />
+    <Compile Include="../../Assets/RR/Vendor/AI/**/*.cs" />
+    <Compile Include="../../Assets/RR/Vendor/Tests/EditMode/**/*.cs" />
+    <Compile Include="../../Assets/RR/Strategy/**/*.cs" />
+    <Compile Include="../../Assets/RR/Tests/EditMode/**/*.cs" />
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework"><HintPath>lib/nunit.framework.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

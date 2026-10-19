@@ -24,3 +24,7 @@ Resume from "Next step". Full status: [HANDOFF.md](HANDOFF.md). Decisions: [DECI
 * Measure at true 1080p: launch with `-screen-fullscreen 1 -screen-width 1920 -screen-height 1080` (the player otherwise keeps
   its last window size; check the second line of the tour log).
 * Creator review of `Docs/Evidence`, then act on "Known weaknesses" in HANDOFF.md (the galaxy overview's map-like look first).
+
+## Vertical slice prompt pack (from 2026-10-19)
+The Pygmaei and Inhumanus vertical slice (Prompts 0 to 12) is tracked in [vertical-slice/STATE.md](vertical-slice/STATE.md), with its
+contract, decisions and acceptance gates beside it. Read those four files first when resuming that work.
