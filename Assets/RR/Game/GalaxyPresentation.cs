@@ -137,8 +137,8 @@ namespace RR.Game
             {
                 case "silex_expanse": return new Color(0.18f, 0.62f, 1f);
                 case "pygmaei_sector": return new Color(0.62f, 0.22f, 1f);
-                case "pirate_reach": return new Color(1f, 0.66f, 0.16f);
-                case "inhumanus_dominion": return new Color(1f, 0.16f, 0.1f);
+                case "pirate_reach": return new Color(0.2f, 0.92f, 0.34f);
+                case "inhumanus_dominion": return new Color(1f, 0.72f, 0.14f);
                 case "elven_front": return new Color(1f, 0.38f, 0.16f);
                 case "meeples": return new Color(0.16f, 0.4f, 1f);
                 case "craigon": return new Color(0.8f, 0.25f, 0.95f);

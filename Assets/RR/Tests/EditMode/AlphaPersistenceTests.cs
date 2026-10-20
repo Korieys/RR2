@@ -24,6 +24,18 @@ namespace RR.Tests
         }
 
         [Test]
+        public void ASaveFromBeforeThePaletteChange_LoadsWithTheCurrentFactionColours()
+        {
+            var g = War.New();
+            Assert.AreEqual(0xF2C044, g.GetPolity("inhumanus").Color, "the Inhumanus are gold");
+            Assert.AreEqual(0x4FD86A, g.GetPolity("pirates").Color, "the Pirates are green");
+            g.GetPolity("inhumanus").Color = 0xE8443C; g.GetPolity("pirates").Color = 0xE8B23A;   // as an older save stored them
+            var back = Camp.Reload(g);
+            Assert.AreEqual(0xF2C044, back.GetPolity("inhumanus").Color);
+            Assert.AreEqual(0x4FD86A, back.GetPolity("pirates").Color);
+        }
+
+        [Test]
         public void PendingProduction_PriorityAndDoctrine_CompleteOnce_WhetherOrNotTheGameIsReloaded()
         {
             var g = War.New();

@@ -96,7 +96,7 @@ namespace RR.Game
                     break;
                 case "inhumanus":
                     m.SetColor("_HullColor", new Color(0.86f, 0.85f, 0.82f)); m.SetColor("_HullColor2", new Color(0.7f, 0.7f, 0.72f));
-                    m.SetColor("_TrimColor", new Color(0.62f, 0.16f, 0.14f)); m.SetFloat("_Metal", 0.35f); m.SetFloat("_TrimRough", 0.35f);
+                    m.SetColor("_TrimColor", new Color(0.66f, 0.48f, 0.14f)); m.SetFloat("_Metal", 0.35f); m.SetFloat("_TrimRough", 0.35f);   // gold (was red)
                     m.SetColor("_GlassColor", new Color(1.0f, 0.82f, 0.5f)); m.SetFloat("_GlowIntensity", 2.4f);
                     m.SetFloat("_HullRough", 0.25f); m.SetFloat("_DetailScale", 6f);
                     break;

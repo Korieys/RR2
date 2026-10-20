@@ -22,6 +22,19 @@ namespace RR.Strategy
         static double X(double px) => (px - 724) * LyPerPx;
         static double Y(double py) => (543 - py) * LyPerPx;
 
+        /// <summary>The faction map palette. Applied when a galaxy is created and again when a save is loaded, so a palette change
+        /// reaches existing saves (colour is presentation, not rules). 2026-10-20: Inhumanus gold, Pirates green, at the creator's request.</summary>
+        public static readonly Dictionary<string, int> Palette = new Dictionary<string, int>
+        {
+            ["silex"] = 0x4AA8FF, ["craigon"] = 0xC452FF, ["meeples"] = 0x3CC4FF, ["pygmaei"] = 0xA45CFF,
+            ["pirates"] = 0x4FD86A, ["inhumanus"] = 0xF2C044, ["elven"] = 0xFF7A48,
+        };
+
+        public static void ApplyPalette(GalaxyState g)
+        {
+            foreach (var p in g.Polities) if (p.Id != null && Palette.TryGetValue(p.Id, out var c)) p.Color = c;
+        }
+
         public static GalaxyState Create(int seed = 3104)
         {
             var g = new GalaxyState { Seed = seed, Rng = (uint)(seed * 2654435761u) | 1u };
@@ -36,6 +49,7 @@ namespace RR.Strategy
             g.Polities.Add(new Polity { Id = "pirates", Name = "Pirate Reach", Color = 0xE8B23A });
             g.Polities.Add(new Polity { Id = "inhumanus", Name = "Inhumanus Dominion", Color = 0xE8443C });
             g.Polities.Add(new Polity { Id = "elven", Name = "Elven Front", Color = 0xFF7A48 });
+            ApplyPalette(g);
 
             // ------------------------------------------------------------------ sectors
             AddSector("silex_expanse", "Silex Expanse", "Knowledge. Structure. Asylum.", "silex", 260, 275, 190);

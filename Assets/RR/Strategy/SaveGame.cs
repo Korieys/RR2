@@ -233,6 +233,7 @@ namespace RR.Strategy
             foreach (IDictionary<string, object> p in r.A("polities"))
                 g.Polities.Add(new Polity { Id = p.S("id"), Name = p.S("name"), Color = p.I("color"), PlayerControlled = p.B("player"), Playable = p.B("playable"),
                     CommandfallFaction = p.S("cfFaction"), Stock = Res(p.O("stock")) });
+            SliceScenario.ApplyPalette(g);   // saves written before a palette change take the current faction colours
             foreach (IDictionary<string, object> s in r.A("sectors"))
                 g.Sectors.Add(new Sector { Id = s.S("id"), Name = s.S("name"), Subtitle = s.S("subtitle"), OwnerId = s.S("owner"), X = s.D("x"), Y = s.D("y"),
                     Radius = s.D("r"), Aspect = s.D("aspect") > 0 ? s.D("aspect") : 1, Eclipse = s.B("eclipse"), ProvisionalName = s.B("provisional") });
