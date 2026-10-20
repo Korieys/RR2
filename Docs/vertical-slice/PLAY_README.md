@@ -27,6 +27,7 @@ delete the save file (by default `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\R
 | | |
 |---|---|
 | Left click | select a ship, fleet, system or planet; in battle, give the order shown in the preview |
+| Galaxy: double-click a fleet, or C | fly the camera close to that fleet (picking it in the fleet list does the same) |
 | Mouse wheel; + and −; right or middle drag; W A S D; Q E | zoom toward the cursor; zoom; turn the camera; pan; rotate |
 | Home | recentre the camera |
 | F5 / F9 | save / load (also during a battle, between actions) |

@@ -108,16 +108,34 @@ namespace RR.Game
         public void ZoomAt(float factor, Vector2 screenPos)
         {
             float before = Target.Distance;
-            Zoom(factor);
-            float k = Target.Distance / Mathf.Max(1e-4f, before);
-            if (Mathf.Approximately(k, 1f)) return;
-            var ray = Cam.ScreenPointToRay(screenPos);
             var plane = new Plane(Vector3.up, new Vector3(0, Target.Focus.y, 0));
-            if (!plane.Raycast(ray, out float t) || t > before * 20f) return;
+            var ray = RayFrom(Target, screenPos);
+            if (!plane.Raycast(ray, out float t) || t > before * 20f) { Zoom(factor); return; }
             var anchor = ray.GetPoint(t);
-            var focus = anchor + (Target.Focus - anchor) * k;
-            focus.y = Target.Focus.y;
-            Target.Focus = Limits.FocusBounds.ClosestPoint(focus);
+            Zoom(factor);   // may also change the pitch (the galaxy view tilts with distance)
+            if (Mathf.Approximately(Target.Distance, before)) return;
+            // Move the focus until the cursor's ray from the new pose meets the same point again; the plane is flat and the
+            // focus moves within it, so this converges in one or two steps even when the pitch changed.
+            for (int i = 0; i < 3; i++)
+            {
+                var r = RayFrom(Target, screenPos);
+                if (!plane.Raycast(r, out float u)) break;
+                var miss = anchor - r.GetPoint(u); miss.y = 0;
+                if (miss.sqrMagnitude < 1e-6f) break;
+                Target.Focus = Limits.FocusBounds.ClosestPoint(Target.Focus + miss);
+            }
+        }
+
+        /// <summary>The ray through <paramref name="screenPos"/> if the camera stood at <paramref name="p"/>.</summary>
+        Ray RayFrom(CamPose p, Vector2 screenPos)
+        {
+            var t = transform; var pos = t.position; var rot = t.rotation; float fov = Cam.fieldOfView;
+            var r = Quaternion.Euler(p.Pitch, p.Yaw, 0);
+            t.SetPositionAndRotation(p.Focus - r * Vector3.forward * p.Distance, r);
+            Cam.fieldOfView = p.Fov;
+            var ray = Cam.ScreenPointToRay(screenPos);
+            t.SetPositionAndRotation(pos, rot); Cam.fieldOfView = fov;
+            return ray;
         }
 
         /// <summary>A short move that centres the camera on <paramref name="point"/> at <paramref name="distance"/>, keeping the angle.</summary>

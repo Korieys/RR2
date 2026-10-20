@@ -334,19 +334,27 @@ namespace RR.Game
             UI.Strategy.RefreshInspector();
         }
 
+        /// <summary>Galaxy view: select a fleet and fly the camera close to it (double-click it, C, or pick it in the fleet list).</summary>
+        public void FlyToFleet(string id)
+        {
+            var f = G.GetFleet(id);
+            if (f == null || Scale != ViewScale.Galaxy) return;
+            Selection.SelectFleet(G, id);
+            Audio.Play("ui_select", 0.6f);
+            var p = Galaxy.FleetMarkers.ContainsKey(id) ? Galaxy.FleetMarkers[id].position : GalaxyScale.ToWorld(G.GetSystem(f.SystemId));
+            var to = Rig.Target; to.Focus = p; to.Distance = Mathf.Min(Rig.Target.Distance, FleetCloseDistance);
+            to.Pitch = GalaxyPitch(to.Distance) + (Rig.Target.Pitch - GalaxyPitch(Rig.Target.Distance));   // keep the player's tilt offset
+            Rig.TransitionTo(to, 0.45f);
+        }
+
         public void SelectAndFocusFleet(string id)
         {
             var f = G.GetFleet(id);
             if (f == null) return;
+            if (Scale == ViewScale.Galaxy) { FlyToFleet(id); return; }
             Selection.SelectFleet(G, id);
             Audio.Play("ui_select", 0.6f);
-            if (Scale == ViewScale.Galaxy)
-            {
-                var p = Galaxy.FleetMarkers.ContainsKey(id) ? Galaxy.FleetMarkers[id].position : GalaxyScale.ToWorld(G.GetSystem(f.SystemId));
-                var to = Rig.Current; to.Focus = p; to.Distance = Mathf.Min(Rig.Current.Distance, 180);
-                Rig.TransitionTo(to, 0.45f);
-            }
-            else if (LocalSystem != null && LocalSystem.Data.Id == f.SystemId && LocalSystem.Fleets.ContainsKey(id))
+            if (LocalSystem != null && LocalSystem.Data.Id == f.SystemId && LocalSystem.Fleets.ContainsKey(id))
             {
                 if (Scale == ViewScale.Planet) Scale = ViewScale.System;
                 var to = Rig.Current; to.Focus = LocalSystem.Fleets[id].Root.position; to.Distance = 16; to.Pitch = 18;

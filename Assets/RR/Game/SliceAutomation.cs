@@ -56,9 +56,33 @@ namespace RR.Game
             Directory.CreateDirectory(dir);
             Automation.UseDir(dir);
             yield return Wait(2f);
+            var rig = root.Rig;
+
+            // Galaxy: from the opening view, wheel notches aimed at the player's fleet until the camera is close to it.
+            rig.Snap(root.GalaxyHome);
+            yield return Wait(0.5f);
+            yield return Automation.Shot(dir, "gal01_home");
+            var fleetId = root.G.Fleets.First(f => f.OwnerId == root.G.Player.Id).Id;
+            var marker = root.Galaxy.FleetMarkers[fleetId];
+            Vector2 aim = rig.Cam.WorldToScreenPoint(marker.position);
+            float g0 = rig.Target.Distance; int notches = 0;
+            while (rig.Target.Distance > GameRoot.FleetCloseDistance && notches < 60) { rig.ZoomAt(0.7f, aim); notches++; yield return Wait(0.06f); }
+            yield return Wait(0.8f);
+            Vector2 seen = rig.Cam.WorldToScreenPoint(marker.position);
+            Note($"galaxy wheel zoom at the player's fleet: {notches} notches, distance {g0:0} -> {rig.Current.Distance:0}, pitch {rig.Current.Pitch:0}; the fleet ended {(seen - aim).magnitude:0} px from the cursor");
+            yield return Automation.Shot(dir, "gal02_wheel_zoomed_on_fleet");
+            rig.Snap(root.GalaxyHome);
+            yield return Wait(0.5f);
+            float t2 = Time.unscaledTime;
+            root.FlyToFleet(fleetId);
+            yield return Until(() => !rig.Transitioning, 5);
+            Vector2 mid = rig.Cam.WorldToScreenPoint(marker.position);
+            Note($"galaxy fly to the fleet (double-click, C or the fleet list): {Time.unscaledTime - t2:0.00} s; distance {rig.Current.Distance:0}; fleet {(mid - new Vector2(Screen.width / 2f, Screen.height / 2f)).magnitude:0} px from screen centre");
+            yield return Automation.Shot(dir, "gal03_flew_to_fleet");
+
             root.StartPassage(PassageVariant.Challenge, FactionId.Pygmaei, false);
             yield return Ready(root);
-            var b = root.Battle; var rig = root.Rig;
+            var b = root.Battle;
             yield return Until(() => !rig.Transitioning, 5);
             yield return Wait(0.5f);
             yield return Automation.Shot(dir, "cam01_start");

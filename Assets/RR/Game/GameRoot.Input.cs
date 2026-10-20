@@ -51,6 +51,11 @@ namespace RR.Game
             }
             else if (!modal)
             {
+                if (kb.cKey.wasPressedThisFrame && Scale == ViewScale.Galaxy)
+                {
+                    if (Selection.FleetId != null) FlyToFleet(Selection.FleetId);
+                    else if (Selection.SystemId != null) SelectAndFocusSystem(Selection.SystemId);
+                }
                 if (kb.spaceKey.wasPressedThisFrame) TogglePause();
                 if (kb.digit1Key.wasPressedThisFrame) SetSpeed(1);
                 if (kb.digit2Key.wasPressedThisFrame) SetSpeed(2);
@@ -87,8 +92,9 @@ namespace RR.Game
                     // One wheel notch is 1 unit with the Input System's default (uniform) range and 120 with platform ranges.
                     float notches = Mathf.Clamp(Mathf.Abs(scroll) >= 20f ? scroll / 120f : scroll, -5f, 5f);
                     Rig.FinishTransition();
-                    if (Scale == ViewScale.Planet) Rig.Zoom(Mathf.Pow(ZoomPerNotch, notches));
-                    else Rig.ZoomAt(Mathf.Pow(ZoomPerNotch, notches), pos);
+                    float step = Scale == ViewScale.Galaxy ? GalaxyZoomPerNotch : ZoomPerNotch;
+                    if (Scale == ViewScale.Planet) Rig.Zoom(Mathf.Pow(step, notches));
+                    else Rig.ZoomAt(Mathf.Pow(step, notches), pos);
                 }
             }
 
@@ -130,6 +136,10 @@ namespace RR.Game
 
         /// <summary>Distance multiplier per wheel notch (0.8: each notch closes 20 % of the distance).</summary>
         const float ZoomPerNotch = 0.8f;
+        /// <summary>The galaxy spans a much larger range (22 to 900), so each notch closes 30 % there.</summary>
+        const float GalaxyZoomPerNotch = 0.7f;
+        /// <summary>How close "fly to a fleet" brings the galaxy camera.</summary>
+        public const float FleetCloseDistance = 45f;
 
         /// <summary>Flies the battle camera to a ship (double-click it, or C for the selected or hovered ship).</summary>
         void FocusShip(int unitId)
@@ -149,7 +159,11 @@ namespace RR.Game
         void HandleGalaxyClick(string sysHit, string fleetHit, bool dbl)
         {
             if (Targeting && sysHit != null) { IssueMove(sysHit); return; }
-            if (fleetHit != null) { Selection.SelectFleet(G, fleetHit); Audio.Play("ui_select", 0.6f); return; }
+            if (fleetHit != null)
+            {
+                if (dbl) { FlyToFleet(fleetHit); return; }   // double-click a fleet: fly to it
+                Selection.SelectFleet(G, fleetHit); Audio.Play("ui_select", 0.6f); return;
+            }
             if (sysHit != null)
             {
                 if (dbl) { EnterSystem(sysHit); return; }
