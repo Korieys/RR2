@@ -255,7 +255,8 @@ build from modified sources is named `..._modified`. The script keeps the player
 metrics, logs and Unity's debug-symbol folder. It contains the player, [PLAY_README](PLAY_README.md) (launch, reset,
 controls), [RULES_SUMMARY](RULES_SUMMARY.md), [KNOWN_ISSUES](KNOWN_ISSUES.md), [PLAYTEST_KIT](PLAYTEST_KIT.md), the ship manifest
 and `VERSION.json` (revision, rules version, content fingerprint). No licensed tools, font sources, credentials or local saves are
-bundled; nothing was uploaded or published. Save compatibility: campaign saves load; battles saved under earlier rules are refused
+bundled; nothing was uploaded or published. The packaged player was unzipped and run (content preview tour, 0 exceptions); from
+a deeply nested folder it would not start (path over 260 characters), now stated in the README and known issues. Save compatibility: campaign saves load; battles saved under earlier rules are refused
 (a deliberate rules-version boundary, as in the slice).
 
 **Private test kit** ([PLAYTEST_KIT](PLAYTEST_KIT.md)): tasks, a non-leading interview guide, the observation sheet (time to first

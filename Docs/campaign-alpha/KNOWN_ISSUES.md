@@ -37,5 +37,8 @@ are first-pass. The extended-magazines module reuses the heavy battery's mesh.
 * The strategic map has no fog of war: every fleet is visible to both sides (supply and the rival read only that).
 * Transport capacity is a provisional rule (flagship two units, other ships one); troops beyond capacity after a loss are lost.
 
+**Install.** Unzipped into a deeply nested folder (paths over 260 characters), the player closes at start-up without a message
+("Unable to load mono library" in its log). Unzip to a short folder such as `C:\RR\`.
+
 **Saves.** Battles saved under earlier rules (`vs-3` to `vs-5`) are refused by this build (`vs-6`), as designed; campaign saves
 without a battle in progress load. Starting a new Passage War is recommended for testing.

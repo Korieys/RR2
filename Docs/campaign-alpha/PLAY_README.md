@@ -4,7 +4,9 @@ A private, unfinished build for invited testers. Not for redistribution. Values 
 
 ## Launch
 
-Windows 10 or 11, 64-bit, a DirectX 12 graphics card. Unzip anywhere and run `game\RuleAndRuin.exe`.
+Windows 10 or 11, 64-bit, a DirectX 12 graphics card. Unzip to a short folder (for example `C:\RR\`) and run
+`game\RuleAndRuin.exe`. A deeply nested folder can push the game's files past Windows' 260-character path limit, and the game
+then closes at once without a message.
 To keep a session's save separate (recommended for every test session):
 
 ```
