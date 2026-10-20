@@ -10,6 +10,8 @@ namespace RR.EditorTools
 {
  public sealed class UnitImportRules:AssetPostprocessor
  {
+  // Bump to re-import unit models when the rules below change.
+  public override uint GetVersion()=>2;
   void OnPreprocessModel()
   {
    if(!assetPath.StartsWith("Assets/RR/Art/Units/"))return;
@@ -20,6 +22,42 @@ namespace RR.EditorTools
    m.isReadable=false;m.importCameras=false;m.importLights=false;m.addCollider=false;m.meshCompression=ModelImporterMeshCompression.Low;
    m.animationCompression=ModelImporterAnimationCompression.KeyframeReduction;
    m.animationRotationError=.02f;m.animationPositionError=.02f;m.animationScaleError=.02f;
+  }
+  // process_models.py levels ships and ground vehicles with a mirroring basis, so their FBX shells arrive inside-out:
+  // back-face culling then drops the outer hull and the camera sees the inner walls. Re-wind any mesh whose signed volume is negative.
+  void OnPostprocessModel(GameObject root)
+  {
+   if(!assetPath.StartsWith("Assets/RR/Art/Units/"))return;
+   var meshes=root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Select(r=>r.sharedMesh).Concat(root.GetComponentsInChildren<MeshFilter>(true).Select(f=>f.sharedMesh));
+   foreach(var mesh in meshes.Where(x=>x!=null).Distinct())if(InsideOut(mesh))Rewind(mesh);
+  }
+  public static double SignedVolume(Mesh mesh)
+  {
+   var v=mesh.vertices;double volume=0;
+   for(int s=0;s<mesh.subMeshCount;s++)
+   {
+    var t=mesh.GetTriangles(s);
+    for(int i=0;i<t.Length;i+=3)volume+=Vector3.Dot(v[t[i]],Vector3.Cross(v[t[i+1]],v[t[i+2]]));
+   }
+   return volume/6;
+  }
+  public static bool InsideOut(Mesh mesh)=>SignedVolume(mesh)<0;
+  static void Rewind(Mesh mesh)
+  {
+   var v=mesh.vertices;var normals=mesh.normals;double agree=0;
+   for(int s=0;s<mesh.subMeshCount;s++)
+   {
+    var t=mesh.GetTriangles(s);
+    for(int i=0;i<t.Length;i+=3)
+    {
+     (t[i+1],t[i+2])=(t[i+2],t[i+1]);
+     if(normals.Length==v.Length)agree+=Vector3.Dot(Vector3.Cross(v[t[i+1]]-v[t[i]],v[t[i+2]]-v[t[i]]),normals[t[i]]+normals[t[i+1]]+normals[t[i+2]]);
+    }
+    mesh.SetTriangles(t,s,false);
+   }
+   // Imported normals followed the old winding; point them out with the new faces.
+   if(agree<0){for(int i=0;i<normals.Length;i++)normals[i]=-normals[i];mesh.normals=normals;}
+   mesh.RecalculateTangents();
   }
   void OnPreprocessTexture()
   {
@@ -81,6 +119,11 @@ namespace RR.EditorTools
     mat.SetTexture("_NormalMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/normal.png"));
     mat.SetTexture("_MaskMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/orm.png"));
     var rs=go.GetComponentsInChildren<SkinnedMeshRenderer>();
+    foreach(var r in rs)
+    {
+     var baked=new Mesh();r.BakeMesh(baked);bool inverted=UnitImportRules.InsideOut(baked);UnityEngine.Object.DestroyImmediate(baked);
+     if(inverted)throw new Exception(id+": "+r.name+" is inside-out");
+    }
     var lods=new LOD[3];
     for(int i=0;i<3;i++)
     {
@@ -120,7 +163,7 @@ namespace RR.EditorTools
     foreach(var drive in new[]{visual.DriveL,visual.DriveR})if(drive!=null)drive.rotation=go.transform.rotation;
     var prefab=PrefabUtility.SaveAsPrefabAsset(go,dir.Replace('\\','/')+"/"+id+".prefab");UnityEngine.Object.DestroyImmediate(go);
     if(!id.Contains("__variant")){lib.models.RemoveAll(m=>m!=null&&m.name==id);lib.models.Add(prefab);}
-    report.Add(id+": "+string.Join("/",stats.lod_triangles)+" triangles; 6 moving clips; closed Idle/Move loops; forward +Z; "+rs.Length+" skinned LODs");count++;
+    report.Add(id+": "+string.Join("/",stats.lod_triangles)+" triangles; 6 moving clips; closed Idle/Move loops; outward shells; forward +Z; "+rs.Length+" skinned LODs");count++;
    }
    EditorUtility.SetDirty(lib);AssetDatabase.SaveAssets();
    Directory.CreateDirectory("Captures/UnitProduction");File.WriteAllLines("Captures/UnitProduction/import-validation.txt",report);
