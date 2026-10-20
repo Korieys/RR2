@@ -39,7 +39,7 @@ def main():
         'package': name, 'revision': rev, 'branch': git('rev-parse', '--abbrev-ref', 'HEAD'),
         'source_modified_since_commit': bool(dirty), 'built': datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(BUILD, 'RuleAndRuin.exe'))).isoformat(timespec='seconds'),
         'packaged': datetime.datetime.now().isoformat(timespec='seconds'),
-        'rules_and_content': open(os.path.join(ROOT, 'Docs/campaign-alpha/manifest/ship_manifest.md'), encoding='utf-8').splitlines()[2],
+        'rules_and_content': open(os.path.join(ROOT, 'Docs/campaign-alpha/manifest/ship_manifest.md'), encoding='utf-8').read().splitlines()[2],
         'private': 'Private campaign alpha for invited testers only. Not for redistribution or public release.',
     }
     count = 0
