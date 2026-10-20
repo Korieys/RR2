@@ -26,7 +26,7 @@ namespace RR.Game
             cam.transform.localPosition = new Vector3(0, 1.6f, -4.2f);
             cam.transform.localRotation = Quaternion.Euler(20, 0, 0);
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.035f, 0.045f, 0.065f, 1);
+            cam.backgroundColor = new Color(0.047f, 0.129f, 0.208f, 1);   // Command Glass --navy-raised behind the hull
             cam.fieldOfView = 34; cam.nearClipPlane = 0.05f; cam.farClipPlane = 60;
             cam.targetTexture = h.Texture;
             cam.enabled = false;

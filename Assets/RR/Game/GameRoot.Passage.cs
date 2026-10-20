@@ -27,19 +27,19 @@ namespace RR.Game
             ShowPassageMenu();
         }
 
+        /// <summary>A paragraph in the Command Glass text roles (SlicePanels.uss): body at reading size, supporting text smaller,
+        /// warnings in the theme's danger colour. The size and colour arguments choose the role; no literal colours reach the UI.</summary>
         static Label Para(string text, int size = 14, Color? col = null)
         {
-            var l = new Label(text);
-            l.style.whiteSpace = WhiteSpace.Normal; l.style.fontSize = size; l.style.marginBottom = 6;
-            l.style.color = col ?? new Color(0.92f, 0.9f, 0.84f);
-            return l;
+            string role = col.HasValue && col.Value.r > 0.9f && col.Value.g < 0.8f ? "text-danger" : size >= 13 && !col.HasValue ? "body" : size >= 12 ? "item-sub" : "small";
+            return role == "body" ? UIX.Text(text, "slice-line", "body") : UIX.Text(text, "slice-line", "body", role);
         }
 
         public void ShowPassageMenu()
         {
             if (Scale == ViewScale.Battle || Busy) { UI.Strategy.Toast("Finish the current battle or action first.", "bad"); return; }
             var m = UI.OpenModal(980);
-            var title = UIX.Text("THE TRADE PASSAGE", "h-display"); UIRoot.Display(title); m.Add(title);
+            var title = UIX.Text("THE TRADE PASSAGE", "modal-title"); UIRoot.Display(title); m.Add(title);
             m.Add(Para("A Pygmaei raiding force and an Inhumanus convoy escort contest the passage at Umbra, on the border of The Eclipse Sector. " +
                        "Destroying the enemy flagship ends a battle at once; numbers protect nobody. Generals don't roll dice: every result is shown before you commit it."));
             var row = UIX.Div("row"); row.style.flexWrap = Wrap.Wrap; m.Add(row);
@@ -104,7 +104,7 @@ namespace RR.Game
             bool won = s.Winner == me;
             var m = UI.OpenModal(900);
             string head = setup.Hotseat ? s.Config.Players[s.Winner].DisplayName.ToUpperInvariant() + " WIN" : won ? "VICTORY" : "DEFEAT";
-            var t = UIX.Text(head, "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text(head, "modal-title"); UIRoot.Display(t); m.Add(t);
             m.Add(Para("Decisive action: " + (Battle.Session.Decisive ?? BattleNarrator.Ending(s)), 15));
             m.Add(Para($"Round {s.Round}, {Battle.History.Count} orders. Losses: {s.Config.Players[0].DisplayName} {s.Units.Count(u => u.Owner == 0 && !u.Alive && !u.R.IsToken)}, " +
                        $"{s.Config.Players[1].DisplayName} {s.Units.Count(u => u.Owner == 1 && !u.Alive && !u.R.IsToken)}.", 13, new Color(0.75f, 0.77f, 0.8f)));

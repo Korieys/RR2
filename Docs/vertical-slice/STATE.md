@@ -8,6 +8,7 @@ Updated 2026-10-19, end of Prompt 12 (the whole pack; Prompt 0 audit below). Bra
 | Prompt 1: authoritative deterministic combat | Done and verified (see "Prompt 1 result"). |
 | Prompts 2 to 5: battlefield, flagship protection, two fleets, the encounter | Done and verified (see "Prompts 2 to 5 result"). Checkpoint after Prompt 5: the tactical hook works by the rules; human playtesting has not happened. |
 | Prompts 6 to 10: campaign, capital ships, negotiation and capture, consequences, the Eclipse expedition | Done and verified in tests and an automated tour (see "Prompts 6 to 10 result"). Not yet played by a person. |
+| Cinematic UI and units merge (after the pack) | Done and verified (see "Cinematic UI and units merge"): the CinematicUI interface and the 49 Craigon and Silex units are now the slice's. |
 | Prompts 11 and 12: presentation pass, validation and packaging | Done, honestly scoped (see "Prompt 11 result", "Prompt 12 result" and "Status at the end of the pack"). Human playtesting and premium art are blocked on people. |
 
 ## Verified baseline
@@ -58,7 +59,7 @@ What exists today, against what each prompt needs. File paths are under `Assets/
 
 | ID | Defect or risk | Severity | Owner prompt |
 |---|---|---|---|
-| D-01 | About 80 uncommitted files in the main checkout (2026-10-17 to 19) are in no commit. They could be lost, and this branch diverges from them (CR-01). | Blocker for Prompt 2 | Creator decision now |
+| D-01 | About 80 uncommitted files in the main checkout (2026-10-17 to 19) are in no commit. They could be lost, and this branch diverges from them (CR-01). | Resolved 2026-10-19: snapshotted unchanged onto `snapshot/cinematic-ui-and-units` and merged here (VS-32); the main checkout itself still holds its uncommitted copy, untouched | Done |
 | D-02 | `Tools/SliceTests/SliceTests.csproj` was gitignored, so a fresh clone cannot run the tests. | Fixed in Prompt 0 (VS-06) | 0 |
 | D-03 | `../DECISIONS.md` says the AI's only randomness is the Beginner level; Tactical adds a seeded jitter (CR-14). | Low | 5 |
 | D-04 | No ship models for Pygmaei or Inhumanus. | High for Prompts 4, 11 | 4 (temporary), 11 |
@@ -71,7 +72,7 @@ What exists today, against what each prompt needs. File paths are under `Assets/
 | D-09 | HANDOFF known weaknesses remain (Inhumanus title under the inspector at the default overview framing, provisional emblems, transition double image). | Low | 11 |
 | D-19 | The mouse wheel barely zoomed: the code divided the wheel by 120 (the old Windows range), but Input System 1.20 reports 1 per notch, so a notch zoomed about 0.13 % and closing on a ship in battle took some 860 notches. Fixed (2026-10-19, after the pack): either range is read correctly, 20 % per notch, zoom aims at the point under the cursor, `+`/`−` zoom, and double-click or C flies the camera to a ship. Check: `-rrCameraCheck` ([log](evidence/camera/tour_log.txt)): 7 notches take the battle camera from 26.5 to its closest 6.0 with the aimed ship within 65 px of the cursor; the fly-to centres a ship in 0.35 s. The physical wheel was not exercised by automation. Galaxy follow-up: the galaxy spans 22 to 900 and tilts as it zooms, so the aimed fleet slid away; zoom now re-solves the focus so the point under the cursor stays put whatever the tilt, the galaxy steps 30 % per notch, and double-click, C or the fleet list fly to a fleet at distance 45. Check: 8 notches from the opening view (720) to 42 with the fleet 3 px from the cursor; the battle drift fell from 65 px to 0. | High (controls) | Fixed |
 | D-10 | Vendored patches will diverge from Commandfall upstream (VS-02); an upstream port is not scheduled. | Medium, deferred | 12 |
-| D-18 | `-rrSavePath`, documented in Prompt 0 as the way to keep automation away from the player's save, was never implemented: every automated tour this session (the Prompt 0 baseline on the main build, Prompts 1 to 10 on `Builds/VS`) saved to the real slot `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\Rule and Ruin Slice\saves\slot1.json`. Whatever save was there before 2026-10-19 was overwritten and cannot be recovered; the file now holds a tour's campaign. Fixed: `GameRoot.SavePath` honours `-rrSavePath`, and local metrics follow it. | High (data loss, reported to the creator) | Fixed in Prompt 12 |
+| D-18 | Automated tours from Prompt 1 onward overwrote the player's real save slot (`%USERPROFILE%\AppData\LocalLow\Rule and Ruin\Rule and Ruin Slice\saves\slot1.json`). Prompt 0 documented `-rrSavePath` as the way to keep automation away from it. The flag existed only in the main checkout's uncommitted code; this branch started from the last commit, which ignores it, so this branch's builds wrote the default slot. (The Prompt 0 baseline ran the main checkout's own build, which probably honoured the flag.) Whatever save was there before was overwritten and cannot be recovered; the file now holds a tour's campaign. Fixed: `GameRoot.SavePath` honours `-rrSavePath` (the same line the main checkout had), and local metrics follow it. | High (data loss, reported to the creator) | Fixed in Prompt 12 |
 
 ## Milestone dependencies
 
@@ -223,6 +224,40 @@ the AI never proposes terms itself (it only answers); the in-battle offer is los
 holds is refused (VS-26); fog has no hex shading, only hidden ships; the fleet's voyage to Umbra takes 29 days, which is slow at
 the default speed.
 
+## Cinematic UI and units merge (2026-10-19, after the pack)
+
+The creator asked for the interface of `Builds/CinematicUI` and the imported Craigon and Silex units (`Builds/Units`, `Builds/PolishedUnits`)
+to be the slice's. Both came from the main checkout's uncommitted Codex work (CR-01). What was done:
+
+* **Snapshot:** all 928 uncommitted files except `ArtSource/` (1.3 GB of Blender and authoring sources, not needed to build) were copied
+  file for file onto `snapshot/cinematic-ui-and-units` (`5c4eeb9`, from the same base `b23e354`) and verified byte-identical. The main
+  checkout was not modified (same branch, same 1,260 uncommitted entries). The snapshot is the latest state of that work (UI files last
+  edited 07:02), newer than the 03:09 CinematicUI build; that build's exact source no longer exists.
+* **Merge** (`956a445`): 12 files changed on both sides, 17 conflict blocks, every one resolved by keeping the cinematic presentation and
+  re-applying the slice's rules and features (VS-32). The ground exercise now runs through a `BattleSession` (VS-07). Ship portraits are
+  rendered for the Pygmaei and Inhumanus classes too.
+* **Restyle:** the slice's own panels use the kit's glass surfaces and text roles (`SlicePanels.uss`): the campaign panel under the dispatch,
+  the Command Threat panel at the lower right of battle, modal titles and paragraphs in the kit's roles, the hangar view on the kit's navy.
+
+**Verification** (`Builds/VS`, 1920x1080; [evidence](evidence/merge/)):
+* Tests 245/245 on the merged code; the unit asset build (`UnitAssetBuild.PrepareAndBuild`) and ordinary builds succeed (668 MB player).
+* Campaign tour on the merged, restyled build: the whole journey (refit, battle, save and load mid-battle, delegation, decisive camera,
+  consequences, strategic save digest identical, fogged expedition, repair and free refit, the second encounter), 0 exceptions
+  ([log](evidence/merge/campaign_tour_log.txt)).
+* Unit review (`-rrUnitReview`): 48 gallery units (the 49th folder is an art variant the gallery skips), 336 checks of LODs and the six
+  animation clips with bone motion, 0 failures, no effects left behind; all three ground exercises played 14 legal commands each through
+  the session ([validation](evidence/merge/unit-validation.txt)).
+* Camera check: unchanged (galaxy 8 notches with the fleet 3 px from the cursor; battle 7 notches, 0 px).
+* Against the Codex agent's own reference captures: [galaxy](evidence/merge/compare_galaxy.jpg) (identical layout and styling; fleet
+  portraits now show the polished unit models, which postdate the CinematicUI build), [battle preparation](evidence/merge/compare_battle_preparation.jpg),
+  [battle](evidence/merge/compare_battle.jpg), [result](evidence/merge/compare_result.jpg), [units](evidence/merge/compare_units.jpg)
+  (identical models, materials and inspection view).
+* The player's save slot was not touched by any of these runs (`-rrSavePath`).
+
+**Known gaps:** the slice factions (Pygmaei, Inhumanus) have no faction theme file, so they use the kit's base palette (the Silex
+accents) and their crests; their ships are still the first-pass models, not production units like Craigon and Silex. Frame-time
+numbers from the earlier uncapped profile predate the merge (the vsync-capped tour holds 144 Hz; uncapped numbers were not re-measured).
+
 ## Prompt 11 result (2026-10-19): presentation pass, honestly scoped
 
 The pack asks for a premium pass. What was done is a **targeted pass on the slice's own surfaces**, driven by defects seen in runtime
@@ -335,9 +370,8 @@ understand previews, whether the campaign reads as one story, balance, and sessi
 [PLAYTEST_PROTOCOL](PLAYTEST_PROTOCOL.md) is ready. Automated tours are technical verification only.
 
 **Blocked:**
-* CR-01: the main checkout's uncommitted Codex work (UI kit, unit models, ground exercises) is still outside any commit; merging this
-  branch with it needs the creator's decision. Ground gameplay exists only in that uncommitted work, and online play only in the separate
-  Commandfall game, so neither has smoke tests on this branch.
+* ~~CR-01~~ resolved after the pack (see "Cinematic UI and units merge"). Online play exists only in the separate Commandfall game, so it has
+  no smoke test here; ground exercises now do (the unit review plays all three).
 * Premium art: approved Pygmaei and Inhumanus ship designs, emblems and module art.
 
 **Deliberately deferred:**

@@ -1,0 +1,28 @@
+/* Vertical-slice panels in the Command Glass / cinematic system (loaded after CommandGlass.uss by UiKit.Install).
+   Surfaces come from .panel (glass, rims and lighting via Prismatic.Decorate); these rules only place the panels and give
+   their lines semantic roles. No literal colours: every role resolves a theme token. */
+
+/* Galaxy and system: the passage campaign panel sits under the dispatch, matching its width. */
+.campaign-panel { position: absolute; right: 16px; top: 218px; width: 422px; padding: 14px 22px 16px 22px; max-height: 58%; }
+.compact .campaign-panel { width: 310px; right: 14px; top: 200px; padding: 12px 16px; }
+.campaign-panel .slice-actions { flex-direction: row; flex-wrap: wrap; margin-top: 6px; }
+.campaign-panel .slice-actions > .btn { margin: 6px 8px 0 0; }
+
+/* Battle: the Command Threat panel at the lower right; the detail panel above it gives up its lower half. */
+.slice-battle .battle-right { max-height: 47%; }
+.slice-threat { position: absolute; right: 16px; bottom: 96px; width: 340px; padding: 16px 20px; }
+.slice-threat > *, .campaign-panel > * { flex-shrink: 0; }   /* size to content; never squeeze lines into each other */
+.compact .slice-threat { width: 300px; right: 14px; }
+.slice-threat .slice-actions { flex-direction: row; flex-wrap: wrap; margin-top: 6px; }
+.slice-threat .slice-actions > .btn { margin: 6px 6px 0 0; }
+.slice-lesson { position: absolute; left: 300px; top: 150px; width: 520px; padding: 18px 22px; }
+
+/* Line roles. */
+.slice-line { white-space: normal; margin: 0 0 5px 0; }
+.slice-line.body { font-size: 14px; color: var(--ivory); }
+.slice-line.item-sub { font-size: 12px; color: var(--muted); }
+.slice-line.small { font-size: 11px; color: var(--muted); }
+.slice-accent { font-size: 13px; color: var(--accent); }
+.slice-notice { font-size: 12px; color: var(--accent-ink); }
+.slice-line.text-danger { color: var(--danger); }
+.compact .slice-line.body { font-size: 13px; }

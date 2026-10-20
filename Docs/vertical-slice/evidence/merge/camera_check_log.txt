@@ -1,0 +1,10 @@
+shot gal01_home
+galaxy wheel zoom at the player's fleet: 8 notches, distance 720 -> 42, pitch 40; the fleet ended 3 px from the cursor
+shot gal02_wheel_zoomed_on_fleet
+galaxy fly to the fleet (double-click, C or the fleet list): 0.45 s; distance 45; fleet 0 px from screen centre
+shot gal03_flew_to_fleet
+shot cam01_start
+zoom at the enemy flagship: 7 notches in 0.44 s of input, distance 26.5 -> 6.0 (limit 6); the ship moved 0 px from the cursor (screen 1920x1080)
+shot cam02_zoomed_at_flagship
+fly to Annihilator Destroyer: 0.35 s; ship 0 px from screen centre; distance 12.0
+shot cam03_focused_ship

@@ -26,26 +26,8 @@ namespace RR.Game
         int _lesson_ = 0, _sig = -1;
         bool _doctrineOpen;
 
-        static VisualElement Box(float width)
-        {
-            var v = new VisualElement();
-            v.style.backgroundColor = new Color(0.05f, 0.07f, 0.1f, 0.88f);
-            v.style.borderTopWidth = v.style.borderBottomWidth = v.style.borderLeftWidth = v.style.borderRightWidth = 1;
-            var edge = new Color(0.79f, 0.64f, 0.36f, 0.5f);
-            v.style.borderTopColor = v.style.borderBottomColor = v.style.borderLeftColor = v.style.borderRightColor = edge;
-            v.style.paddingLeft = v.style.paddingRight = 10; v.style.paddingTop = v.style.paddingBottom = 8;
-            v.style.width = width;
-            return v;
-        }
-
-        static Label Line(string text, int size = 13, Color? color = null, bool bold = false)
-        {
-            var l = new Label(text);
-            l.style.fontSize = size; l.style.whiteSpace = WhiteSpace.Normal; l.style.color = color ?? new Color(0.92f, 0.9f, 0.84f);
-            if (bold) l.style.unityFontStyleAndWeight = FontStyle.Bold;
-            l.style.marginBottom = 4;
-            return l;
-        }
+        // Panels use the Command Glass surfaces (.panel, decorated by Prismatic) and semantic line roles (SlicePanels.uss).
+        static Label Line(string text, string role = "body") => UIX.Text(text, "slice-line", role);
 
         public SliceBattlePanel(BattlePresentation b, VisualElement parent)
         {
@@ -53,41 +35,42 @@ namespace RR.Game
             Root = new VisualElement(); Root.pickingMode = PickingMode.Ignore;
             Root.style.position = Position.Absolute; Root.style.left = 0; Root.style.right = 0; Root.style.top = 0; Root.style.bottom = 0;
             parent.Add(Root);
+            parent.AddToClassList("slice-battle");   // the battle detail panel makes room for the Command Threat panel
+            _parent = parent;
             _labels = new VisualElement(); _labels.pickingMode = PickingMode.Ignore;
             _labels.style.position = Position.Absolute; _labels.style.left = 0; _labels.style.right = 0; _labels.style.top = 0; _labels.style.bottom = 0;
             Root.Add(_labels);
 
-            _panel = Box(380);
-            _panel.style.position = Position.Absolute; _panel.style.right = 16; _panel.style.bottom = 96;
+            _panel = UIX.Div("panel", "slice-threat");
             Root.Add(_panel);
-            _panel.Add(Line("COMMAND THREAT", 12, new Color(0.91f, 0.78f, 0.47f), true));
+            _panel.Add(UiKit.Section("01", "Command threat"));
             _threat = Line(""); _panel.Add(_threat);
-            _exposure = Line("", 12, new Color(0.75f, 0.77f, 0.8f)); _panel.Add(_exposure);
-            _opportunity = Line("", 13, new Color(0.65f, 0.85f, 1f)); _panel.Add(_opportunity);
-            _contracts = Line("", 12, new Color(0.91f, 0.78f, 0.47f)); _panel.Add(_contracts);
-            var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.flexWrap = Wrap.Wrap; _panel.Add(row);
+            _exposure = Line("", "item-sub"); _panel.Add(_exposure);
+            _opportunity = Line("", "slice-accent"); _panel.Add(_opportunity);
+            _contracts = Line("", "slice-notice"); _panel.Add(_contracts);
+            var row = UIX.Div("slice-actions"); _panel.Add(row);
             _overclock = UIX.Btn("Overclock (O)", () => _b.ToggleOverclock()); row.Add(_overclock);
             _turn = UIX.Btn("Turn (R)", () => _b.ToggleTurn()); row.Add(_turn);
             _board = UIX.Btn("Board (B)", () => _b.ToggleBoard()); row.Add(_board);
             _offer = UIX.Btn("Offer terms", () => OfferTerms?.Invoke()); row.Add(_offer);
             _delegate = UIX.Btn("Delegate this round (G)", () => { if (_b.Delegated) _b.StopDelegating(); else _b.Delegate(false); _sig = -1; }); row.Add(_delegate);
             _delegateAll = UIX.Btn("Delegate the battle", () => { _b.Delegate(true); _sig = -1; }); row.Add(_delegateAll);
-            _delegation = Line("", 12, new Color(0.65f, 0.85f, 1f)); _panel.Add(_delegation);
+            _delegation = Line("", "slice-accent"); _panel.Add(_delegation);
             row.Add(UIX.Btn("Doctrine", () => { _doctrineOpen = !_doctrineOpen; _sig = -1; }));
-            _doctrine = Line("", 12, new Color(0.8f, 0.82f, 0.86f)); _panel.Add(_doctrine);
-            _ai = Line("", 11, new Color(0.6f, 0.62f, 0.66f)); _panel.Add(_ai);
+            _doctrine = Line("", "item-sub"); _panel.Add(_doctrine);
+            _ai = Line("", "small"); _panel.Add(_ai);
 
-            _lesson = Box(520);
-            _lesson.style.position = Position.Absolute; _lesson.style.left = 300; _lesson.style.top = 150;
-            _lessonText = Line("", 14);
-            _lesson.Add(Line("TRAINING", 12, new Color(0.91f, 0.78f, 0.47f), true));
+            _lesson = UIX.Div("panel", "slice-lesson");
+            _lessonText = Line("");
+            _lesson.Add(UiKit.Section("01", "Training"));
             _lesson.Add(_lessonText);
             _lessonNext = UIX.Btn("Next lesson", () => { _lesson_ = Mathf.Min(_lesson_ + 1, PassageScenario.TrainingSteps.Length - 1); _sig = -1; });
             _lesson.Add(_lessonNext);
             Root.Add(_lesson);
         }
 
-        public void Dispose() { Root.RemoveFromHierarchy(); }
+        readonly VisualElement _parent;
+        public void Dispose() { Root.RemoveFromHierarchy(); _parent?.RemoveFromClassList("slice-battle"); }
 
         string LeaderName(int seat) { var l = _b.S.Commander(seat); return l != null ? l.Def.Name : "the flagship"; }
 
@@ -110,7 +93,8 @@ namespace RR.Game
             _delegateAll.style.display = canDelegate && !_b.Delegated ? DisplayStyle.Flex : DisplayStyle.None;
             _delegateAll.tooltip = BattlePresentation.DelegateDisclosure;
             _delegation.style.display = _b.Delegated ? DisplayStyle.Flex : DisplayStyle.None;
-            _delegation.text = _b.Delegated ? (_b.DelegatedForBattle ? "Delegated for the rest of the battle. " : $"Delegated until the end of round {S.Round}. ") + BattlePresentation.DelegateDisclosure : "";
+            _delegation.text = _b.Delegated ? (_b.DelegatedForBattle ? "Delegated for the rest of the battle" : $"Delegated until the end of round {S.Round}") +
+                ": the opponent's AI plays your ships by the same rules with your side's view. Not guaranteed best play." : "";
             _board.style.display = u != null && SliceRules.CaptureEnabled(S) ? DisplayStyle.Flex : DisplayStyle.None;
             _board.SetEnabled(_b.PlayersTurn);
             _board.text = _b.BoardMode ? "Cancel boarding (B)" : "Board (B)";
@@ -134,7 +118,7 @@ namespace RR.Game
             _panel.style.display = DisplayStyle.Flex;
             var t = _b.MyThreat;
             _threat.text = t == null ? "" : t.Summary("your " + LeaderName(me));
-            _threat.style.color = t != null && t.Lines.Count > 0 ? new Color(1f, 0.55f, 0.45f) : new Color(0.92f, 0.9f, 0.84f);
+            _threat.EnableInClassList("text-danger", t != null && t.Lines.Count > 0);
             var x = _b.MyExposure;
             _exposure.text = x == null ? "" : x.Summary("your " + LeaderName(me));
             var o = _b.Opportunity;

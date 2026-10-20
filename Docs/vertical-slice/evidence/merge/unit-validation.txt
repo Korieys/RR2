@@ -1,0 +1,341 @@
+PASS craigon_ascendant_ark clip Idle bone motion
+PASS craigon_ascendant_ark clip Move bone motion
+PASS craigon_ascendant_ark clip Attack bone motion
+PASS craigon_ascendant_ark clip Ability bone motion
+PASS craigon_ascendant_ark clip Hit bone motion
+PASS craigon_ascendant_ark clip Death bone motion
+PASS craigon_ascendant_ark LODs/clips 25999
+PASS craigon_ascension_engine clip Idle bone motion
+PASS craigon_ascension_engine clip Move bone motion
+PASS craigon_ascension_engine clip Attack bone motion
+PASS craigon_ascension_engine clip Ability bone motion
+PASS craigon_ascension_engine clip Hit bone motion
+PASS craigon_ascension_engine clip Death bone motion
+PASS craigon_ascension_engine LODs/clips 26000
+PASS craigon_assimilator clip Idle bone motion
+PASS craigon_assimilator clip Move bone motion
+PASS craigon_assimilator clip Attack bone motion
+PASS craigon_assimilator clip Ability bone motion
+PASS craigon_assimilator clip Hit bone motion
+PASS craigon_assimilator clip Death bone motion
+PASS craigon_assimilator LODs/clips 31998
+PASS craigon_carapace_custodian clip Idle bone motion
+PASS craigon_carapace_custodian clip Move bone motion
+PASS craigon_carapace_custodian clip Attack bone motion
+PASS craigon_carapace_custodian clip Ability bone motion
+PASS craigon_carapace_custodian clip Hit bone motion
+PASS craigon_carapace_custodian clip Death bone motion
+PASS craigon_carapace_custodian LODs/clips 32000
+PASS craigon_carapace_drone clip Idle bone motion
+PASS craigon_carapace_drone clip Move bone motion
+PASS craigon_carapace_drone clip Attack bone motion
+PASS craigon_carapace_drone clip Ability bone motion
+PASS craigon_carapace_drone clip Hit bone motion
+PASS craigon_carapace_drone clip Death bone motion
+PASS craigon_carapace_drone LODs/clips 31999
+PASS craigon_chitin_walker clip Idle bone motion
+PASS craigon_chitin_walker clip Move bone motion
+PASS craigon_chitin_walker clip Attack bone motion
+PASS craigon_chitin_walker clip Ability bone motion
+PASS craigon_chitin_walker clip Hit bone motion
+PASS craigon_chitin_walker clip Death bone motion
+PASS craigon_chitin_walker LODs/clips 26000
+PASS craigon_chrysalis_carrier clip Idle bone motion
+PASS craigon_chrysalis_carrier clip Move bone motion
+PASS craigon_chrysalis_carrier clip Attack bone motion
+PASS craigon_chrysalis_carrier clip Ability bone motion
+PASS craigon_chrysalis_carrier clip Hit bone motion
+PASS craigon_chrysalis_carrier clip Death bone motion
+PASS craigon_chrysalis_carrier LODs/clips 25998
+PASS craigon_communion_destroyer clip Idle bone motion
+PASS craigon_communion_destroyer clip Move bone motion
+PASS craigon_communion_destroyer clip Attack bone motion
+PASS craigon_communion_destroyer clip Ability bone motion
+PASS craigon_communion_destroyer clip Hit bone motion
+PASS craigon_communion_destroyer clip Death bone motion
+PASS craigon_communion_destroyer LODs/clips 26000
+PASS craigon_convergence_hauler clip Idle bone motion
+PASS craigon_convergence_hauler clip Move bone motion
+PASS craigon_convergence_hauler clip Attack bone motion
+PASS craigon_convergence_hauler clip Ability bone motion
+PASS craigon_convergence_hauler clip Hit bone motion
+PASS craigon_convergence_hauler clip Death bone motion
+PASS craigon_convergence_hauler LODs/clips 26000
+PASS craigon_evolutionary_bastion clip Idle bone motion
+PASS craigon_evolutionary_bastion clip Move bone motion
+PASS craigon_evolutionary_bastion clip Attack bone motion
+PASS craigon_evolutionary_bastion clip Ability bone motion
+PASS craigon_evolutionary_bastion clip Hit bone motion
+PASS craigon_evolutionary_bastion clip Death bone motion
+PASS craigon_evolutionary_bastion LODs/clips 26000
+PASS craigon_evolved_praetor clip Idle bone motion
+PASS craigon_evolved_praetor clip Move bone motion
+PASS craigon_evolved_praetor clip Attack bone motion
+PASS craigon_evolved_praetor clip Ability bone motion
+PASS craigon_evolved_praetor clip Hit bone motion
+PASS craigon_evolved_praetor clip Death bone motion
+PASS craigon_evolved_praetor LODs/clips 32000
+PASS craigon_fleshweaver clip Idle bone motion
+PASS craigon_fleshweaver clip Move bone motion
+PASS craigon_fleshweaver clip Attack bone motion
+PASS craigon_fleshweaver clip Ability bone motion
+PASS craigon_fleshweaver clip Hit bone motion
+PASS craigon_fleshweaver clip Death bone motion
+PASS craigon_fleshweaver LODs/clips 31999
+PASS craigon_giftbearer clip Idle bone motion
+PASS craigon_giftbearer clip Move bone motion
+PASS craigon_giftbearer clip Attack bone motion
+PASS craigon_giftbearer clip Ability bone motion
+PASS craigon_giftbearer clip Hit bone motion
+PASS craigon_giftbearer clip Death bone motion
+PASS craigon_giftbearer LODs/clips 31999
+PASS craigon_harmonic_disruptor clip Idle bone motion
+PASS craigon_harmonic_disruptor clip Move bone motion
+PASS craigon_harmonic_disruptor clip Attack bone motion
+PASS craigon_harmonic_disruptor clip Ability bone motion
+PASS craigon_harmonic_disruptor clip Hit bone motion
+PASS craigon_harmonic_disruptor clip Death bone motion
+PASS craigon_harmonic_disruptor LODs/clips 32000
+PASS craigon_neural_spiker clip Idle bone motion
+PASS craigon_neural_spiker clip Move bone motion
+PASS craigon_neural_spiker clip Attack bone motion
+PASS craigon_neural_spiker clip Ability bone motion
+PASS craigon_neural_spiker clip Hit bone motion
+PASS craigon_neural_spiker clip Death bone motion
+PASS craigon_neural_spiker LODs/clips 32000
+PASS craigon_pincer_frigate clip Idle bone motion
+PASS craigon_pincer_frigate clip Move bone motion
+PASS craigon_pincer_frigate clip Attack bone motion
+PASS craigon_pincer_frigate clip Ability bone motion
+PASS craigon_pincer_frigate clip Hit bone motion
+PASS craigon_pincer_frigate clip Death bone motion
+PASS craigon_pincer_frigate LODs/clips 26000
+PASS craigon_pincer_guard clip Idle bone motion
+PASS craigon_pincer_guard clip Move bone motion
+PASS craigon_pincer_guard clip Attack bone motion
+PASS craigon_pincer_guard clip Ability bone motion
+PASS craigon_pincer_guard clip Hit bone motion
+PASS craigon_pincer_guard clip Death bone motion
+PASS craigon_pincer_guard LODs/clips 32000
+PASS craigon_prime_synapse_flagship clip Idle bone motion
+PASS craigon_prime_synapse_flagship clip Move bone motion
+PASS craigon_prime_synapse_flagship clip Attack bone motion
+PASS craigon_prime_synapse_flagship clip Ability bone motion
+PASS craigon_prime_synapse_flagship clip Hit bone motion
+PASS craigon_prime_synapse_flagship clip Death bone motion
+PASS craigon_prime_synapse_flagship LODs/clips 26000
+PASS craigon_scuttler_corvette clip Idle bone motion
+PASS craigon_scuttler_corvette clip Move bone motion
+PASS craigon_scuttler_corvette clip Attack bone motion
+PASS craigon_scuttler_corvette clip Ability bone motion
+PASS craigon_scuttler_corvette clip Hit bone motion
+PASS craigon_scuttler_corvette clip Death bone motion
+PASS craigon_scuttler_corvette LODs/clips 26000
+PASS craigon_scuttler_interceptor clip Idle bone motion
+PASS craigon_scuttler_interceptor clip Move bone motion
+PASS craigon_scuttler_interceptor clip Attack bone motion
+PASS craigon_scuttler_interceptor clip Ability bone motion
+PASS craigon_scuttler_interceptor clip Hit bone motion
+PASS craigon_scuttler_interceptor clip Death bone motion
+PASS craigon_scuttler_interceptor LODs/clips 26000
+PASS craigon_shellbound clip Idle bone motion
+PASS craigon_shellbound clip Move bone motion
+PASS craigon_shellbound clip Attack bone motion
+PASS craigon_shellbound clip Ability bone motion
+PASS craigon_shellbound clip Hit bone motion
+PASS craigon_shellbound clip Death bone motion
+PASS craigon_shellbound LODs/clips 32000
+PASS craigon_specimen_crawler clip Idle bone motion
+PASS craigon_specimen_crawler clip Move bone motion
+PASS craigon_specimen_crawler clip Attack bone motion
+PASS craigon_specimen_crawler clip Ability bone motion
+PASS craigon_specimen_crawler clip Hit bone motion
+PASS craigon_specimen_crawler clip Death bone motion
+PASS craigon_specimen_crawler LODs/clips 26000
+PASS craigon_sporewing_fighter clip Idle bone motion
+PASS craigon_sporewing_fighter clip Move bone motion
+PASS craigon_sporewing_fighter clip Attack bone motion
+PASS craigon_sporewing_fighter clip Ability bone motion
+PASS craigon_sporewing_fighter clip Hit bone motion
+PASS craigon_sporewing_fighter clip Death bone motion
+PASS craigon_sporewing_fighter LODs/clips 26000
+PASS craigon_synapse_stalker clip Idle bone motion
+PASS craigon_synapse_stalker clip Move bone motion
+PASS craigon_synapse_stalker clip Attack bone motion
+PASS craigon_synapse_stalker clip Ability bone motion
+PASS craigon_synapse_stalker clip Hit bone motion
+PASS craigon_synapse_stalker clip Death bone motion
+PASS craigon_synapse_stalker LODs/clips 31999
+PASS craigon_synaptic_cruiser clip Idle bone motion
+PASS craigon_synaptic_cruiser clip Move bone motion
+PASS craigon_synaptic_cruiser clip Attack bone motion
+PASS craigon_synaptic_cruiser clip Ability bone motion
+PASS craigon_synaptic_cruiser clip Hit bone motion
+PASS craigon_synaptic_cruiser clip Death bone motion
+PASS craigon_synaptic_cruiser LODs/clips 25999
+PASS craigon_tide_skimmer clip Idle bone motion
+PASS craigon_tide_skimmer clip Move bone motion
+PASS craigon_tide_skimmer clip Attack bone motion
+PASS craigon_tide_skimmer clip Ability bone motion
+PASS craigon_tide_skimmer clip Hit bone motion
+PASS craigon_tide_skimmer clip Death bone motion
+PASS craigon_tide_skimmer LODs/clips 31999
+PASS silex_bastion_keeper clip Idle bone motion
+PASS silex_bastion_keeper clip Move bone motion
+PASS silex_bastion_keeper clip Attack bone motion
+PASS silex_bastion_keeper clip Ability bone motion
+PASS silex_bastion_keeper clip Hit bone motion
+PASS silex_bastion_keeper clip Death bone motion
+PASS silex_bastion_keeper LODs/clips 31999
+PASS silex_bastion_sled clip Idle bone motion
+PASS silex_bastion_sled clip Move bone motion
+PASS silex_bastion_sled clip Attack bone motion
+PASS silex_bastion_sled clip Ability bone motion
+PASS silex_bastion_sled clip Hit bone motion
+PASS silex_bastion_sled clip Death bone motion
+PASS silex_bastion_sled LODs/clips 26000
+PASS silex_citadel_dreadnought clip Idle bone motion
+PASS silex_citadel_dreadnought clip Move bone motion
+PASS silex_citadel_dreadnought clip Attack bone motion
+PASS silex_citadel_dreadnought clip Ability bone motion
+PASS silex_citadel_dreadnought clip Hit bone motion
+PASS silex_citadel_dreadnought clip Death bone motion
+PASS silex_citadel_dreadnought LODs/clips 26000
+PASS silex_crown_bastion clip Idle bone motion
+PASS silex_crown_bastion clip Move bone motion
+PASS silex_crown_bastion clip Attack bone motion
+PASS silex_crown_bastion clip Ability bone motion
+PASS silex_crown_bastion clip Hit bone motion
+PASS silex_crown_bastion clip Death bone motion
+PASS silex_crown_bastion LODs/clips 26000
+PASS silex_crown_warden clip Idle bone motion
+PASS silex_crown_warden clip Move bone motion
+PASS silex_crown_warden clip Attack bone motion
+PASS silex_crown_warden clip Ability bone motion
+PASS silex_crown_warden clip Hit bone motion
+PASS silex_crown_warden clip Death bone motion
+PASS silex_crown_warden LODs/clips 32000
+PASS silex_facet_ram clip Idle bone motion
+PASS silex_facet_ram clip Move bone motion
+PASS silex_facet_ram clip Attack bone motion
+PASS silex_facet_ram clip Ability bone motion
+PASS silex_facet_ram clip Hit bone motion
+PASS silex_facet_ram clip Death bone motion
+PASS silex_facet_ram LODs/clips 25999
+PASS silex_facet_surveyor clip Idle bone motion
+PASS silex_facet_surveyor clip Move bone motion
+PASS silex_facet_surveyor clip Attack bone motion
+PASS silex_facet_surveyor clip Ability bone motion
+PASS silex_facet_surveyor clip Hit bone motion
+PASS silex_facet_surveyor clip Death bone motion
+PASS silex_facet_surveyor LODs/clips 26000
+PASS silex_geode_colossus clip Idle bone motion
+PASS silex_geode_colossus clip Move bone motion
+PASS silex_geode_colossus clip Attack bone motion
+PASS silex_geode_colossus clip Ability bone motion
+PASS silex_geode_colossus clip Hit bone motion
+PASS silex_geode_colossus clip Death bone motion
+PASS silex_geode_colossus LODs/clips 32000
+PASS silex_geode_walker clip Idle bone motion
+PASS silex_geode_walker clip Move bone motion
+PASS silex_geode_walker clip Attack bone motion
+PASS silex_geode_walker clip Ability bone motion
+PASS silex_geode_walker clip Hit bone motion
+PASS silex_geode_walker clip Death bone motion
+PASS silex_geode_walker LODs/clips 26000
+PASS silex_lattice_corvette clip Idle bone motion
+PASS silex_lattice_corvette clip Move bone motion
+PASS silex_lattice_corvette clip Attack bone motion
+PASS silex_lattice_corvette clip Ability bone motion
+PASS silex_lattice_corvette clip Hit bone motion
+PASS silex_lattice_corvette clip Death bone motion
+PASS silex_lattice_corvette LODs/clips 25999
+PASS silex_lithic_strider clip Idle bone motion
+PASS silex_lithic_strider clip Move bone motion
+PASS silex_lithic_strider clip Attack bone motion
+PASS silex_lithic_strider clip Ability bone motion
+PASS silex_lithic_strider clip Hit bone motion
+PASS silex_lithic_strider clip Death bone motion
+PASS silex_lithic_strider LODs/clips 32000
+PASS silex_monolith_battleship clip Idle bone motion
+PASS silex_monolith_battleship clip Move bone motion
+PASS silex_monolith_battleship clip Attack bone motion
+PASS silex_monolith_battleship clip Ability bone motion
+PASS silex_monolith_battleship clip Hit bone motion
+PASS silex_monolith_battleship clip Death bone motion
+PASS silex_monolith_battleship LODs/clips 26000
+PASS silex_obelisk_cruiser clip Idle bone motion
+PASS silex_obelisk_cruiser clip Move bone motion
+PASS silex_obelisk_cruiser clip Attack bone motion
+PASS silex_obelisk_cruiser clip Ability bone motion
+PASS silex_obelisk_cruiser clip Hit bone motion
+PASS silex_obelisk_cruiser clip Death bone motion
+PASS silex_obelisk_cruiser LODs/clips 26000
+PASS silex_obelisk_guard clip Idle bone motion
+PASS silex_obelisk_guard clip Move bone motion
+PASS silex_obelisk_guard clip Attack bone motion
+PASS silex_obelisk_guard clip Ability bone motion
+PASS silex_obelisk_guard clip Hit bone motion
+PASS silex_obelisk_guard clip Death bone motion
+PASS silex_obelisk_guard LODs/clips 31999
+PASS silex_pillar_destroyer clip Idle bone motion
+PASS silex_pillar_destroyer clip Move bone motion
+PASS silex_pillar_destroyer clip Attack bone motion
+PASS silex_pillar_destroyer clip Ability bone motion
+PASS silex_pillar_destroyer clip Hit bone motion
+PASS silex_pillar_destroyer clip Death bone motion
+PASS silex_pillar_destroyer LODs/clips 26000
+PASS silex_prism_escort clip Idle bone motion
+PASS silex_prism_escort clip Move bone motion
+PASS silex_prism_escort clip Attack bone motion
+PASS silex_prism_escort clip Ability bone motion
+PASS silex_prism_escort clip Hit bone motion
+PASS silex_prism_escort clip Death bone motion
+PASS silex_prism_escort LODs/clips 26000
+PASS silex_royal_castellan clip Idle bone motion
+PASS silex_royal_castellan clip Move bone motion
+PASS silex_royal_castellan clip Attack bone motion
+PASS silex_royal_castellan clip Ability bone motion
+PASS silex_royal_castellan clip Hit bone motion
+PASS silex_royal_castellan clip Death bone motion
+PASS silex_royal_castellan LODs/clips 32000
+PASS silex_shard_retainer clip Idle bone motion
+PASS silex_shard_retainer clip Move bone motion
+PASS silex_shard_retainer clip Attack bone motion
+PASS silex_shard_retainer clip Ability bone motion
+PASS silex_shard_retainer clip Hit bone motion
+PASS silex_shard_retainer clip Death bone motion
+PASS silex_shard_retainer LODs/clips 32000
+PASS silex_shard_sentinel clip Idle bone motion
+PASS silex_shard_sentinel clip Move bone motion
+PASS silex_shard_sentinel clip Attack bone motion
+PASS silex_shard_sentinel clip Ability bone motion
+PASS silex_shard_sentinel clip Hit bone motion
+PASS silex_shard_sentinel clip Death bone motion
+PASS silex_shard_sentinel LODs/clips 32000
+PASS silex_tessera_frigate clip Idle bone motion
+PASS silex_tessera_frigate clip Move bone motion
+PASS silex_tessera_frigate clip Attack bone motion
+PASS silex_tessera_frigate clip Ability bone motion
+PASS silex_tessera_frigate clip Hit bone motion
+PASS silex_tessera_frigate clip Death bone motion
+PASS silex_tessera_frigate LODs/clips 26000
+PASS silex_throne_ark clip Idle bone motion
+PASS silex_throne_ark clip Move bone motion
+PASS silex_throne_ark clip Attack bone motion
+PASS silex_throne_ark clip Ability bone motion
+PASS silex_throne_ark clip Hit bone motion
+PASS silex_throne_ark clip Death bone motion
+PASS silex_throne_ark LODs/clips 26000
+PASS silex_throne_engine clip Idle bone motion
+PASS silex_throne_engine clip Move bone motion
+PASS silex_throne_engine clip Attack bone motion
+PASS silex_throne_engine clip Ability bone motion
+PASS silex_throne_engine clip Hit bone motion
+PASS silex_throne_engine clip Death bone motion
+PASS silex_throne_engine LODs/clips 25999
+Effects remaining: 0; failures: 0
+Ground exercise 0: 14 legal player commands
+Ground exercise 1: 14 legal player commands
+Ground exercise 2: 14 legal player commands
+Final failures: 0

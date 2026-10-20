@@ -17,6 +17,8 @@ namespace RR.Game
             var theme = Resources.Load<StyleSheet>("RR/UIThemes/" + faction);
             if (theme != null) root.styleSheets.Add(theme);
             root.styleSheets.Add(Resources.Load<StyleSheet>("RR/CommandGlass"));
+            var slice = Resources.Load<StyleSheet>("RR/SlicePanels");   // the vertical slice's own panels, in this system
+            if (slice != null) root.styleSheets.Add(slice);
             root.AddToClassList("command-glass");
             root.AddToClassList("cinematic-ui");
             root.EnableInClassList("reduced-motion", Settings.ReducedMotion);

@@ -27,12 +27,15 @@ delete the save file (by default `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\R
 | | |
 |---|---|
 | Left click | select a ship, fleet, system or planet; in battle, give the order shown in the preview |
+| Faction name (top left) | the Command Directory: key systems and known contacts |
+| Battle: Shift-click a ship, click your selected ship, or Inspect | the unit inspection view (rotate, zoom, animations) |
 | Galaxy: double-click a fleet, or C | fly the camera close to that fleet (picking it in the fleet list does the same) |
 | Mouse wheel; + and −; right or middle drag; W A S D; Q E | zoom toward the cursor; zoom; turn the camera; pan; rotate |
 | Home | recentre the camera |
 | F5 / F9 | save / load (also during a battle, between actions) |
 | F6 | scenario menu |
 | Space; 1, 2, 3 | galaxy: pause, game speed. Battle: hold position (wait) |
+| Settings (gear, top right) | interface size, reduced motion, controls; **Controls & companion** opens the ground exercises (line infantry, specialists, war engines) and the unit gallery |
 | Esc | back; in battle, undo the last ability pick |
 | Tab | galaxy overlays |
 | **Battle** | |

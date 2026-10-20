@@ -29,12 +29,12 @@ namespace RR.Game
             _campaign.Update(Rig.Cam);
         }
 
+        /// <summary>A paragraph in the Command Glass text roles (SlicePanels.uss): body at reading size, supporting text smaller,
+        /// warnings in the theme's danger colour. The size and colour arguments choose the role; no literal colours reach the UI.</summary>
         static Label P(string text, int size = 14, Color? col = null)
         {
-            var l = new Label(text);
-            l.style.whiteSpace = WhiteSpace.Normal; l.style.fontSize = size; l.style.marginBottom = 6;
-            l.style.color = col ?? new Color(0.92f, 0.9f, 0.84f);
-            return l;
+            string role = col.HasValue && col.Value.r > 0.9f && col.Value.g < 0.8f ? "text-danger" : size >= 13 && !col.HasValue ? "body" : size >= 12 ? "item-sub" : "small";
+            return role == "body" ? UIX.Text(text, "slice-line", "body") : UIX.Text(text, "slice-line", "body", role);
         }
 
         /// <summary>Light text on a dark field for form inputs (the default theme draws light grey on light grey here).</summary>
@@ -64,7 +64,7 @@ namespace RR.Game
             if (Busy || Scale == ViewScale.Battle) return;
             UI.CloseModal();
             var g = SliceCampaign.Create(f);
-            StartCoroutine(ReplaceStateThen(g, "The Umbra passage campaign: declare an objective in the panel at the bottom left.", () =>
+            StartCoroutine(ReplaceStateThen(g, "The Umbra passage campaign: declare an objective in the passage panel on the right.", () =>
             {
                 var mine = G.Fleets.FirstOrDefault(x => x.OwnerId == G.Player.Id);
                 if (mine != null) Selection.SelectFleet(G, mine.Id);
@@ -97,7 +97,7 @@ namespace RR.Game
         public void OpenHistory(string systemId)
         {
             var m = UI.OpenModal(820);
-            var t = UIX.Text("HISTORY", "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text("HISTORY", "modal-title"); UIRoot.Display(t); m.Add(t);
             var events = G.Slice?.History ?? new List<HistoryEvent>();
             var list = (systemId != null ? events.Where(e => e.SystemId == systemId) : events).OrderByDescending(e => e.Day).Take(30).ToList();
             if (list.Count == 0) m.Add(P(systemId != null ? "Nothing has happened here yet." : "Nothing has happened yet."));
@@ -128,7 +128,7 @@ namespace RR.Game
             img.style.backgroundImage = new StyleBackground(Background.FromRenderTexture(_hangar.Texture));
             head.Add(img);
             var info = new VisualElement(); info.style.width = 500; head.Add(info);
-            var t = UIX.Text((prof.Name ?? ShipCatalog.Name(ship.DefId)).ToUpperInvariant(), "h-display"); UIRoot.Display(t); info.Add(t);
+            var t = UIX.Text((prof.Name ?? ShipCatalog.Name(ship.DefId)).ToUpperInvariant(), "modal-title"); UIRoot.Display(t); info.Add(t);
             info.Add(P($"{ShipCatalog.Name(ship.DefId)}, flagship of {SliceCampaign.FleetOf(G, uid)?.Name}. Hull {ship.Hp} of {SliceCampaign.MaxHull(G, ship)}; battle scars {prof.Scars} (cosmetic)."));
             var name = new TextField("Name") { value = prof.Name ?? "", maxLength = SliceCampaign.MaxNameLength };
             name.style.width = 420; info.Add(name);
@@ -169,7 +169,7 @@ namespace RR.Game
         VisualElement OfferForm(string title, string intro, Action<Offer> send, bool allowSurrender, Action cancel = null)
         {
             var m = UI.OpenModal(860);
-            var t = UIX.Text(title, "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text(title, "modal-title"); UIRoot.Display(t); m.Add(t);
             m.Add(P(intro, 13));
             var who = new DropdownField("Who yields the passage", new List<string> { "They yield to us", "We yield to them" }, 0); who.style.width = 520; m.Add(who);
             Legible(who.Q(className: DropdownField.inputUssClassName));
@@ -213,7 +213,7 @@ namespace RR.Game
         void ShowVerdict(OfferVerdict v, Action onAccept, Action onDecline = null)
         {
             var m = UI.OpenModal(820);
-            var t = UIX.Text(!v.Valid ? "TERMS REFUSED" : v.Accepted ? "TERMS ACCEPTED" : "TERMS REJECTED", "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text(!v.Valid ? "TERMS REFUSED" : v.Accepted ? "TERMS ACCEPTED" : "TERMS REJECTED", "modal-title"); UIRoot.Display(t); m.Add(t);
             m.Add(P(v.Reason, 13));
             var row = Row(); m.Add(row);
             B(row, v.Valid && v.Accepted ? "Conclude" : "Back", () => { UI.CloseModal(); if (v.Valid && v.Accepted) onAccept(); else onDecline?.Invoke(); });
@@ -248,7 +248,7 @@ namespace RR.Game
             var e = Expeditions.Of(G);
             if (e == null) return;
             var m = UI.OpenModal(860);
-            var t = UIX.Text(e.Title.ToUpperInvariant(), "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text(e.Title.ToUpperInvariant(), "modal-title"); UIRoot.Display(t); m.Add(t);
             foreach (var l in Expeditions.Briefing(G, e)) m.Add(P(l, 13));
             var fleet = G.Fleets.FirstOrDefault(f => f.OwnerId == G.Player.Id && f.SystemId == e.SystemId && !f.Moving);
             var row = Row(); m.Add(row);
@@ -294,7 +294,7 @@ namespace RR.Game
             var r = Expeditions.Resolve(G, _setup, o);
             var e = Expeditions.Of(G);
             var m = UI.OpenModal(860);
-            var t = UIX.Text(o.WinnerSeat == _setup.PlayerSeat ? "THE DERELICT IS SECURED" : "DRIVEN OFF", "h-display"); UIRoot.Display(t); m.Add(t);
+            var t = UIX.Text(o.WinnerSeat == _setup.PlayerSeat ? "THE DERELICT IS SECURED" : "DRIVEN OFF", "modal-title"); UIRoot.Display(t); m.Add(t);
             m.Add(P(r.Ok ? e.Outcome : r.Reason));
             m.Add(P("Decisive action: " + (Battle.Session.Decisive ?? BattleNarrator.Ending(Battle.S)), 13));
             var row = Row(); m.Add(row);

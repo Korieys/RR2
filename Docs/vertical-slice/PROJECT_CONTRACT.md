@@ -55,7 +55,8 @@ A lower source never silently overrides a higher one. Every conflict goes into t
 | Item | Value |
 |---|---|
 | Engine | Unity 6000.6.5f1, URP 17.6, D3D12, Mono player, Windows x64 |
-| UI | UI Toolkit (`UnityEngine.UIElements`, USS in `Assets/Resources/RR`) |
+| UI | UI Toolkit with the Command Glass / cinematic UI kit merged from the main checkout (VS-32): `RR_Style.uss`, `Prismatic.uss`, `CommandGlass.uss`, then the slice's own `SlicePanels.uss`; see `Docs/UI_KIT.md` and `Docs/CINEMATIC_UI.md` |
+| Units | 49 imported Craigon and Silex units in `Assets/RR/Art/Units` (LODs, six animation clips, inspection gallery); the Pygmaei and Inhumanus slice classes remain the first-pass models in `Assets/RR/Art/Models` |
 | Entry scene | `Assets/RR/Scenes/RuleAndRuin.unity`, the only scene; `RR.Game.GameRoot` is the composition root |
 | Assemblies | `Commandfall.Core`, `Commandfall.AI` (vendored), `RR.Strategy` (engine-free), `RR.Game`, `RR.Editor`, two test assemblies |
 | Rules | Commandfall 0.15.0 Full Roster, vendored unmodified from Commandfall commit `5a31053` (repository `C:\Users\jacob\Documents\ClaudeCodeProj\Commandfall`, branch `claude/rule-ruin-commandfall-units-e88455`) |
@@ -66,6 +67,16 @@ A lower source never silently overrides a higher one. Every conflict goes into t
 | Machine | RTX 5060 8 GB, i5-14400F, 32 GB, Windows 11 26200; both displays 1080p (1440p only offscreen) |
 
 ## Commands
+
+After changing unit art or ship models, rebuild through the unit asset step, which prepares the unit prefabs, renders the UI kit's ship
+portraits (all four factions) and then builds:
+
+```bash
+"/c/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe" -batchmode -quit -projectPath . -executeMethod RR.EditorTools.UnitAssetBuild.PrepareAndBuild -rrSetup -rrBuildOut Builds/VS/RuleAndRuin.exe -logFile Logs/build.log
+```
+
+The step regenerates unit prefabs and materials with LF line endings and re-renders existing portraits; restore those with `git checkout`
+unless the art actually changed. Otherwise build as below.
 
 Build (from the project root; add `-rrSetup` after adding shaders, models or audio). If it fails with
 `PlayerDataCache ... Access is denied`, delete `Library/PlayerDataCache` and build again.
