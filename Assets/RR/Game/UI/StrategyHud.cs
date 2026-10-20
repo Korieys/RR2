@@ -58,17 +58,22 @@ namespace RR.Game
         void BuildTop()
         {
             _top = UIX.Div("topbar"); Root.Add(_top);
-            var identity = UIX.Btn("", OpenNavigation, "empire-identity");
-            identity.tooltip = "Open the system directory and known contacts";
-            identity.Add(UiKit.Crest(G.Player.Id));
-            var words = UIX.Div(); _playerName = UIX.Text(G.Player.Name.ToUpperInvariant(), "emblem-name"); words.Add(_playerName);
-            words.Add(UIX.Text("FLEET OPERATIONS  /  DIRECTORY", "identity-sub"));
+            var identity = UIX.Btn("", OpenNavigation, "empire-identity"); identity.name = "empire-identity";
+            identity.tooltip = "Command directory" + TooltipLayer.Separator + "Every known system, fleet and contact. Choose one to fly the camera to it.";
+            var crest = UIX.Div("identity-crest"); crest.pickingMode = PickingMode.Ignore;
+            var badge = UiKit.Crest(G.Player.Id);
+            var halo = UIX.Div("identity-halo"); halo.pickingMode = PickingMode.Ignore; CinematicUi.Glow(halo, badge.Tint); crest.Add(halo);
+            crest.Add(badge); identity.Add(crest);
+            var words = UIX.Div("identity-words"); _playerName = UIX.Text(G.Player.Name.ToUpperInvariant(), "emblem-name"); words.Add(_playerName);
+            var sub = UIX.Div("row", "identity-sub-row"); sub.Add(UIX.Text("FLEET OPERATIONS  /  DIRECTORY", "identity-sub"));
+            sub.Add(UiKit.Chevron("identity-chevron")); words.Add(sub);
+            var rule = UIX.Div("identity-rule"); rule.pickingMode = PickingMode.Ignore; words.Add(rule);
             identity.Add(words); _top.Add(identity);
             foreach (var (k, col, tip) in new[] { (IconKind.Energy, new Color(1f, .85f, .4f), "Energy"),
                 (IconKind.Materials, new Color(.7f, .82f, .95f), "Materials"), (IconKind.Credits, new Color(.95f, .78f, .45f), "Credits"),
                 (IconKind.Influence, new Color(.78f, .65f, 1f), "Influence") })
             {
-                var box = UIX.Div("res"); box.tooltip = tip + " stockpile and daily income"; box.Add(new Icon(k, col, 17));
+                var box = UIX.Div("res"); box.tooltip = tip + TooltipLayer.Separator + (k == IconKind.Influence ? "Current stockpile." : "Current stockpile, with the daily income beside it."); box.Add(new Icon(k, col, 17));
                 var detail = UIX.Div("res-detail"); detail.Add(UIX.Text(tip.ToUpperInvariant(), "res-label"));
                 var values = UIX.Div("row"); var v = UIX.Text("0", "res-value"); _res[k] = v; values.Add(v);
                 var inc = UIX.Text("", "res-income"); _inc[k] = inc; values.Add(inc); detail.Add(values); box.Add(detail); _top.Add(box);

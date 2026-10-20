@@ -44,7 +44,7 @@ namespace RR.Game
             return texture;
         }
 
-        static void Field(MeshGenerationContext ctx, Rect r, Vector2 center, Vector2 radius, Color color, bool vignette=false)
+        internal static void Field(MeshGenerationContext ctx, Rect r, Vector2 center, Vector2 radius, Color color, bool vignette=false)
         {
             radius.x=Mathf.Max(1,radius.x);radius.y=Mathf.Max(1,radius.y);
             var extent=new Rect(center-radius,radius*2);
@@ -152,6 +152,24 @@ namespace RR.Game
                 }
                 for(int i=-1;i<=1;i+=2)
                     Line(pen,new Vector2(center.x+i*(rx-3),center.y),new Vector2(center.x+i*(rx+3),center.y),Alpha(ink,.4f));
+            };
+        }
+
+        /// <summary>A soft glow; a fixed tint (an emblem's colour) overrides the theme accent.</summary>
+        public static void Glow(VisualElement e, Color? tint=null)
+        {
+            e.AddToClassList("portrait-optics");
+            Color accent=tint ?? new Color32(139,207,252,255);
+            if(!tint.HasValue)e.RegisterCallback<CustomStyleResolvedEvent>(ev=>
+            {
+                if(ev.customStyle.TryGetValue(new CustomStyleProperty<Color>("--portrait-accent"),out var color))accent=color;
+                e.MarkDirtyRepaint();
+            });
+            e.generateVisualContent+=ctx=>
+            {
+                var r=e.contentRect;if(r.width<8 || r.height<8)return;
+                Field(ctx,r,r.center,r.size*.5f,Alpha(accent,.34f));
+                Field(ctx,r,r.center,r.size*.26f,Alpha(Color.Lerp(accent,Color.white,.4f),.16f));
             };
         }
 

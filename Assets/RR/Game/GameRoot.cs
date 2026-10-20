@@ -101,7 +101,7 @@ namespace RR.Game
             UI.Strategy.Root.style.display = DisplayStyle_None;
             // Chart the hero system up front (honest loading: shown with progress).
             var hero = G.GetSystem(SliceScenario.HeroSystem);
-            var jobs = hero.Planets.Where(p => !Args.Has("-rrUiSmoke")).Select(p => PlanetBaker.Start(p, p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant ? 768 : 384)).ToList();
+            var jobs = hero.Planets.Where(p => !Args.Has("-rrUiSmoke") && !Args.Has("-rrHoverReview")).Select(p => PlanetBaker.Start(p, p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant ? 768 : 384)).ToList();
             while (jobs.Any(j => !j.Work.IsCompleted))
             {
                 UI.ShowLoading("Charting the Aurelith system", jobs.Count(j => j.Work.IsCompleted) / (float)jobs.Count);
@@ -124,6 +124,8 @@ namespace RR.Game
             if(Args.Has("-rrGround")){StartGroundExercise();yield break;}
             var uiSmoke = Args.Value("-rrUiSmoke");
             if(uiSmoke != null) { StartCoroutine(Automation.UiSmoke(this,uiSmoke)); yield break; }
+            var hoverReview = Args.Value("-rrHoverReview");
+            if(hoverReview != null) { StartCoroutine(Automation.HoverReview(this,hoverReview)); yield break; }
             var tour = Args.Value("-rrTour");
             if (tour != null) StartCoroutine(Automation.FullTour(this, tour));
             var soak = Args.Value("-rrSoak");

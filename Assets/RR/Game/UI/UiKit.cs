@@ -50,15 +50,7 @@ namespace RR.Game
             return icon;
         }
 
-        public static VisualElement Crest(string faction)
-        {
-            var tex = Resources.Load<Texture2D>("RR/Emblems/" + faction);
-            if (tex == null) return AccentIcon(IconKind.Crown, 34);
-            var crest = UIX.Div("faction-crest");
-            crest.style.backgroundImage = new StyleBackground(tex);
-            crest.pickingMode = PickingMode.Ignore;
-            return crest;
-        }
+        public static EmblemBadge Crest(string faction) => new EmblemBadge(faction);
 
         public static VisualElement Ship(string id, bool small = false)
         {
@@ -80,7 +72,7 @@ namespace RR.Game
         {
             var button = UIX.Btn("", () => GameRoot.I.InspectUnit(id), "inspect-portrait");
             button.name = "inspect-" + id;
-            button.tooltip = "Inspect " + id.Replace('_',' ') + " · rotate, zoom and preview animations";
+            button.tooltip = "Inspect " + RR.Strategy.ShipCatalog.Name(id) + TooltipLayer.Separator + "Rotate, zoom and preview its animations.";
             button.Add(Ship(id, small));
             var hint=UIX.Text("INSPECT", "inspect-hint");hint.pickingMode=PickingMode.Ignore;button.Add(hint);
             button.RegisterCallback<ClickEvent>(e => e.StopPropagation());
@@ -88,6 +80,21 @@ namespace RR.Game
             button.RegisterCallback<PointerUpEvent>(e => e.StopPropagation());
             button.RegisterCallback<NavigationSubmitEvent>(e => e.StopPropagation());
             return button;
+        }
+
+        /// <summary>A small accent chevron (fonts in the kit lack a reliable glyph for it).</summary>
+        public static VisualElement Chevron(string cls)
+        {
+            var c = UIX.Div("chevron", "accent-icon", cls); c.pickingMode = PickingMode.Ignore;
+            Color tint = new Color32(134, 201, 245, 255);
+            c.RegisterCallback<CustomStyleResolvedEvent>(e => { if (e.customStyle.TryGetValue(AccentProperty, out var t)) tint = t; c.MarkDirtyRepaint(); });
+            c.generateVisualContent += ctx =>
+            {
+                var r = c.contentRect; if (r.width < 2 || r.height < 2) return;
+                var pen = ctx.painter2D; pen.strokeColor = tint; pen.lineWidth = 1.4f; pen.lineCap = LineCap.Round; pen.lineJoin = LineJoin.Round;
+                pen.BeginPath(); pen.MoveTo(new Vector2(r.xMin + 1, r.yMin + 1)); pen.LineTo(new Vector2(r.xMax - 1, r.center.y)); pen.LineTo(new Vector2(r.xMin + 1, r.yMax - 1)); pen.Stroke();
+            };
+            return c;
         }
 
         public static VisualElement Section(string index, string title)

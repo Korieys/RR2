@@ -153,7 +153,7 @@ namespace RR.Game
             var b = new PrismaticButton(click) { text = text };
             b.AddToClassList("btn");
             foreach (var c in classes) b.AddToClassList(c);
-            Prismatic.Decorate(b);
+            Prismatic.Decorate(b); UiHover.Track(b);
             return b;
         }
         public static Button IconBtn(IconKind icon, Action click, string tooltip)

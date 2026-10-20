@@ -22,7 +22,7 @@ namespace RR.Game
 
         public void MaybeShowStartMenu()
         {
-            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrCameraCheck")) return;
+            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrCameraCheck") || Args.Has("-rrHoverReview")) return;
             _startMenuShown = true;
             ShowPassageMenu();
         }

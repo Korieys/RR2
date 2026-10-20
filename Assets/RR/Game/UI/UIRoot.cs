@@ -14,6 +14,7 @@ namespace RR.Game
         public VisualElement Root { get; private set; }
         public VisualElement HudLayer { get; private set; }
         public StrategyHud Strategy { get; private set; }
+        public TooltipLayer Tooltips { get; private set; }
         VisualElement _modalLayer, _fade, _loading;
         Label _loadingText;
         VisualElement _loadingBar;
@@ -50,6 +51,7 @@ namespace RR.Game
             _loading.style.display = DisplayStyle.None;
             Root.Add(_loading);
             _fade = UIX.Div("fade"); _fade.pickingMode = PickingMode.Ignore; _fade.style.display = DisplayStyle.None; Root.Add(_fade);
+            Tooltips = new TooltipLayer(Root);   // last child: above modals, loading and the cross-fade
             ApplyScale();
         }
 
@@ -149,7 +151,7 @@ namespace RR.Game
             _modalLayer.Add(back);
             return m;
         }
-        public void CloseModal() { _modalLayer.Clear(); }
+        public void CloseModal() { Tooltips?.Hide(); _modalLayer.Clear(); }
 
         // ------------------------------------------------------------------ battle preparation
 
@@ -188,7 +190,8 @@ namespace RR.Game
                 {
                     var d = ShipCatalog.Def(s.DefId);
                     bool on = selection.Contains(s.Uid);
-                    var row = UIX.Div("ship-row", on ? "ship-row-on" : "ship-row-off");
+                    var row = UIX.Div("ship-row", on ? "ship-row-on" : "ship-row-off"); UiHover.Track(row);
+                    row.Add(UiKit.Ship(s.DefId, true));
                     var nameCol = UIX.Div("col-name");
                     var nm = UIX.Div("row");
                     if (ShipCatalog.IsLeader(s.DefId)) { var c = UiKit.ContentIcon(IconKind.Crown, 13); c.style.marginRight = 5; nm.Add(c); }
@@ -198,6 +201,7 @@ namespace RR.Game
                     if (prof != null && prof.Modules.Count > 0)
                         nameCol.Add(UIX.Text("Fitted: " + string.Join(", ", prof.Modules.Select(x => Commandfall.Core.SliceRules.Module(x).Name)) + ".", "item-sub"));
                     nameCol.Add(UIX.Text(StrategyHud.RoleText(d) + ", tier " + d.Roster.Tier + (ShipCatalog.IsLeader(s.DefId) ? ". Leader: its loss ends the battle." : ""), "item-sub"));
+                    nameCol.Add(UIX.Tag(on ? "IN BATTLE LINE" : "IN RESERVE", on ? "tag-line" : "tag-reserve"));
                     row.Add(nameCol);
                     row.Add(Stat("HULL", s.Hp + "/" + d.MaxHp));
                     row.Add(Stat("ARM", d.Armor.ToString()));
@@ -235,12 +239,21 @@ namespace RR.Game
             {
                 var s = enemy.Ships.First(x => x.Uid == uid);
                 var d = ShipCatalog.Def(s.DefId);
-                var it = UIX.Div("item");
-                var line = UIX.Div("row");
-                if (ShipCatalog.IsLeader(s.DefId)) { var c = UiKit.ContentIcon(IconKind.Crown, 13); c.style.marginRight = 5; line.Add(c); }
-                line.Add(UIX.Text(d.Name, "item-title")); line.Add(UIX.Div("spacer")); line.Add(UIX.Text(s.Hp + "/" + d.MaxHp, "small"));
-                it.Add(line);
-                it.Add(UIX.Text(StrategyHud.RoleText(d) + ", armor " + d.Armor + ", " + d.Weapon.Damage + " damage at " + d.Weapon.MinRange + " to " + d.Weapon.MaxRange + ". " + d.Roster.ActiveName + ".", "item-sub"));
+                var it = UIX.Div("enemy-line-item");
+                var body = UIX.Div("row", "enemy-line-body"); it.Add(body);
+                body.Add(UiKit.Ship(s.DefId, true));
+                var enemyInfo = UIX.Div("enemy-line-info"); body.Add(enemyInfo);
+                enemyInfo.Add(UIX.Text(d.Name, "item-title", "enemy-name"));
+                // The crown sits on the small-caps meta line, centred on it, so a wrapped name never pushes it out of line.
+                var meta = UIX.Div("row", "enemy-meta");
+                if (ShipCatalog.IsLeader(s.DefId))
+                {
+                    var c = UiKit.ContentIcon(IconKind.Crown, 11); c.AddToClassList("enemy-crown"); meta.Add(c);
+                    meta.Add(UIX.Text("FLAGSHIP", "enemy-hull", "enemy-flagship"));
+                }
+                meta.Add(UIX.Text("HULL  " + s.Hp + " / " + d.MaxHp, "enemy-hull"));
+                enemyInfo.Add(meta);
+                enemyInfo.Add(UIX.Text(StrategyHud.RoleText(d) + ", armor " + d.Armor + ", " + d.Weapon.Damage + " damage at " + d.Weapon.MinRange + " to " + d.Weapon.MaxRange + ". " + d.Roster.ActiveName + ".", "item-sub"));
                 right.Add(it);
             }
             right.Add(UIX.Text("BATTLEFIELD", "h-section"));
@@ -289,9 +302,10 @@ namespace RR.Game
                     var so = o.Ships[seat][i];
                     var defId = setup.Config.Players[seat].Army.Units[i].UnitId;
                     string state = so.Destroyed ? "destroyed" : so.Captured ? "captured" : so.Hp + " hull remaining";
+                    var entry = UIX.Div("row", "result-ship"); entry.Add(UiKit.Ship(defId, true));
                     var line = UIX.Text(ShipCatalog.Name(defId) + ": " + state + ".", "item-sub");
-                    if (so.Destroyed || so.Captured) line.AddToClassList("text-danger");
-                    col.Add(line);
+                    if (so.Destroyed || so.Captured) { line.AddToClassList("text-danger"); entry.AddToClassList("result-ship-lost"); }
+                    entry.Add(line); col.Add(entry);
                 }
                 cols.Add(col);
             }

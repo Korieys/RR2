@@ -140,6 +140,7 @@ namespace RR.Game
             name.style.fontSize = 13;
             row.Add(name);
             bool seen = mine || _b.Visible(u);   // under fog of war an unseen enemy ship shows only that it exists
+            row.Insert(0, UiKit.Ship(seen ? u.Def.Id : null, true));
             row.Add(UIX.Text(!seen ? "out of sight" : u.Alive ? u.Hp + "/" + u.MaxHp : (u.HasR(RStatusType.Captured) ? "captured" : "lost"), "small", "unit-status"));
             c.Add(row);
             if (u.Alive && seen)
@@ -147,7 +148,7 @@ namespace RR.Game
                 float f = u.Hp / (float)Mathf.Max(1, u.MaxHp);
                 c.Add(UIX.Bar(f, f < 0.4f ? "bar-hp-low" : "bar-hp"));
             }
-            if (mine && u.Alive) c.RegisterCallback<ClickEvent>(e => _b.Select(u.Id));
+            if (mine && u.Alive) { c.AddToClassList("unit-card-selectable"); UiHover.Track(c); c.RegisterCallback<ClickEvent>(e => _b.Select(u.Id)); }
             var inspect=UIX.Btn("Inspect",()=>_root.InspectUnit(u.Def.Id),"btn-quiet");inspect.name="battle-inspect-"+u.Id;
             inspect.RegisterCallback<ClickEvent>(e=>e.StopPropagation());c.Add(inspect);
             return c;

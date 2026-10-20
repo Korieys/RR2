@@ -368,6 +368,128 @@ namespace RR.Game
             CheckReview(SaveGame.Digest(root.G)==before,"fleet inspection and UI scale preserve authoritative state");
         }
 
+        static void PointerEnter(VisualElement e) { using (var ev = PointerEnterEvent.GetPooled()) { ev.target = e; e.SendEvent(ev); } }
+        static void PointerLeave(VisualElement e) { using (var ev = PointerLeaveEvent.GetPooled()) { ev.target = e; e.SendEvent(ev); } }
+
+        static void CheckTooltip(GameRoot root, VisualElement owner, string what)
+        {
+            var card = root.UI.Tooltips.Card; var r = card.worldBound; var view = root.UI.Root.worldBound;
+            CheckReview(root.UI.Tooltips.Owner == owner, what + " tooltip belongs to its control");
+            CheckReview(card.resolvedStyle.display == DisplayStyle.Flex && card.resolvedStyle.opacity > .95f, what + " tooltip is fully revealed");
+            CheckReview(r.xMin >= view.xMin && r.yMin >= view.yMin && r.xMax <= view.xMax && r.yMax <= view.yMax, what + " tooltip stays on screen");
+            CheckReview(!r.Overlaps(owner.worldBound), what + " tooltip does not cover its control");
+            CheckReview(card.Q<Label>(className: "tooltip-body").text.Length > 0, what + " tooltip has text");
+        }
+
+        // Hover language and runtime tooltips: the identity nameplate, resources, icon controls, inspect portraits and
+        // directory rows. Synthetic pointer entry drives the same UiHover classes a real pointer does.
+        public static IEnumerator HoverReview(GameRoot root, string dir)
+        {
+            _dir = dir; _reviewFailures = 0; Directory.CreateDirectory(dir);
+            ulong before = SaveGame.Digest(root.G);
+            var ui = root.UI.Root; var tips = root.UI.Tooltips;
+            bool oldMotion = Settings.ReducedMotion; Settings.ReducedMotion = false; ui.EnableInClassList("reduced-motion", false);
+            yield return Wait(1f);
+            var identity = ui.Q<Button>("empire-identity");
+            CheckReview(identity != null, "empire identity present");
+            if (identity == null) { Application.Quit(1); yield break; }
+            var bounds = identity.worldBound;
+            var badge = identity.Q<EmblemBadge>();
+            CheckReview(badge != null && badge.HasArt && badge.worldBound.width >= 48, "the identity shows the faction emblem on a full-size badge");
+            if (badge != null) Note("player emblem trim " + badge.ArtUv + ", tint " + badge.Tint);
+            // Every faction's emblem on the same badge, so new factions are checked before they ship.
+            var gallery = UIX.Div("panel", "emblem-gallery"); gallery.style.position = Position.Absolute; gallery.style.left = 460; gallery.style.top = 96;
+            gallery.style.flexDirection = FlexDirection.Row; gallery.pickingMode = PickingMode.Ignore;
+            foreach (var art in UnityEngine.Resources.LoadAll<Texture2D>("RR/Emblems").OrderBy(t => t.name))
+            {
+                var cell = UIX.Div(); cell.style.alignItems = Align.Center; cell.style.marginRight = 18;
+                var b = new EmblemBadge(art.name); b.style.width = 52; b.style.height = 52; cell.Add(b);
+                var label = UIX.Text(art.name.ToUpperInvariant(), "identity-sub"); label.style.marginTop = 8; cell.Add(label);
+                gallery.Add(cell);
+                CheckReview(b.HasArt && b.ArtUv.width < .95f && b.ArtUv.height < .95f, art.name + " emblem is trimmed to its artwork");
+            }
+            ui.Add(gallery); yield return Wait(.3f);
+            yield return Shot(dir, "hover_00_emblem_gallery");
+            gallery.RemoveFromHierarchy(); yield return null;
+            yield return Shot(dir, "hover_01_identity_rest");
+            PointerEnter(identity); tips.Over(identity);
+            yield return Wait(.3f);
+            CheckReview(tips.Owner == null, "tooltip waits for the hover delay");
+            yield return Shot(dir, "hover_02_identity");
+            yield return Wait(.3f);   // a capture stalls the frame; give the 0.22 s draw-in time to settle before measuring
+            var rule = identity.Q(className: "identity-rule");
+            Note("identity rule opacity " + rule?.resolvedStyle.opacity.ToString("0.00") + ", scale " + rule?.resolvedStyle.scale.value.x.ToString("0.00") + ", frame " + (Time.unscaledDeltaTime * 1000).ToString("0") + " ms");
+            CheckReview(identity.ClassListContains(UiHover.Class), "identity reports hover");
+            CheckReview(identity.worldBound == bounds, "identity hover keeps its layout");
+            CheckReview(identity.resolvedStyle.backgroundColor.a < .01f, "identity hover paints no filled face");
+            CheckReview(rule != null && rule.resolvedStyle.opacity > .5f, "identity hover draws its rule");
+            yield return Wait(.2f);
+            CheckTooltip(root, identity, "identity");
+            yield return Shot(dir, "hover_03_identity_tooltip");
+            PointerLeave(identity); tips.Hide(); yield return Wait(.6f);
+            CheckReview(!identity.ClassListContains(UiHover.Class) && tips.Owner == null, "leaving clears hover and tooltip");
+            CheckReview(rule != null && rule.resolvedStyle.opacity < .05f, "identity rule retracts after hover");
+
+            yield return Wait(.4f);
+            var res = ui.Q(className: "res");
+            tips.Over(res); yield return Wait(.75f);
+            CheckTooltip(root, res, "resource");
+            yield return Shot(dir, "hover_04_resource_tooltip");
+            tips.Hide();
+            var edge = ui.Query<Button>(className: "btn-icon").ToList().LastOrDefault();   // the settings gear at the right edge
+            tips.Over(edge); yield return Wait(.1f);
+            CheckReview(edge != null && tips.Owner == edge, "the next control's tooltip shows at once inside the warm window");
+            yield return Wait(.25f);
+            if (edge != null) CheckTooltip(root, edge, "right-edge control");
+            yield return Shot(dir, "hover_05_edge_tooltip");
+            tips.Hide();
+
+            var inspect = ui.Q<Button>(className: "inspect-portrait");
+            CheckReview(inspect != null, "fleet card offers an inspect portrait");
+            if (inspect != null)
+            {
+                yield return Wait(.4f);
+                var ib = inspect.worldBound;
+                PointerEnter(inspect); tips.Over(inspect); yield return Wait(.8f);
+                CheckReview(inspect.worldBound == ib && inspect.resolvedStyle.backgroundColor.a < .01f, "inspect portrait hover keeps its bounds and paints no box");
+                CheckTooltip(root, inspect, "inspect portrait");
+                yield return Shot(dir, "hover_06_inspect_portrait");
+                PointerLeave(inspect); tips.Hide();
+            }
+
+            CheckReview(SubmitUi(root, "empire-identity") && root.UI.ModalOpen, "the identity opens the command directory");
+            yield return Wait(.6f);
+            var items = ui.Query<Button>(className: "item").ToList();
+            CheckReview(items.Count > 1, "the directory lists rows");
+            var row = items.FirstOrDefault(i => !i.ClassListContains("item-selected")) ?? items.FirstOrDefault();
+            if (row != null)
+            {
+                var rest = row.resolvedStyle.backgroundColor; var rb = row.worldBound;
+                PointerEnter(row); yield return Wait(.3f);
+                var wash = row.resolvedStyle.backgroundColor;
+                var chosen = items.FirstOrDefault(i => i.ClassListContains("item-selected"));
+                if (chosen != null) CheckReview(chosen.resolvedStyle.backgroundColor.a > wash.a + .1f, "a hovered row stays visibly quieter than the selected row");
+                CheckReview(row.worldBound == rb, "directory row hover keeps its layout");
+                CheckReview(row.resolvedStyle.borderBottomWidth <= 1.01f, "directory row hover adds no thick underline");
+                CheckReview(wash != rest && wash.a < .5f, "directory row hover is a translucent wash");
+                yield return Shot(dir, "hover_07_directory_row");
+                PointerLeave(row);
+            }
+            tips.Over(identity);
+            root.UI.CloseModal(); yield return Wait(.6f);
+            CheckReview(tips.Owner == null, "closing a modal clears a pending tooltip");
+
+            Settings.ReducedMotion = true; ui.EnableInClassList("reduced-motion", true);
+            PointerEnter(identity); yield return null; yield return null;
+            CheckReview(rule != null && rule.resolvedStyle.opacity > .5f, "Reduced Motion shows hover states without a transition");
+            PointerLeave(identity);
+            Settings.ReducedMotion = oldMotion; ui.EnableInClassList("reduced-motion", oldMotion);
+            yield return Wait(.3f);
+            CheckReview(SaveGame.Digest(root.G) == before, "hover review leaves authoritative state unchanged");
+            Note("Hover review failures: " + _reviewFailures);
+            if (!Args.Has("-rrReviewStay")) Application.Quit(_reviewFailures == 0 ? 0 : 1);
+        }
+
         // Focused UI regression run. Skip only the expensive planet warmup; the real galaxy and HUD render normally.
         public static IEnumerator UiSmoke(GameRoot root, string dir)
         {
@@ -802,6 +924,18 @@ namespace RR.Game
             if (!preparationReady) { Application.Quit(1); yield break; }
             yield return Wait(0.6f);
             yield return Shot(dir, "b01_battle_preparation");
+            var lineRows = root.UI.Root.Query(className: "ship-row").ToList();
+            CheckReview(lineRows.Count > 0 && lineRows.All(r => r.Q<Image>(className: "ship-portrait-image") != null), "every battle-line row shows its ship");
+            var enemyRows = root.UI.Root.Query(className: "enemy-line-item").ToList();
+            CheckReview(enemyRows.Count > 0 && enemyRows.All(r => r.Q<Image>(className: "ship-portrait-image") != null), "every scouted enemy shows its ship");
+            if (lineRows.Count > 1)
+            {
+                var hovered = lineRows[1]; var rowBounds = hovered.worldBound;
+                PointerEnter(hovered); yield return Wait(0.3f);
+                CheckReview(hovered.worldBound == rowBounds, "battle-line row hover keeps its layout");
+                yield return Shot(dir, "b01b_battle_line_hover");
+                PointerLeave(hovered);
+            }
             var e = G.PendingEngagement;
             var mine = G.GetFleet(e.AttackerFleetId).OwnerId == G.Player.Id ? G.GetFleet(e.AttackerFleetId) : G.GetFleet(e.DefenderFleetId);
             var line = BattleBridge.AutoSelect(G, mine);
@@ -813,6 +947,8 @@ namespace RR.Game
             if (!battleReady) { Application.Quit(1); yield break; }
             yield return Wait(0.6f);
             yield return Shot(dir, "b02_battle_start");
+            var rosterCards = root.UI.Root.Query(className: "unit-card").ToList();
+            CheckReview(rosterCards.Count > 0 && rosterCards.All(c => c.Q(className: "ship-portrait") != null), "every combat roster card shows its ship (or the unseen glyph)");
             if (Args.Has("-rrSpacingReview"))
             {
                 float rosterScale = Settings.UiScale;
