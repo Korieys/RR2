@@ -118,6 +118,7 @@ namespace RR.Strategy
                 got += " and a damaged " + SliceRules.Module(w.Module).Name;
             }
             Record(g, new HistoryEvent { Kind = "salvage", SystemId = w.SystemId, Text = $"{f.Name} salvaged the wreck of {w.Name}: {got}.", Ships = { w.Uid } });
+            PassageWar.ForPolity(g, f.OwnerId, "salvage", $"Salvaged the wreck of {w.Name}" + (w.Module != null ? " (and a spare module)" : ""), default(Resources) - w.Materials);
             g.Note("result", $"{f.Name} salvaged the wreck of {w.Name}: {got}.");
             return StratResult.Accept();
         }

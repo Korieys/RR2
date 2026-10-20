@@ -25,6 +25,8 @@ namespace RR.Strategy
     {
         public string SystemId, Name;
         public string AccessHolderId;   // null = contested
+        /// <summary>How the holder obtained access: "battle" or "treaty" (PassageWar), or null when contested.</summary>
+        public string Basis;
         public int TollPerDay = 3;
         public int SinceDay;
     }
@@ -93,6 +95,8 @@ namespace RR.Strategy
         public List<Settlement> Settlements = new List<Settlement>();
         /// <summary>Keys of one-time consequences already applied (reactions, settlements, salvage): reopening or reloading never repeats them.</summary>
         public HashSet<string> Applied = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>A bounded scenario configuration (PassageWar), or null in the freeform passage campaign.</summary>
+        public ScenarioState Scenario;
 
         public bool Active => PlayerPolityId != null;
         public PassageState Passage(string systemId) => Passages.FirstOrDefault(p => p.SystemId == systemId);
@@ -181,11 +185,11 @@ namespace RR.Strategy
             if (passage.AccessHolderId == polity) return StratResult.Reject("You already hold access through this passage.");
             var open = s.Objectives.FirstOrDefault(o => o.PolityId == polity && o.SystemId == systemId && o.Status == ObjectiveStatus.Declared);
             if (open != null) return StratResult.Reject("That objective is already declared.");
-            var prior = s.Objectives.Where(o => o.PolityId == polity && o.SystemId == systemId).ToList();
-            if (prior.Sum(o => o.Attempts) >= MaxAttempts) return StratResult.Reject($"This objective has failed {MaxAttempts} times; the campaign treats the passage as lost for this slice.");
+            int failed = FailedAttempts(g, polity, systemId);
+            if (failed >= MaxAttempts) return StratResult.Reject($"This objective has failed {MaxAttempts} times; the campaign treats the passage as lost for this slice.");
             string target = polity == "pygmaei" ? "inhumanus" : "pygmaei";
             var obj = new WarObjective { Id = "obj_" + g.NextId++, PolityId = polity, TargetPolityId = target, SystemId = systemId, Status = ObjectiveStatus.Declared, DeclaredDay = g.Day,
-                Attempts = prior.Sum(o => o.Attempts) };
+                Attempts = failed };
             s.Objectives.Add(obj);
             var rel = s.RelationOf(polity, target);
             rel.Status = "war";
@@ -194,9 +198,16 @@ namespace RR.Strategy
             if (rival != null) { rival.AITarget = systemId; rival.AIDepartDay = g.Day + 2; }
             var sys = g.GetSystem(systemId);
             Record(g, new HistoryEvent { Kind = "declaration", SystemId = systemId, Text = $"{g.GetPolity(polity).Name} declared war over access through {passage.Name} ({sys.Name})." });
+            PassageWar.ForPolity(g, polity, "declaration", $"Declared war over {passage.Name} (attempt {obj.Attempts + 1} of {MaxAttempts})", default);
             g.Note("danger", $"War declared over {passage.Name}. Scouts expect the {g.GetPolity(target).Name} fleet to sail for {sys.Name} in two days.");
             return StratResult.Accept();
         }
+
+        /// <summary>How many times <paramref name="polity"/>'s objective at a system has failed. Each objective record carries the
+        /// running count (the failures before it was declared, plus its own), so the count is the largest, never the sum
+        /// (summing counted earlier failures twice: defect D-20).</summary>
+        public static int FailedAttempts(GalaxyState g, string polity, string systemId) =>
+            g.Slice?.Objectives.Where(o => o.PolityId == polity && o.SystemId == systemId).Select(o => o.Attempts).DefaultIfEmpty(0).Max() ?? 0;
 
         // ------------------------------------------------------------------ daily effects
 
@@ -211,6 +222,8 @@ namespace RR.Strategy
             }
             foreach (var r in s.Relations) r.Modifiers.RemoveAll(m => m.ExpiresDay <= g.Day);
             CounterOffensives(g);
+            Economy.Daily(g);
+            PassageWar.OnDay(g);
         }
 
         // ------------------------------------------------------------------ previews
@@ -242,7 +255,7 @@ namespace RR.Strategy
             var passage = s.Passage(sys.Id);
             if (passage != null && o.Reason != "Settlement")
             {
-                passage.AccessHolderId = winner.OwnerId; passage.SinceDay = g.Day;
+                passage.AccessHolderId = winner.OwnerId; passage.SinceDay = g.Day; passage.Basis = PassageWar.Battle;
                 foreach (var obj in s.Objectives.Where(x => x.SystemId == sys.Id && x.Status == ObjectiveStatus.Declared))
                 {
                     if (obj.PolityId == winner.OwnerId) { obj.Status = ObjectiveStatus.Secured; obj.Note = $"Secured on day {g.Day} ({setup.BattleId})."; }
@@ -253,6 +266,14 @@ namespace RR.Strategy
             }
             ServiceRecords(g, setup, o, sys, winner);
             Consequences(g, setup, o, sys, winner, loser);
+            if (o.Reason != "Settlement")
+            {
+                int w = o.WinnerSeat;
+                int Lost(int seat) => o.Ships[seat].Count(x => x.Destroyed || x.Captured);
+                string how = o.Reason switch { "CommanderEliminated" => "a flagship destroyed", "LeaderCaptured" => "a flagship captured", "RoundLimitObjectives" => "on the round limit", "Resignation" => "the other side yielded", _ => o.Reason };
+                PassageWar.ForPolity(g, winner.OwnerId, "battle", $"Won the battle of {sys.Name} ({how}); lost {Lost(w)} ship(s), the enemy {Lost(1 - w)}", default);
+                PassageWar.ForPolity(g, loser.OwnerId, "battle", $"Lost the battle of {sys.Name} ({how}); lost {Lost(1 - w)} ship(s), the enemy {Lost(w)}", default);
+            }
         }
     }
 }

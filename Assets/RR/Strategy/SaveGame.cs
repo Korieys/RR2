@@ -177,7 +177,7 @@ namespace RR.Strategy
                         ["seed"] = p.Seed,
                         ["project"] = p.Project == null ? null : new Dictionary<string, object>
                         {
-                            ["kind"] = p.Project.Kind.ToString(), ["ship"] = p.Project.ShipDefId, ["cost"] = Res(p.Project.Cost),
+                            ["kind"] = p.Project.Kind.ToString(), ["ship"] = p.Project.ShipDefId, ["priority"] = p.Project.PriorityId, ["cost"] = Res(p.Project.Cost),
                             ["days"] = p.Project.DaysTotal, ["done"] = p.Project.DaysDone,
                         },
                     }).ToList(),
@@ -257,7 +257,7 @@ namespace RR.Strategy
                         Id = p.S("id"), Name = p.S("name"), Kind = En<PlanetKind>(p.S("kind")), OrbitRadius = p.D("orbit"), Size = p.D("size"), OrbitPhase = p.D("phase"),
                         Rings = p.B("rings"), Moons = p.I("moons"), OwnerId = p.S("owner"), Population = p.L("pop"), Development = p.I("dev"),
                         DailyYield = Res(p.O("yield")), Foundries = p.I("foundries"), HasShipyard = p.B("shipyard"), ProvisionalName = p.B("provisional"), Seed = p.I("seed"),
-                        Project = pr == null ? null : new ProjectState { Kind = En<ProjectKind>(pr.S("kind")), ShipDefId = pr.S("ship"), Cost = Res(pr.O("cost")),
+                        Project = pr == null ? null : new ProjectState { Kind = En<ProjectKind>(pr.S("kind")), ShipDefId = pr.S("ship"), PriorityId = pr.S("priority"), Cost = Res(pr.O("cost")),
                             DaysTotal = pr.I("days"), DaysDone = pr.I("done") },
                     });
                 }

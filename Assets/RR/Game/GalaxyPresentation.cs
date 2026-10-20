@@ -32,7 +32,7 @@ namespace RR.Game
         public readonly Dictionary<string, SystemMarker> Markers = new Dictionary<string, SystemMarker>();
         public readonly Dictionary<string, Transform> FleetMarkers = new Dictionary<string, Transform>();
         Material _starMat, _volMat, _terrMat, _laneMat, _routeMat;
-        GameObject _overlayRoot, _territory, _lanes, _route;
+        GameObject _overlayRoot, _territory, _lanes, _route, _supply;
         Texture3D _density;
         static Texture3D s_density;
         static string s_densityKey;
@@ -756,6 +756,15 @@ namespace RR.Game
             string at = f.SystemId;
             foreach (var p in path) { segs.Add((at, p, new Color(Look.GoldBright.r, Look.GoldBright.g, Look.GoldBright.b, 1.2f))); at = p; }
             _route = LaneMesh("Route", segs, _routeMat);
+        }
+
+        /// <summary>The supply overlay (Passage War, Prompt 15): coloured segments derived from the supply network, or none.</summary>
+        public void ShowSupply(List<(string a, string b, Color c)> segs)
+        {
+            if (_supply != null) Destroy(_supply);
+            _supply = null;
+            if (segs == null || segs.Count == 0 || _routeMat == null) return;
+            _supply = LaneMesh("Supply", segs, _routeMat);
         }
 
         // One capital world per faction, shown with a ring glyph (presentation only; the map marks capitals in its legend).

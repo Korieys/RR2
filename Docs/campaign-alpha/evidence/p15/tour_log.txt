@@ -1,0 +1,130 @@
+war tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-3; save <scratchpad>\p15tour\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+scenario The Passage War: active systems 10 (forgefall, ironmouth, cinderhold, gloam, umbra, salvage_row, blackwake, shoal_haven, dividend, ledgerhold)
+  condition: Victory by arms: hold access through the Umbra passage, won in battle, at 3 consecutive settlements (every 10 days) while Forgefall and Ironmouth stay operational (yours and not blockaded).
+  condition: A settlement does not count, and the count restarts, while: your access is lost; a designated world is lost or blockaded; your supply does not reach Umbra (see the supply overlay); an enemy fleet led by a flagship holds position at Umbra; or the rival is actively contesting the passage (a declared objective and a fleet that can fight).
+  condition: At each settlement both powers pay fleet upkeep (2 credit per fleet point). Upkeep that cannot be paid becomes arrears: projects pause and repairs, refits and new projects wait until income has paid it.
+  condition: Victory by treaty: hold passage rights granted by a settlement or a treaty, still in force at the next settlement, with Forgefall and Ironmouth operational.
+  condition: If the rival has no way left to contest the passage (no fleet that can fight, none being built, none it can pay for, or no attempts left), the next settlement that counts ends the campaign at once.
+  condition: Defeat: your objective fails 3 times and the rival holds access at a settlement; or, at a settlement, you have no fleet led by a flagship, none being built and cannot pay for one, and no access. A lost battle alone never ends the campaign.
+  condition: Inconclusive: day 240 (Day 1, Month 9, 3104) arrives first. The campaign ends with the passage as it stands.
+  condition: During an encounter strategic time stops for both powers: no income, production, movement or settlement until it is resolved. Pausing never pays income.
+  condition: Planetary operations (landings and ground series) are not connected to this scenario yet; orbital victory blockades a world but never takes it.
+shot w01_mandate
+shot w02_panel
+shot w02b_treasury
+  preview: Next settlement: day 10 (in 10 days).
+  preview: Worlds: +8 energy, +11 materials, +6 credits a day.
+  preview: Fleet upkeep at the settlement: −52 credits (26 fleet points × 2).
+  preview: Projected after the settlement: about 168 credits and 270 materials (before any orders you give).
+  budget: Repair Ember Tyrant: ; The hull is whole.
+  budget: Commission a Rift Interceptor: 30 energy, 60 materials, 24 credits; affordable
+  budget: Forward repair dock: 40 materials, 40 credits; affordable
+  budget: Ironmouth ore drive: 20 energy, 30 credits; affordable
+  budget: Convoy office: 30 materials, 30 credits; affordable
+shot w02c_supply_overlay
+  supply: Forgefall: supplied (a supply source (Forgefall), 0 days).
+  supply: Ironmouth: supplied (supplied from Forgefall via Forgefall, 9 days).
+  supply: Cinderhold: supplied (supplied from Forgefall via Forgefall, 9 days).
+  supply: Gloam: supplied (supplied from Forgefall via Cinderhold, 15 days).
+  supply: Umbra: cut (The Umbra passage is contested; supply needs access).
+  supply: Salvage Row: supplied (supplied from Forgefall via Forgefall, 14 days).
+  supply: Blackwake: supplied (supplied from Forgefall via Salvage Row, 22 days).
+  supply: Shoal Haven: supplied (supplied from Forgefall via Blackwake, 31 days).
+  supply: Dividend: cut (Convoy Escort (Inhumanus Dominion) holds position at Dividend).
+  supply: Ledgerhold: cut (Ledgerhold is Inhumanus Dominion territory).
+shot w03_treaty_declined
+treaty on day 0: Inhumanus Dominion declined the passage treaty. Rejected: pressure 25 against cost 50. +25: 100 credits for the rights; −30: our claim on the contested passage; −20: we have not lost a battle over the passage.
+order to Umbra: ok
+shot w04_first_prep
+w04_first: battle battle_eng_3_d29 on trade_passage; player orders: pass every activation
+campaign battle applied: CommanderEliminated | Decisive action: Arbitration Destroyer fired Arbitration Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win. | Battle of Umbra: Convoy Escort (Inhumanus Dominion) defeated Forgefall Raiders (Pygmaei Sector). | Inhumanus Dominion took access through The Umbra passage. | The Pygmaei Sector flagship Ember Tyrant was destroyed at Umbra; its wreck remains.
+w04_first: over after 81 orders, 317 s; winner seat 1 (CommanderEliminated); decisive: Arbitration Destroyer fired Arbitration Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win.
+shot w04_first_result
+after the first battle: day 29; access inhumanus (battle); hold 0; outcome None; stock E352 M479 C230 I30; fleets Forgefall Raiders at umbra (1, no flagship)
+  progress: Inhumanus Dominion holds access. Next settlement day 30.
+  warning: You have no fleet led by a flagship. Commission a replacement at your shipyard (90 energy, 180 materials, 72 credits) before you can fight again.
+  next: Commission a replacement flagship at Forgefall I (90 energy, 180 materials, 72 credits). It is a new ship; the old one stays lost. [shipyard]
+  next: Declare war over the passage (2 attempt(s) left), or propose a treaty. [declare]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+shot w05_mandate_after_loss
+after a settlement following the loss: ended False (Inhumanus Dominion holds access; your hold is at 0.)
+recovery: commissioned a replacement flagship; in production True
+recovery: commissioned Rift Interceptor (30 energy, 60 materials, 24 credits, 8 days)
+recovery: commissioned Rift Interceptor (30 energy, 60 materials, 24 credits, 8 days)
+recovery: commissioned Rift Interceptor (30 energy, 60 materials, 24 credits, 8 days)
+recovery: commissioned Rift Interceptor (30 energy, 60 materials, 24 credits, 8 days)
+recovery: Forgefall Raiders home: ok
+recovered: day 98; access inhumanus (battle); hold 0; outcome None; stock E694 M818 C346 I30; fleets Forgefall Guard at forgefall (6, flagship)
+  progress: Inhumanus Dominion holds access. Next settlement day 100.
+  next: Declare war over the passage (2 attempt(s) left), or propose a treaty. [declare]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+  settlement day 80: No battles, declarations or settlements since the last settlement.
+  settlement day 80: Upkeep: 30 credits for 15 fleet points (paid).
+  settlement day 80: Inhumanus Dominion holds access; your hold is at 0.
+  settlement day 90: No battles, declarations or settlements since the last settlement.
+  settlement day 90: Upkeep: 34 credits for 17 fleet points (paid).
+  settlement day 90: Inhumanus Dominion holds access; your hold is at 0.
+shot w06_recovered
+order to Umbra: ok
+shot w07_battle2_prep
+w07_battle2: battle battle_eng_10_d127 on trade_passage_wrecked; player orders: slice AI pilot
+campaign battle applied: CommanderEliminated | Decisive action: Proxy Frigate fired Proxy Battery at Revenant Command Ship (flagship): 3 raw − 1 armour = 2; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win. | Battle of Umbra: Convoy Escort (Inhumanus Dominion) defeated Forgefall Guard (Pygmaei Sector). | Inhumanus Dominion took access through The Umbra passage. | The Pygmaei Sector flagship Revenant Command Ship was destroyed at Umbra; its wreck remains.
+w07_battle2: over after 63 orders, 140 s; winner seat 1 (CommanderEliminated); decisive: Proxy Frigate fired Proxy Battery at Revenant Command Ship (flagship): 3 raw − 1 armour = 2; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win.
+shot w07_battle2_result
+after battle 2: day 127; access inhumanus (battle); hold 0; outcome None; stock E926 M1137 C418 I30; fleets 
+  progress: Inhumanus Dominion holds access. Next settlement day 130.
+  warning: You have no fleet led by a flagship. Commission a replacement at your shipyard (90 energy, 180 materials, 72 credits) before you can fight again.
+  next: Commission a replacement flagship at Forgefall I (90 energy, 180 materials, 72 credits). It is a new ship; the old one stays lost. [shipyard]
+  next: Declare war over the passage (1 attempt(s) left), or propose a treaty. [declare]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+ending: Inconclusive end; The mandate ran out on day 240. Inhumanus Dominion holds access.
+ending: day 240; access inhumanus (battle); hold 0; outcome Inconclusive; stock E1830 M2380 C1096 I30; fleets 
+  progress: Inconclusive end on day 240.
+  next: The campaign has ended: read the ending, continue freeform, or start again from the scenario menu (F6).
+  ending: Inconclusive end on day 240. The mandate ran out on day 240. Inhumanus Dominion holds access.
+  ending: Battles: 2 (0 won, 2 lost). Spent on decisions: 210 energy, 420 materials, 504 credits. Recovered or received: nothing.
+  ending: Flagships lost: Ember Tyrant, Revenant Command Ship.
+  ending: Relations with Inhumanus Dominion: war, standing 0.
+  ending: Inhumanus Dominion holds access through The Umbra passage (by battle).
+  ending: Your decisions, in order:
+  ending:   Day 0: Proposed passage rights for 100 credits; Inhumanus Dominion declined (pressure 25 against 50).
+  ending:   Day 0: Declared war over The Umbra passage (attempt 1 of 3)
+  ending:   Day 10: Fleet upkeep at the settlement: 52 credits (52 credits)
+  ending:   Day 20: Fleet upkeep at the settlement: 52 credits (52 credits)
+  ending:   Day 29: Lost the battle of Umbra (a flagship destroyed); lost 7 ship(s), the enemy 0
+  ending:   Day 30: Fleet upkeep at the settlement: 6 credits (6 credits)
+  ending:   Day 31: Forgefall I: Commission Revenant Command Ship (20 days) (90 energy, 180 materials, 72 credits)
+  ending:   Day 40: Fleet upkeep at the settlement: 6 credits (6 credits)
+  ending:   Day 50: Fleet upkeep at the settlement: 6 credits (6 credits)
+  ending:   Day 51: Forgefall I: Commission Rift Interceptor (8 days) (30 energy, 60 materials, 24 credits)
+  ending:   Day 59: Forgefall I: Commission Rift Interceptor (8 days) (30 energy, 60 materials, 24 credits)
+  ending:   Day 60: Fleet upkeep at the settlement: 22 credits (22 credits)
+  ending:   Day 67: Forgefall I: Commission Rift Interceptor (8 days) (30 energy, 60 materials, 24 credits)
+  ending:   Day 70: Fleet upkeep at the settlement: 26 credits (26 credits)
+  ending:   Day 75: Forgefall I: Commission Rift Interceptor (8 days) (30 energy, 60 materials, 24 credits)
+  ending:   Day 80: Fleet upkeep at the settlement: 30 credits (30 credits)
+  ending:   Day 90: Fleet upkeep at the settlement: 34 credits (34 credits)
+  ending:   Day 98: Declared war over The Umbra passage (attempt 2 of 3)
+  ending:   Day 100: Fleet upkeep at the settlement: 34 credits (34 credits)
+  ending:   Day 110: Fleet upkeep at the settlement: 34 credits (34 credits)
+  ending:   Day 120: Fleet upkeep at the settlement: 34 credits (34 credits)
+  ending:   Day 127: Lost the battle of Umbra (a flagship destroyed); lost 6 ship(s), the enemy 2
+  ending:   Day 127: Declared war over The Umbra passage (attempt 3 of 3)
+  ending:   Day 130: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 140: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 150: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 160: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 170: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 180: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 190: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 200: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 210: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 220: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 230: Fleet upkeep at the settlement: 0 credits
+  ending:   Day 240: Fleet upkeep at the settlement: 0 credits
+shot w09_ending
+save and load after the ending: digest identical; outcome Inconclusive
+advance after the ending: The campaign has ended. Continue freeform to keep playing.
+campaign took 240 strategic days and 587 s of automated real time (not a human session length)

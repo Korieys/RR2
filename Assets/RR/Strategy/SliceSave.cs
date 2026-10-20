@@ -21,7 +21,7 @@ namespace RR.Strategy
                 ["player"] = s.PlayerPolityId,
                 ["objectives"] = L(s.Objectives, o => new Dictionary<string, object> { ["id"] = o.Id, ["kind"] = o.Kind, ["polity"] = o.PolityId, ["target"] = o.TargetPolityId,
                     ["system"] = o.SystemId, ["status"] = o.Status.ToString(), ["day"] = o.DeclaredDay, ["attempts"] = o.Attempts, ["note"] = o.Note }),
-                ["passages"] = L(s.Passages, p => new Dictionary<string, object> { ["system"] = p.SystemId, ["name"] = p.Name, ["holder"] = p.AccessHolderId, ["toll"] = p.TollPerDay, ["since"] = p.SinceDay }),
+                ["passages"] = L(s.Passages, p => new Dictionary<string, object> { ["system"] = p.SystemId, ["name"] = p.Name, ["holder"] = p.AccessHolderId, ["toll"] = p.TollPerDay, ["since"] = p.SinceDay, ["basis"] = p.Basis }),
                 ["relations"] = L(s.Relations, r => new Dictionary<string, object> { ["a"] = r.A, ["b"] = r.B, ["status"] = r.Status,
                     ["mods"] = L(r.Modifiers, m => new Dictionary<string, object> { ["key"] = m.Key, ["cause"] = m.Cause, ["amount"] = m.Amount, ["until"] = m.ExpiresDay }) }),
                 ["ships"] = L(s.Ships.Values.OrderBy(p => p.Uid), p => new Dictionary<string, object> { ["uid"] = p.Uid, ["def"] = p.DefId, ["owner"] = p.OwnerId, ["name"] = p.Name,
@@ -37,7 +37,57 @@ namespace RR.Strategy
                 ["expeditions"] = L(s.Expeditions, e => new Dictionary<string, object> { ["id"] = e.Id, ["system"] = e.SystemId, ["title"] = e.Title, ["state"] = e.State.ToString(),
                     ["scouted"] = e.Scouted, ["map"] = e.MapId, ["rival"] = e.RivalComposition, ["asset"] = e.Asset, ["day"] = e.CreatedDay, ["outcome"] = e.Outcome, ["battle"] = e.BattleId }),
                 ["applied"] = s.Applied.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
+                ["scenario"] = Scenario(s.Scenario),
             };
+        }
+
+        /// <summary>The bounded scenario (PassageWar): configuration, hold progress, outcome, ledger and settlement reports.</summary>
+        static Dictionary<string, object> Scenario(ScenarioState sc)
+        {
+            if (sc == null) return null;
+            return new Dictionary<string, object>
+            {
+                ["id"] = sc.Id, ["title"] = sc.Title, ["version"] = sc.Version, ["active"] = L(sc.ActiveSystems, x => x),
+                ["designated"] = sc.Designated.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)L(kv.Value, x => x)),
+                ["interval"] = sc.Interval, ["hold"] = sc.HoldRequired, ["treatyHold"] = sc.TreatyHoldRequired, ["mandate"] = sc.MandateDay,
+                ["holdCount"] = sc.HoldCount, ["holdNote"] = sc.HoldNote, ["outcome"] = sc.Outcome.ToString(), ["ended"] = sc.EndedDay, ["endText"] = sc.EndText,
+                ["freeform"] = sc.Freeform,
+                ["proposals"] = sc.LastProposal.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+                ["ledger"] = L(sc.Ledger, l => new Dictionary<string, object> { ["day"] = l.Day, ["polity"] = l.Polity, ["kind"] = l.Kind, ["text"] = l.Text, ["cost"] = Res(l.Cost) }),
+                ["reports"] = L(sc.Reports, r => new Dictionary<string, object> { ["day"] = r.Day, ["lines"] = L(r.Lines, x => x) }),
+                ["built"] = sc.Built.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
+                ["stores"] = sc.Stores.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+                ["arrears"] = sc.Arrears.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+                ["supplyKnown"] = sc.SupplyKnown == null ? null : L(sc.SupplyKnown, x => x),
+                ["threatsKnown"] = sc.ThreatsKnown == null ? null : L(sc.ThreatsKnown, x => x),
+            };
+        }
+
+        static ScenarioState Scenario(IDictionary<string, object> d)
+        {
+            if (d == null) return null;
+            var sc = new ScenarioState { Id = d.S("id"), Title = d.S("title"), Version = d.I("version"), Interval = d.I("interval"), HoldRequired = d.I("hold"),
+                TreatyHoldRequired = d.I("treatyHold"), MandateDay = d.I("mandate"), HoldCount = d.I("holdCount"), HoldNote = d.S("holdNote"),
+                Outcome = En<CampaignOutcome>(d.S("outcome")), EndedDay = d.I("ended"), EndText = d.S("endText"), Freeform = d.B("freeform") };
+            sc.ActiveSystems.AddRange(d.A("active").OfType<string>());
+            var des = d.O("designated");
+            if (des != null) foreach (var kv in des) sc.Designated[kv.Key] = (kv.Value as List<object> ?? new List<object>()).OfType<string>().ToList();
+            var prop = d.O("proposals");
+            if (prop != null) foreach (var kv in prop) if (kv.Value is double x) sc.LastProposal[kv.Key] = (int)x;
+            foreach (var l in Os(d, "ledger")) sc.Ledger.Add(new LedgerEntry { Day = l.I("day"), Polity = l.S("polity"), Kind = l.S("kind"), Text = l.S("text"), Cost = Res(l.O("cost")) });
+            foreach (var r in Os(d, "reports")) { var rep = new SettlementReport { Day = r.I("day") }; rep.Lines.AddRange(r.A("lines").OfType<string>()); sc.Reports.Add(rep); }
+            foreach (var b in d.A("built").OfType<string>()) sc.Built.Add(b);
+            Ints(d.O("stores"), sc.Stores);
+            Ints(d.O("arrears"), sc.Arrears);
+            if (d.TryGetValue("supplyKnown", out var sk) && sk is List<object> skl) sc.SupplyKnown = skl.OfType<string>().ToList();
+            if (d.TryGetValue("threatsKnown", out var tk) && tk is List<object> tkl) sc.ThreatsKnown = tkl.OfType<string>().ToList();
+            return sc;
+        }
+
+        static void Ints(IDictionary<string, object> d, Dictionary<string, int> into)
+        {
+            if (d == null) return;
+            foreach (var kv in d) if (kv.Value is double x) into[kv.Key] = (int)x;
         }
 
         public static SliceCampaignState FromData(IDictionary<string, object> d)
@@ -49,7 +99,7 @@ namespace RR.Strategy
                 s.Objectives.Add(new WarObjective { Id = o.S("id"), Kind = o.S("kind"), PolityId = o.S("polity"), TargetPolityId = o.S("target"), SystemId = o.S("system"),
                     Status = En<ObjectiveStatus>(o.S("status")), DeclaredDay = o.I("day"), Attempts = o.I("attempts"), Note = o.S("note") });
             foreach (var p in Os(d, "passages"))
-                s.Passages.Add(new PassageState { SystemId = p.S("system"), Name = p.S("name"), AccessHolderId = p.S("holder"), TollPerDay = p.I("toll"), SinceDay = p.I("since") });
+                s.Passages.Add(new PassageState { SystemId = p.S("system"), Name = p.S("name"), AccessHolderId = p.S("holder"), TollPerDay = p.I("toll"), SinceDay = p.I("since"), Basis = p.S("basis") });
             foreach (var r in Os(d, "relations"))
             {
                 var rel = new Relation { A = r.S("a"), B = r.S("b"), Status = r.S("status") ?? "tension" };
@@ -80,6 +130,7 @@ namespace RR.Strategy
                 s.Expeditions.Add(new Expedition { Id = e.S("id"), SystemId = e.S("system"), Title = e.S("title"), State = En<ExpeditionState>(e.S("state")), Scouted = e.B("scouted"),
                     MapId = e.S("map"), RivalComposition = e.S("rival"), Asset = e.S("asset"), CreatedDay = e.I("day"), Outcome = e.S("outcome"), BattleId = e.S("battle") });
             foreach (var k in d.A("applied").OfType<string>()) s.Applied.Add(k);
+            s.Scenario = Scenario(d.O("scenario"));
             return s;
         }
     }

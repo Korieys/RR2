@@ -281,7 +281,7 @@ namespace RR.Game
             }
             if (p.Project != null)
             {
-                var project = p.Project; string title = project.Kind == ProjectKind.CommissionShip ? ShipCatalog.Name(project.ShipDefId) : "Crystal Foundry";
+                var project = p.Project; string title = project.Kind == ProjectKind.CommissionShip ? ShipCatalog.Name(project.ShipDefId) : Economy.ProjectName(G, p);
                 var info = Command(s.Blockaded ? "02  /  PRODUCTION SUSPENDED" : "02  /  PROJECT IN PROGRESS", title,
                     (project.DaysTotal - project.DaysDone) + " days remaining" + (s.Blockaded ? " / Blockaded" : ""), project.ShipDefId);
                 info.Add(UIX.Bar(project.DaysDone / (float)project.DaysTotal));
@@ -297,7 +297,7 @@ namespace RR.Game
             else Command("02  /  WORLD COMMAND", mine ? "No project available" : "Foreign world", mine ? "This world has no available construction projects." : "Inspect this world's sovereign and orbital status in the dossier.");
             _back.Add(UIX.Btn(_root.Scale == ViewScale.Planet ? "Return to " + s.Name : "Inspect world", () => { if (_root.Scale == ViewScale.Planet) _root.ExitPlanet(); else _root.InspectPlanet(p.Id); }, "btn-quiet"));
         }
-        static string ProjectKey(ProjectOption o) => o.ShipDefId ?? o.Kind.ToString();
+        static string ProjectKey(ProjectOption o) => o.ShipDefId ?? o.PriorityId ?? o.Kind.ToString();
         VisualElement ProjectRow(ProjectOption o)
         {
             bool selected = _projectKey == ProjectKey(o);
@@ -307,7 +307,7 @@ namespace RR.Game
             if (o.Kind == ProjectKind.CommissionShip) head.Add(UiKit.Ship(o.ShipDefId, true));
             else { var icon = UiKit.ContentIcon(IconKind.Foundry, 30); icon.AddToClassList("project-icon"); head.Add(icon); }
             var copy = UIX.Div("project-copy"); head.Add(copy);
-            copy.Add(UIX.Text(o.Kind == ProjectKind.CommissionShip ? ShipCatalog.Name(o.ShipDefId) : "Crystal Foundry", "item-title"));
+            copy.Add(UIX.Text(o.Kind == ProjectKind.CommissionShip ? ShipCatalog.Name(o.ShipDefId) : o.Kind == ProjectKind.Priority ? o.Label : "Crystal Foundry", "item-title"));
             copy.Add(UIX.Text(o.Days + " DAYS" + (selected ? " / SELECTED" : ""), "project-meta"));
             if (o.Kind == ProjectKind.CommissionShip)
             {
@@ -317,6 +317,7 @@ namespace RR.Game
                 box.tooltip = d.Roster.ActiveName + ": " + d.Roster.ActiveText;
                 if (selected) box.Add(UIX.Text(d.Roster.ActiveName + ": " + d.Roster.ActiveText, "item-sub", "project-ability"));
             }
+            else if (o.Kind == ProjectKind.Priority) box.Add(UIX.Text(o.Detail, "item-sub"));
             else box.Add(UIX.Text("+" + ShipCatalog.FoundryYield.Materials + " materials per day", "item-sub"));
             var cost = UiKit.Cost(o.Cost); cost.AddToClassList("project-cost"); box.Add(cost);
             if (!o.Available) box.Add(UIX.Text(o.UnavailableReason ?? "Unavailable", "item-sub", "text-danger"));
@@ -326,9 +327,11 @@ namespace RR.Game
         {
             _projectKey = ProjectKey(o);
             var info = Command(o.Kind == ProjectKind.CommissionShip ? "02  /  SHIPYARD REQUISITION" : "02  /  DEVELOPMENT ORDER", o.Label,
-                o.Days + " days to complete" + (o.Kind == ProjectKind.CommissionShip ? " / " + RoleText(ShipCatalog.Def(o.ShipDefId)) : " / +4 materials per day"), o.ShipDefId);
+                o.Days + " days to complete" + (o.Kind == ProjectKind.CommissionShip ? " / " + RoleText(ShipCatalog.Def(o.ShipDefId)) : o.Kind == ProjectKind.Priority ? "" : " / +4 materials per day"), o.ShipDefId);
+            if (o.Kind == ProjectKind.Priority) info.Add(UIX.Text(o.Detail, "small"));
             info.Add(UiKit.Cost(o.Cost));
-            var button = UIX.Btn(o.Kind == ProjectKind.CommissionShip ? "Commission ship" : "Build foundry", () => _root.StartProject(p.Id, o.Kind, o.ShipDefId), "btn-primary");
+            var button = UIX.Btn(o.Kind == ProjectKind.CommissionShip ? "Commission ship" : o.Kind == ProjectKind.Priority ? "Start priority" : "Build foundry",
+                () => _root.StartProject(p.Id, o.Kind, o.Kind == ProjectKind.Priority ? o.PriorityId : o.ShipDefId), "btn-primary");
             button.name = "project-commit"; button.SetEnabled(o.Available); button.tooltip = o.UnavailableReason ?? "Begin this project"; info.Add(button);
             if (!o.Available) info.Add(UIX.Text(o.UnavailableReason ?? "Unavailable", "small", "text-danger"));
         }

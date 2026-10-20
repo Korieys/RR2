@@ -20,7 +20,7 @@ namespace RR.Strategy
                 int cost = RosterContent.Cost(RosterContent.Unit(id));
                 bool leader = ShipCatalog.IsLeader(id);
                 if (leader && g.Fleets.Any(x => x.OwnerId == polity && x.Ships.Any(s => ShipCatalog.IsLeader(s.DefId)))) continue;
-                list.Add((id, new Resources(15 * cost, 30 * cost, 12 * cost, 0), leader ? 20 : 4 + 2 * cost));
+                list.Add((id, Economy.CommissionCost(g, polity, id, new Resources(15 * cost, 30 * cost, 12 * cost, 0)), leader ? 20 : 4 + 2 * cost));
             }
             return list.ToArray();
         }

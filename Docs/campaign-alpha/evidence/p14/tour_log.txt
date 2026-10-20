@@ -1,0 +1,70 @@
+war tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-3; save <scratchpad>\p14tour\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+scenario The Passage War: active systems 10 (forgefall, ironmouth, cinderhold, gloam, umbra, salvage_row, blackwake, shoal_haven, dividend, ledgerhold)
+  condition: Victory by arms: hold access through the Umbra passage, won in battle, at 3 consecutive settlements (every 10 days) while Forgefall and Ironmouth stay operational (yours and not blockaded).
+  condition: A settlement does not count, and the count restarts, while: your access is lost; a designated world is lost or blockaded; an enemy fleet led by a flagship holds position at Umbra; or the rival is actively contesting the passage (a declared objective and a fleet that can fight).
+  condition: Victory by treaty: hold passage rights granted by a settlement or a treaty, still in force at the next settlement, with Forgefall and Ironmouth operational.
+  condition: If the rival has no way left to contest the passage (no fleet that can fight, none being built, none it can pay for, or no attempts left), the next settlement that counts ends the campaign at once.
+  condition: Defeat: your objective fails 3 times and the rival holds access at a settlement; or, at a settlement, you have no fleet led by a flagship, none being built and cannot pay for one, and no access. A lost battle alone never ends the campaign.
+  condition: Inconclusive: day 240 (Day 1, Month 9, 3104) arrives first. The campaign ends with the passage as it stands.
+  condition: During an encounter strategic time stops for both powers: no income, production, movement or settlement until it is resolved. Pausing never pays income.
+  condition: Planetary operations (landings and ground series) are not connected to this scenario yet; orbital victory blockades a world but never takes it.
+shot w01_mandate
+shot w02_panel
+shot w03_treaty_declined
+treaty on day 0: Inhumanus Dominion declined the passage treaty. Rejected: pressure 25 against cost 50. +25: 100 credits for the rights; −30: our claim on the contested passage; −20: we have not lost a battle over the passage.
+order to Umbra: ok
+shot w04_first_prep
+w04_first: battle battle_eng_3_d29 on trade_passage; player orders: pass every activation
+campaign battle applied: CommanderEliminated | Decisive action: Arbitration Destroyer fired Arbitration Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win. | Battle of Umbra: Convoy Escort (Inhumanus Dominion) defeated Forgefall Raiders (Pygmaei Sector). | Inhumanus Dominion took access through The Umbra passage. | The Pygmaei Sector flagship Ember Tyrant was destroyed at Umbra; its wreck remains.
+w04_first: over after 81 orders, 311 s; winner seat 1 (CommanderEliminated); decisive: Arbitration Destroyer fired Arbitration Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win.
+shot w04_first_result
+after the first battle: day 29; access inhumanus (battle); hold 0; outcome None; stock E352 M479 C334 I30; fleets Forgefall Raiders at umbra (1, no flagship)
+  progress: Inhumanus Dominion holds access. Next settlement day 30.
+  warning: You have no fleet led by a flagship. Commission a replacement at your shipyard (E90 M180 C72 I0) before you can fight again.
+  next: Commission a replacement flagship at Forgefall I (E90 M180 C72 I0). It is a new ship; the old one stays lost. [shipyard]
+  next: Declare war over the passage (2 attempt(s) left), or propose a treaty. [declare]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+shot w05_mandate_after_loss
+after a settlement following the loss: ended False (Inhumanus Dominion holds access; your hold is at 0.)
+recovery: commissioned a replacement flagship; in production True
+recovery: Forgefall Raiders home: ok
+recovered: day 66; access inhumanus (battle); hold 0; outcome None; stock E558 M706 C484 I30; fleets Forgefall Guard at forgefall (2, flagship)
+  progress: Inhumanus Dominion holds access. Next settlement day 70.
+  next: Declare war over the passage (2 attempt(s) left), or propose a treaty. [declare]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+shot w06_recovered
+order to Umbra: ok
+shot w07_battle2_prep
+w07_battle2: battle battle_eng_10_d95 on trade_passage_wrecked; player orders: slice AI pilot
+campaign battle applied: CommanderEliminated | Decisive action: Parallax Cruiser fired Parallax Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win. | Battle of Umbra: Convoy Escort (Inhumanus Dominion) defeated Forgefall Guard (Pygmaei Sector). | Inhumanus Dominion took access through The Umbra passage. | The Pygmaei Sector flagship Revenant Command Ship was destroyed at Umbra; its wreck remains.
+w07_battle2: over after 62 orders, 130 s; winner seat 1 (CommanderEliminated); decisive: Parallax Cruiser fired Parallax Beam at Revenant Command Ship (flagship): 4 raw − 1 armour = 3; Revenant Command Ship hull 1 → 0. Revenant Command Ship (flagship) was destroyed. A flagship was destroyed: the battle ended at once. Convoy Escort win.
+shot w07_battle2_result
+after battle 2: day 95; access inhumanus (battle); hold 0; outcome None; stock E790 M1025 C658 I30; fleets 
+  progress: Inhumanus Dominion holds access. Next settlement day 100.
+  warning: Your objective has failed 3 times. Unless a treaty grants you passage rights by the settlement on day 100, the mandate fails.
+  warning: You have no fleet led by a flagship. Commission a replacement at your shipyard (E90 M180 C72 I0) before you can fight again.
+  next: Commission a replacement flagship at Forgefall I (E90 M180 C72 I0). It is a new ship; the old one stays lost. [shipyard]
+  next: A treaty proposal is possible now (one per settlement interval). [treaty]
+no attempts left; waiting for the settlement
+ending: Defeat; Your objective failed 3 times and Inhumanus Dominion holds the passage.
+ending: day 100; access inhumanus (battle); hold 0; outcome Defeat; stock E830 M1080 C688 I30; fleets 
+  progress: Defeat on day 100.
+  next: The campaign has ended: read the ending, continue freeform, or start again from the scenario menu (F6).
+  ending: Defeat on day 100. Your objective failed 3 times and Inhumanus Dominion holds the passage.
+  ending: Battles: 2 (0 won, 2 lost). Spent on decisions: 90 energy, 180 materials, 72 credits. Recovered or received: nothing.
+  ending: Flagships lost: Ember Tyrant, Revenant Command Ship.
+  ending: Relations with Inhumanus Dominion: war, standing -20.
+  ending: Inhumanus Dominion holds access through The Umbra passage (by battle).
+  ending: Your decisions, in order:
+  ending:   Day 0: Proposed passage rights for 100 credits; Inhumanus Dominion declined (pressure 25 against 50).
+  ending:   Day 0: Declared war over The Umbra passage (attempt 1 of 3)
+  ending:   Day 29: Lost the battle of Umbra (a flagship destroyed); lost 7 ship(s), the enemy 0
+  ending:   Day 31: Forgefall I: Commission Revenant Command Ship (20 days) (90 energy, 180 materials, 72 credits)
+  ending:   Day 66: Declared war over The Umbra passage (attempt 2 of 3)
+  ending:   Day 95: Lost the battle of Umbra (a flagship destroyed); lost 2 ship(s), the enemy 2
+shot w09_ending
+save and load after the ending: digest identical; outcome Defeat
+advance after the ending: The campaign has ended. Continue freeform to keep playing.
+campaign took 100 strategic days and 532 s of automated real time (not a human session length)

@@ -51,7 +51,7 @@ namespace RR.Game
             var s = g.Slice;
             string sig = $"{g.Day}|{g.Log.Count}|{s.History.Count}|{s.Wrecks.Count(w => w.Salvaged)}|{g.Player.Stock}|{g.PendingEngagement?.Id}|{_root.Scale}|" +
                          $"{(_root.LocalSystem != null ? _root.LocalSystem.Data.Id : "-")}|{string.Join(",", g.Fleets.Select(f => f.SystemId + f.Ships.Count + (f.Moving ? "m" : "")))}|" +
-                         $"{string.Join(",", s.Ships.Values.Select(x => x.Name + x.Modules.Count))}|{s.Objectives.Count}|{(Expeditions.Of(g)?.State.ToString() ?? "")}|{_version}|{_expanded}";
+                         $"{string.Join(",", s.Ships.Values.Select(x => x.Name + x.Modules.Count))}|{s.Objectives.Count}|{(Expeditions.Of(g)?.State.ToString() ?? "")}|{_version}|{_expanded}|{PassageWar.Of(g)?.Outcome}|{PassageWar.Of(g)?.Freeform}|{PassageWar.Of(g)?.HoldCount}|{_root.SupplyOverlay}|{Economy.Arrears(g, g.Player.Id)}";
             if (sig != _sig) { _sig = sig; Rebuild(g, s); }
             Labels(g, s, cam);
         }
@@ -69,6 +69,25 @@ namespace RR.Game
             _body.Clear();
             var passage = s.Passages.FirstOrDefault();
             string me = g.Player.Id, them = me == "pygmaei" ? "inhumanus" : "pygmaei";
+            var sc = PassageWar.Of(g);
+            if (sc != null)
+            {
+                // The mandate first: the exact state of the win condition, any warning, and the most useful next step.
+                _body.Add(UiKit.Section("00", sc.Title));
+                _body.Add(Line(PassageWar.Progress(g)));
+                foreach (var w in PassageWar.Warnings(g)) _body.Add(Line(w, "text-danger"));
+                var next = PassageWar.NextActions(g).FirstOrDefault();
+                if (next != null && !sc.Ended) _body.Add(Line("Next: " + next.Text, "slice-notice"));
+                var arrears = Economy.ArrearsProblem(g, me);
+                if (arrears != null && !sc.Ended) _body.Add(Line(arrears, "text-danger"));
+                var mrow = UIX.Div("slice-actions");
+                Btn(mrow, "Mandate", () => _root.OpenMandate());
+                Btn(mrow, "Treasury", () => _root.OpenTreasury());
+                Btn(mrow, _root.SupplyOverlay ? "Hide supply" : "Supply", () => { _root.ToggleSupply(); Invalidate(); });
+                if (sc.Ended) Btn(mrow, "Ending", () => _root.ShowEnding());
+                else Btn(mrow, "Treaty", () => _root.OpenTreaty(), PassageWar.CanPropose(g, me, 0) == null, PassageWar.CanPropose(g, me, 0));
+                _body.Add(mrow);
+            }
             _body.Add(UiKit.Section("01", "The Umbra passage"));
             if (passage != null)
                 _body.Add(Line(passage.AccessHolderId == null ? "Access: contested. Neither power may use the passage freely."
@@ -144,6 +163,18 @@ namespace RR.Game
                 var ex = Expeditions.Of(g);
                 if (ex != null && (ex.State == ExpeditionState.Offered || ex.State == ExpeditionState.Scouted))
                     items.Add((W(ex.SystemId) + Vector3.up * 6, "Derelict signal", new Color(0.7f, 0.75f, 1f)));
+                if (_root.SupplyOverlay && PassageWar.Of(g) != null)
+                {
+                    var net = _root.SupplyNet;
+                    foreach (var id in PassageWar.Of(g).ActiveSystems)
+                    {
+                        var n = net?.Node(id);
+                        if (n == null) continue;
+                        string text = n.Supplied ? (n.Threat != null ? "Supply threatened" : "Supplied") : "Supply cut";
+                        var col = n.Supplied ? (n.Threat != null ? new Color(1f, 0.72f, 0.3f) : new Color(0.45f, 0.9f, 0.75f)) : new Color(1f, 0.45f, 0.4f);
+                        items.Add((W(id) - Vector3.up * 11, text, col));
+                    }
+                }
             }
             while (_world.Count < items.Count)
             {

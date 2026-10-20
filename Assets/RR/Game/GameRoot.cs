@@ -142,6 +142,8 @@ namespace RR.Game
             if (cameraCheck != null) StartCoroutine(SliceAutomation.CameraCheck(this, cameraCheck));
             var campaignTour = Args.Value("-rrCampaignTour");
             if (campaignTour != null) StartCoroutine(CampaignAutomation.Tour(this, campaignTour));
+            var warTour = Args.Value("-rrWarTour");
+            if (warTour != null) StartCoroutine(WarAutomation.Tour(this, warTour));
             var problems = SliceRoster.Validate();
             if (problems.Count > 0) { foreach (var p in problems) Debug.LogError("Slice content: " + p); UI.Strategy.Toast("Slice content problem: " + problems[0], "bad"); }
             MaybeShowStartMenu();
@@ -283,7 +285,9 @@ namespace RR.Game
         public void StartProject(string planetId, ProjectKind kind, string shipDefId)
         {
             var r = StrategyRules.StartProject(G, planetId, kind, shipDefId);
-            Feedback(r, kind == ProjectKind.CommissionShip ? "Commissioning " + ShipCatalog.Name(shipDefId) + " at " + G.GetPlanet(planetId).Name + "." : "Work on a Crystal Foundry has begun.");
+            Feedback(r, kind == ProjectKind.CommissionShip ? "Commissioning " + ShipCatalog.Name(shipDefId) + " at " + G.GetPlanet(planetId).Name + "."
+                      : kind == ProjectKind.Priority ? "Work on " + (Economy.Priority(G.Player.Id, shipDefId)?.Name ?? shipDefId) + " has begun." : "Work on a Crystal Foundry has begun.");
+            if (r.Ok) PlaytestMetrics.Decision("started project " + kind + " " + shipDefId);
             UI.Strategy.RefreshAll();
         }
 

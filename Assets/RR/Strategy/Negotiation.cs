@@ -141,7 +141,7 @@ namespace RR.Strategy
             cp.Stock = cp.Stock - new Resources(0, 0, paid, 0);
             rp.Stock = rp.Stock + new Resources(0, 0, paid, 0);
             var passage = s.Passage(sys.Id);
-            if (passage != null) { passage.AccessHolderId = recipient.OwnerId; passage.SinceDay = g.Day; }
+            if (passage != null) { passage.AccessHolderId = recipient.OwnerId; passage.SinceDay = g.Day; passage.Basis = PassageWar.Treaty; }
             foreach (var obj in s.Objectives.Where(x => x.SystemId == sys.Id && x.Status == ObjectiveStatus.Declared))
             { obj.Status = obj.PolityId == recipient.OwnerId ? ObjectiveStatus.Secured : ObjectiveStatus.Settled; obj.Note = $"Settled on day {g.Day}."; }
             var rel = s.RelationOf(cp.Id, rp.Id);
@@ -169,6 +169,8 @@ namespace RR.Strategy
             s.Settlements.Add(st);
             SliceCampaign.React(g, "settlement_" + o.Id, cp.Id, rp.Id, SliceCampaign.SettlementOpinion, "an honoured settlement");
             SliceCampaign.RecordEvent(g, "settlement", sys.Id, setup.BattleId, $"Settlement at {sys.Name}: {st.Text}");
+            PassageWar.ForPolity(g, cp.Id, "settlement", $"Yielded the passage under terms at {sys.Name}" + (surrendered != 0 ? ", surrendering the flagship" : ""), new Resources(0, 0, paid, 0));
+            PassageWar.ForPolity(g, rp.Id, "settlement", $"Obtained passage rights under terms at {sys.Name}", new Resources(0, 0, -paid, 0));
         }
     }
 }

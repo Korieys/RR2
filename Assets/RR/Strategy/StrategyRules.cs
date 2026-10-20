@@ -45,7 +45,9 @@ namespace RR.Strategy
     {
         public ProjectKind Kind;
         public string ShipDefId;
+        public string PriorityId;
         public string Label;
+        public string Detail;
         public Resources Cost;
         public int Days;
         public bool Available;
@@ -88,7 +90,8 @@ namespace RR.Strategy
             string common = p.OwnerId != player.Id ? "This world is not under your rule."
                           : p.Project != null ? "This world is already working on a project."
                           : sys.Blockaded ? "Enemy ships hold the orbit; construction is halted."
-                          : g.PendingEngagement != null ? "Resolve the engagement before issuing new projects." : null;
+                          : g.PendingEngagement != null ? "Resolve the engagement before issuing new projects."
+                          : Economy.Active(g) ? Economy.ArrearsProblem(g, player.Id) : null;
             if (p.HasShipyard)
             {
                 foreach (var (defId, cost, days) in SliceCampaign.Commissionable(g, player.Id) ?? ShipCatalog.Commissionable)
@@ -97,6 +100,12 @@ namespace RR.Strategy
                     list.Add(new ProjectOption { Kind = ProjectKind.CommissionShip, ShipDefId = defId, Label = "Commission " + ShipCatalog.Name(defId),
                         Cost = cost, Days = days, Available = why == null, UnavailableReason = why });
                 }
+            }
+            foreach (var pr in Economy.PrioritiesAt(g, p))
+            {
+                string why = common ?? (player.Stock.Covers(pr.Cost) ? null : "Not enough resources.");
+                list.Add(new ProjectOption { Kind = ProjectKind.Priority, PriorityId = pr.Id, Label = "Priority: " + pr.Name, Cost = pr.Cost, Days = pr.Days,
+                    Detail = $"{pr.Effect} Enables: {pr.Enables} Opportunity cost: {pr.Forecloses}", Available = why == null, UnavailableReason = why });
             }
             if (p.Kind == PlanetKind.Crystal)
             {
@@ -110,13 +119,15 @@ namespace RR.Strategy
 
         public static StratResult StartProject(GalaxyState g, string planetId, ProjectKind kind, string shipDefId = null)
         {
-            var opt = ProjectOptions(g, planetId).FirstOrDefault(o => o.Kind == kind && (kind != ProjectKind.CommissionShip || o.ShipDefId == shipDefId));
+            // For a priority, the third argument names the priority (Economy.Priorities).
+            var opt = ProjectOptions(g, planetId).FirstOrDefault(o => o.Kind == kind && (kind == ProjectKind.CommissionShip ? o.ShipDefId == shipDefId : kind != ProjectKind.Priority || o.PriorityId == shipDefId));
             if (opt == null) return StratResult.Reject("That project is not offered on this world.");
             if (!opt.Available) return StratResult.Reject(opt.UnavailableReason);
             var p = g.GetPlanet(planetId);
             var player = g.Player;
             player.Stock = player.Stock - opt.Cost;
-            p.Project = new ProjectState { Kind = kind, ShipDefId = shipDefId, Cost = opt.Cost, DaysTotal = opt.Days };
+            PassageWar.ForPolity(g, player.Id, "production", $"{p.Name}: {opt.Label} ({opt.Days} days)", opt.Cost);
+            p.Project = new ProjectState { Kind = kind, ShipDefId = kind == ProjectKind.CommissionShip ? shipDefId : null, PriorityId = opt.PriorityId, Cost = opt.Cost, DaysTotal = opt.Days };
             g.Note("build", $"{p.Name} began work: {opt.Label} ({opt.Days} days).");
             return StratResult.Accept();
         }
@@ -127,6 +138,7 @@ namespace RR.Strategy
             if (p == null || p.Project == null) return StratResult.Reject("There is no project to cancel.");
             if (p.OwnerId != g.Player.Id) return StratResult.Reject("This world is not under your rule.");
             g.Player.Stock = g.Player.Stock + p.Project.Cost.Half();
+            PassageWar.ForPolity(g, g.Player.Id, "production", $"{p.Name}: cancelled its project (half refunded)", default(Resources) - p.Project.Cost.Half());
             g.Note("build", $"{p.Name} cancelled its project; half of the resources were recovered.");
             p.Project = null;
             return StratResult.Accept();
@@ -169,6 +181,7 @@ namespace RR.Strategy
                 foreach (var lane in g.LanesOf(id))
                 {
                     var n = lane.Other(id);
+                    if (!PassageWar.InScope(g, n)) continue;   // a bounded scenario routes only through its active systems
                     int nd = d + lane.Days;
                     if (!dist.TryGetValue(n, out var cur) || nd < cur)
                     {
@@ -215,6 +228,8 @@ namespace RR.Strategy
         {
             var rep = new DayReport();
             if (g.PendingEngagement != null) { rep.BlockedReason = "An engagement is waiting for a decision."; return rep; }
+            var scenario = PassageWar.Of(g);
+            if (scenario != null && scenario.Ended && !scenario.Freeform) { rep.BlockedReason = "The campaign has ended. Continue freeform to keep playing."; return rep; }
             g.Day++;
             rep.Advanced = true;
 
@@ -228,6 +243,7 @@ namespace RR.Strategy
                 {
                     if (p.Project == null) continue;
                     if (s.Blockaded) continue;
+                    if (Economy.Active(g) && Economy.InArrears(g, p.OwnerId)) continue;   // projects pause while upkeep is in arrears
                     p.Project.DaysDone++;
                     if (p.Project.DaysDone >= p.Project.DaysTotal) { CompleteProject(g, s, p); rep.Completed.Add(p.Id); }
                 }
@@ -269,6 +285,11 @@ namespace RR.Strategy
         {
             var proj = p.Project;
             p.Project = null;
+            if (proj.Kind == ProjectKind.Priority)
+            {
+                Economy.Complete(g, p, proj.PriorityId);
+                return;
+            }
             if (proj.Kind == ProjectKind.CrystalFoundry)
             {
                 p.Foundries++;
@@ -290,7 +311,7 @@ namespace RR.Strategy
         static void OnArrival(GalaxyState g, Fleet f, DayReport rep)
         {
             var sys = g.GetSystem(f.SystemId);
-            var hostile = g.FleetsAt(sys.Id).Where(o => o != f && Hostile(o.OwnerId, f.OwnerId) && o.EngagementId == null).OrderBy(o => o.Id).FirstOrDefault();
+            var hostile = g.FleetsAt(sys.Id).Where(o => o != f && Hostile(o.OwnerId, f.OwnerId) && !PassageWar.AtPeace(g, o.OwnerId, f.OwnerId) && o.EngagementId == null).OrderBy(o => o.Id).FirstOrDefault();
             if (hostile != null)
             {
                 f.Order = null;
@@ -322,7 +343,7 @@ namespace RR.Strategy
                 for (int j = i + 1; j < movers.Count; j++)
                 {
                     var a = movers[i]; var b = movers[j];
-                    if (!Hostile(a.OwnerId, b.OwnerId)) continue;
+                    if (!Hostile(a.OwnerId, b.OwnerId) || PassageWar.AtPeace(g, a.OwnerId, b.OwnerId)) continue;
                     if (a.SystemId != b.Order.Path[0] || b.SystemId != a.Order.Path[0]) continue;
                     var lane = g.LaneBetween(a.SystemId, b.SystemId);
                     if (a.Order.DaysIntoLane + b.Order.DaysIntoLane < lane.Days) continue;
@@ -387,6 +408,7 @@ namespace RR.Strategy
             var other = mine.Id == e.AttackerFleetId ? g.GetFleet(e.DefenderFleetId) : g.GetFleet(e.AttackerFleetId);
             var sys = g.GetSystem(e.SystemId);
             Withdraw(g, mine, sys);
+            PassageWar.ForPolity(g, mine.OwnerId, "withdrawal", $"Withdrew {mine.Name} from {sys.Name} without a battle", default);
             other.EngagementId = null;
             e.State = EngagementState.Retreated;
             e.ResultSummary = $"{mine.Name} withdrew from {sys.Name} without a battle.";

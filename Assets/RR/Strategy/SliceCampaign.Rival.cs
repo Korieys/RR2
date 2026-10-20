@@ -28,7 +28,7 @@ namespace RR.Strategy
         {
             var who = Challenger(g, p);
             if (who == null || RivalFleet(g, who) == null) return null;
-            int tried = g.Slice.Objectives.Where(o => o.PolityId == who && o.SystemId == p.SystemId).Sum(o => o.Attempts);
+            int tried = FailedAttempts(g, who, p.SystemId);
             if (tried >= MaxAttempts) return null;
             if (g.Slice.Applied.Contains(CounterKey(who, p))) return null;
             return p.SinceDay + CounterDelayDays;
@@ -61,7 +61,7 @@ namespace RR.Strategy
                 g.Slice.Applied.Add(CounterKey(who, p));
                 string target = p.AccessHolderId;
                 var obj = new WarObjective { Id = "obj_" + g.NextId++, PolityId = who, TargetPolityId = target, SystemId = p.SystemId, Status = ObjectiveStatus.Declared,
-                    DeclaredDay = g.Day, Attempts = g.Slice.Objectives.Where(o => o.PolityId == who && o.SystemId == p.SystemId).Sum(o => o.Attempts) };
+                    DeclaredDay = g.Day, Attempts = FailedAttempts(g, who, p.SystemId) };
                 g.Slice.Objectives.Add(obj);
                 g.Slice.RelationOf(who, target).Status = "war";
                 fleet.AITarget = p.SystemId; fleet.AIDepartDay = g.Day + 2;
@@ -78,7 +78,9 @@ namespace RR.Strategy
             if (option == null || option.Value.defId == null) return false;
             var pol = g.GetPolity(fleet.OwnerId);
             if (!pol.Stock.Covers(option.Value.cost)) return false;
+            if (Economy.Active(g) && Economy.InArrears(g, fleet.OwnerId)) return false;   // the same accounting as the player
             pol.Stock = pol.Stock - option.Value.cost;
+            PassageWar.ForPolity(g, fleet.OwnerId, "commission", $"Commissioned a replacement {ShipCatalog.Name(option.Value.defId)}", option.Value.cost);
             var ship = new ShipRecord { Uid = g.NextUid++, DefId = option.Value.defId, Hp = ShipCatalog.MaxHp(option.Value.defId) };
             fleet.Ships.Add(ship);
             var home = g.GetSystem(fleet.SystemId) ?? g.GetSystem(HomeOf(fleet.OwnerId));

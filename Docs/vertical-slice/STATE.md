@@ -1,5 +1,7 @@
 # Vertical slice state
 
+> Continued by the campaign alpha (Prompts 13 to 20): see [../campaign-alpha/STATE.md](../campaign-alpha/STATE.md).
+
 Updated 2026-10-19, end of Prompt 12 (the whole pack; Prompt 0 audit below). Branch `claude/rule-ruin-vertical-slice-62633b`, based on `b23e354`.
 
 | Milestone | State |

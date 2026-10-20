@@ -28,7 +28,7 @@ namespace RR.Game
             try { _path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(savePath)), "playtest_metrics.jsonl"); }
             catch { _path = null; return; }
             _sessionStart = Time.unscaledTime;
-            if (Args.Has("-rrTour") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrSoak") || Args.Has("-rrCapture")) _source = "automation";
+            if (Args.Has("-rrTour") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrWarTour") || Args.Has("-rrSoak") || Args.Has("-rrCapture")) _source = "automation";
             Write("session_start", "build", Application.version, "unity", Application.unityVersion);
         }
 

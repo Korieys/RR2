@@ -27,6 +27,8 @@ namespace RR.Game
         {
             EnsureCampaignPanel();
             _campaign.Update(Rig.Cam);
+            MaybeShowEnding();
+            SupplyUpdate();
         }
 
         /// <summary>A paragraph in the Command Glass text roles (SlicePanels.uss): body at reading size, supporting text smaller,

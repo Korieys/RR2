@@ -64,7 +64,8 @@ namespace RR.Strategy
                 bool spare = SpareKey(g, p.OwnerId, m.Id) != null;
                 var o = new RefitOption { Module = m, Fitted = p.Modules.Contains(m.Id), Replaces = current, Cost = spare ? default : ModuleCost(m.Id),
                     Compare = m.Summary + (spare ? " A salvaged spare covers the cost." : "") };
-                o.Blocked = o.Fitted ? "Already fitted." : where ?? (pol != null && !pol.Stock.Covers(o.Cost) ? $"Not enough resources: needs {o.Cost}, you have {pol.Stock}." : null);
+                o.Blocked = o.Fitted ? "Already fitted." : where ?? (Economy.Active(g) ? Economy.ArrearsProblem(g, p.OwnerId) : null) ??
+                            (pol != null && !pol.Stock.Covers(o.Cost) ? $"Not enough resources: needs {o.Cost}, you have {pol.Stock}." : null);
                 list.Add(o);
             }
             return list;
@@ -80,6 +81,7 @@ namespace RR.Strategy
             var spare = SpareKey(g, p.OwnerId, moduleId);
             if (spare != null) g.Slice.Applied.Add("used" + spare);   // a salvaged spare is fitted once, at no cost
             else pol.Stock = pol.Stock - o.Cost;
+            PassageWar.ForPolity(g, p.OwnerId, "refit", $"Refitted {p.Name ?? ShipCatalog.Name(p.DefId)} with {o.Module.Name}" + (spare != null ? " (a salvaged spare)" : ""), spare != null ? default : o.Cost);
             if (o.Replaces != null) p.Modules.Remove(o.Replaces);
             p.Modules.Add(o.Module.Id);
             p.Modules.Sort(StringComparer.Ordinal);
@@ -105,13 +107,21 @@ namespace RR.Strategy
             if (s == null) return StratResult.Reject("That ship is not in service.");
             var f = FleetOf(g, uid);
             var where = RefitLocationProblem(g, f);
-            if (where != null) return StratResult.Reject(where);
+            // A forward dock (Passage War, Prompt 15) repairs too; its materials come from its own finite stores.
+            bool dock = where != null && Economy.Active(g) && Economy.AtDock(g, f);
+            if (where != null && !dock) return StratResult.Reject(where);
             int max = MaxHull(g, s);
             if (s.Hp >= max) return StratResult.Reject("The hull is already at full strength.");
+            if (Economy.Active(g) && Economy.InArrears(g, f.OwnerId)) return StratResult.Reject(Economy.ArrearsProblem(g, f.OwnerId));
             var cost = RepairCost(g, uid);
             var pol = g.GetPolity(f.OwnerId);
-            if (!pol.Stock.Covers(cost)) return StratResult.Reject($"Not enough resources: repairs need {cost}, you have {pol.Stock}.");
-            pol.Stock = pol.Stock - cost;
+            if (dock) { var dp = Economy.DockProblem(g, f, cost); if (dp != null) return StratResult.Reject(dp); }
+            var pay = dock ? new Resources(cost.Energy, 0, cost.Credits, cost.Influence) : cost;
+            if (!pol.Stock.Covers(pay)) return StratResult.Reject($"Not enough resources: repairs need {pay}, you have {pol.Stock}.");
+            pol.Stock = pol.Stock - pay;
+            if (dock) Economy.DrawStores(g, f.SystemId, cost.Materials);
+            cost = pay;
+            PassageWar.ForPolity(g, f.OwnerId, "repair", $"Repaired {ShipName(g, s)} (hull {s.Hp} to {max})", cost);
             int before = s.Hp;
             s.Hp = max;
             var p = g.Slice?.Profile(uid);

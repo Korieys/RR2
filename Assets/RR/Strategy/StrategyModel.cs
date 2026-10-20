@@ -11,7 +11,7 @@ namespace RR.Strategy
     public enum StarClass { BlueGiant, White, Yellow, Orange, RedDwarf, Violet, Dim }
     public enum PlanetKind { Terran, Ocean, Crystal, Barren, Volcanic, Ice, GasGiant, Toxic }
     public enum SystemDetail { Distant, Local, Hero }
-    public enum ProjectKind { CommissionShip, CrystalFoundry }
+    public enum ProjectKind { CommissionShip, CrystalFoundry, Priority }
     public enum EngagementState { Pending, Resolved, Retreated }
     public enum ConquestStage { None = 0, OrbitSecured = 1, LandingEstablished = 2, Conquered = 3 }
 
@@ -95,6 +95,7 @@ namespace RR.Strategy
     {
         public ProjectKind Kind;
         public string ShipDefId;             // for CommissionShip
+        public string PriorityId;            // for Priority (Economy.Priorities, the Passage War scenario)
         public Resources Cost;
         public int DaysTotal;
         public int DaysDone;
