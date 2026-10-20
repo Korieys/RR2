@@ -48,6 +48,42 @@ namespace RR.Game
             }
         }
 
+        /// <summary>Camera check (-rrCameraCheck <dir>): seven wheel notches of zoom aimed at the enemy flagship, through the same
+        /// CameraRig.ZoomAt the mouse wheel calls, then a fly-to on another ship. Records distance and how far the aimed ship drifted
+        /// from the cursor. Not a test of the physical wheel (automation cannot send one); the notch scaling is in GameRoot.Input.</summary>
+        public static IEnumerator CameraCheck(GameRoot root, string dir)
+        {
+            Directory.CreateDirectory(dir);
+            Automation.UseDir(dir);
+            yield return Wait(2f);
+            root.StartPassage(PassageVariant.Challenge, FactionId.Pygmaei, false);
+            yield return Ready(root);
+            var b = root.Battle; var rig = root.Rig;
+            yield return Until(() => !rig.Transitioning, 5);
+            yield return Wait(0.5f);
+            yield return Automation.Shot(dir, "cam01_start");
+            var target = b.S.Commander(1);
+            Vector3 world = b.ViewPosition(target.Id).Value;
+            Vector2 cursor = rig.Cam.WorldToScreenPoint(world);
+            float d0 = rig.Current.Distance;
+            float t0 = Time.unscaledTime;
+            for (int i = 0; i < 7; i++) { rig.ZoomAt(0.8f, cursor); yield return Wait(0.06f); }
+            yield return Wait(0.6f);   // let the damping settle
+            Vector2 now = rig.Cam.WorldToScreenPoint(b.ViewPosition(target.Id).Value);
+            Note($"zoom at the enemy flagship: 7 notches in {Time.unscaledTime - t0 - 0.6f:0.00} s of input, distance {d0:0.0} -> {rig.Current.Distance:0.0} (limit {rig.Limits.MinDistance}); the ship moved {(now - cursor).magnitude:0} px from the cursor (screen {Screen.width}x{Screen.height})");
+            yield return Automation.Shot(dir, "cam02_zoomed_at_flagship");
+            var other = b.S.Units.First(u => u.Owner == 0 && u.OnBoard && !RosterCombat.IsLeader(b.S, u));
+            rig.FocusOn(b.ViewPosition(other.Id).Value, Mathf.Max(rig.Limits.MinDistance, 12f));
+            float t1 = Time.unscaledTime;
+            yield return Until(() => !rig.Transitioning, 5);
+            Vector2 centre = rig.Cam.WorldToScreenPoint(b.ViewPosition(other.Id).Value);
+            Note($"fly to {other.Def.Name}: {Time.unscaledTime - t1:0.00} s; ship {(centre - new Vector2(Screen.width / 2f, Screen.height / 2f)).magnitude:0} px from screen centre; distance {rig.Current.Distance:0.0}");
+            yield return Automation.Shot(dir, "cam03_focused_ship");
+            File.WriteAllText(Path.Combine(dir, "tour_log.txt"), Automation.Log.ToString());
+            yield return Wait(0.5f);
+            Application.Quit();
+        }
+
         public static IEnumerator PassageTour(GameRoot root, string dir)
         {
             Directory.CreateDirectory(dir);

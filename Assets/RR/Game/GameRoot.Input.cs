@@ -43,6 +43,11 @@ namespace RR.Game
                 if (kb.bKey.wasPressedThisFrame) Battle.ToggleBoard();
                 if (kb.gKey.wasPressedThisFrame) { if (Battle.Delegated) Battle.StopDelegating(); else Battle.Delegate(false); }
                 if (kb.fKey.wasPressedThisFrame && _battleHud != null) _battleHud.CycleSpeed();
+                if (kb.cKey.wasPressedThisFrame)
+                {
+                    var target = Battle.Selected != 0 ? Battle.Selected : Battle.HoverHex.HasValue ? Battle.Seen.UnitAt(Battle.HoverHex.Value)?.Id ?? 0 : 0;
+                    if (target != 0) FocusShip(target);
+                }
             }
             else if (!modal)
             {
@@ -60,6 +65,8 @@ namespace RR.Game
             if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) pan.x += 1;
             if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) pan.x -= 1;
             if (pan != Vector2.zero && Scale != ViewScale.Planet) Rig.Pan(pan * 900f * dt);
+            if (!modal && (kb.equalsKey.isPressed || kb.numpadPlusKey.isPressed)) Rig.Zoom(Mathf.Pow(ZoomPerNotch, 6f * dt));
+            if (!modal && (kb.minusKey.isPressed || kb.numpadMinusKey.isPressed)) Rig.Zoom(Mathf.Pow(ZoomPerNotch, -6f * dt));
             if (kb.qKey.isPressed) Rig.Orbit(-90f * dt, 0);
             if (kb.eKey.isPressed) Rig.Orbit(90f * dt, 0);
 
@@ -75,7 +82,14 @@ namespace RR.Game
             if (!overUI)
             {
                 float scroll = mouse.scroll.ReadValue().y;
-                if (Mathf.Abs(scroll) > 0.01f) { Rig.FinishTransition(); Rig.Zoom(Mathf.Pow(0.86f, scroll / 120f)); }
+                if (Mathf.Abs(scroll) > 0.01f)
+                {
+                    // One wheel notch is 1 unit with the Input System's default (uniform) range and 120 with platform ranges.
+                    float notches = Mathf.Clamp(Mathf.Abs(scroll) >= 20f ? scroll / 120f : scroll, -5f, 5f);
+                    Rig.FinishTransition();
+                    if (Scale == ViewScale.Planet) Rig.Zoom(Mathf.Pow(ZoomPerNotch, notches));
+                    else Rig.ZoomAt(Mathf.Pow(ZoomPerNotch, notches), pos);
+                }
             }
 
             // ---- hover and clicks per scale
@@ -83,7 +97,12 @@ namespace RR.Game
             {
                 var h = overUI ? (Commandfall.Core.Hex?)null : RayHex(pos);
                 Battle.Hover(Battle.ForcedHover ?? h);   // automation can pin the hover to show a preview
-                if (mouse.leftButton.wasReleasedThisFrame && _leftDown && !_dragged && h.HasValue) Battle.ClickHex(h.Value);
+                if (mouse.leftButton.wasReleasedThisFrame && _leftDown && !_dragged && h.HasValue)
+                {
+                    var at = Battle.Seen.UnitAt(h.Value);
+                    if (at != null && IsDouble("unit:" + at.Id)) FocusShip(at.Id);   // double-click a ship: fly to it
+                    else Battle.ClickHex(h.Value);
+                }
                 if (mouse.rightButton.wasReleasedThisFrame && _rightDown && !_rightDragged) Battle.UndoPick();
             }
             else if (Scale == ViewScale.Galaxy)
@@ -107,6 +126,17 @@ namespace RR.Game
             if (mouse.leftButton.wasReleasedThisFrame) _leftDown = false;
             if (mouse.rightButton.wasReleasedThisFrame) _rightDown = false;
             if (mouse.middleButton.wasReleasedThisFrame) _midDown = false;
+        }
+
+        /// <summary>Distance multiplier per wheel notch (0.8: each notch closes 20 % of the distance).</summary>
+        const float ZoomPerNotch = 0.8f;
+
+        /// <summary>Flies the battle camera to a ship (double-click it, or C for the selected or hovered ship).</summary>
+        void FocusShip(int unitId)
+        {
+            var p = Battle != null ? Battle.ViewPosition(unitId) : null;
+            if (p == null) return;
+            Rig.FocusOn(p.Value, Mathf.Max(Rig.Limits.MinDistance, 12f));
         }
 
         bool IsDouble(string id)

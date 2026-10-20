@@ -257,7 +257,7 @@ namespace RR.Game
             _resultShown = false;
             ResetReview();
             PlaytestMetrics.BattleStart(session.Setup.BattleId, session.Setup.Scenario ?? (session.Setup.EngagementId != null ? "campaign" : "skirmish"));
-            Rig.Limits = new CamLimits { MinDistance = 9, MaxDistance = 52, MinPitch = 24, MaxPitch = 82, FocusBounds = new Bounds(Vector3.zero, new Vector3(26, 2, 18)) };
+            Rig.Limits = new CamLimits { MinDistance = 6, MaxDistance = 52, MinPitch = 24, MaxPitch = 82, FocusBounds = new Bounds(Vector3.zero, new Vector3(26, 2, 18)) };
             Rig.Near = 0.1f; Rig.Far = 9000;
             var pose = BattlePose();
             var start = pose; start.Distance = 46; start.Pitch = 34;

@@ -127,6 +127,8 @@ namespace RR.Game
             if (cap != null) StartCoroutine(Automation.SystemTourFromGalaxy(this, cap));
             var passageTour = Args.Value("-rrPassageTour");
             if (passageTour != null) StartCoroutine(SliceAutomation.PassageTour(this, passageTour));
+            var cameraCheck = Args.Value("-rrCameraCheck");
+            if (cameraCheck != null) StartCoroutine(SliceAutomation.CameraCheck(this, cameraCheck));
             var campaignTour = Args.Value("-rrCampaignTour");
             if (campaignTour != null) StartCoroutine(CampaignAutomation.Tour(this, campaignTour));
             var problems = SliceRoster.Validate();

@@ -27,7 +27,7 @@ delete the save file (by default `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\R
 | | |
 |---|---|
 | Left click | select a ship, fleet, system or planet; in battle, give the order shown in the preview |
-| Mouse wheel; right or middle drag; W A S D | zoom; turn and move the camera; pan |
+| Mouse wheel; + and −; right or middle drag; W A S D; Q E | zoom toward the cursor; zoom; turn the camera; pan; rotate |
 | Home | recentre the camera |
 | F5 / F9 | save / load (also during a battle, between actions) |
 | F6 | scenario menu |
@@ -42,6 +42,7 @@ delete the save file (by default `%USERPROFILE%\AppData\LocalLow\Rule and Ruin\R
 | 3, Enter | use the selected ship's ability, confirm its targets |
 | G | delegate this round to the AI (again to take command back) |
 | F | animation speed |
+| Double-click your ship, or C | fly the camera to the selected (or hovered) ship |
 
 ## The rules in brief
 

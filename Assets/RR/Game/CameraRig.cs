@@ -103,6 +103,30 @@ namespace RR.Game
             if (PitchForDistance != null)
                 Target.Pitch = Mathf.Clamp(Target.Pitch + PitchForDistance(Target.Distance) - PitchForDistance(before), Limits.MinPitch, Limits.MaxPitch);
         }
+        /// <summary>Zooms so the world point under <paramref name="screenPos"/> stays under the cursor (on the plane through the
+        /// focus), the way map and strategy games zoom: scrolling toward a ship brings you to that ship.</summary>
+        public void ZoomAt(float factor, Vector2 screenPos)
+        {
+            float before = Target.Distance;
+            Zoom(factor);
+            float k = Target.Distance / Mathf.Max(1e-4f, before);
+            if (Mathf.Approximately(k, 1f)) return;
+            var ray = Cam.ScreenPointToRay(screenPos);
+            var plane = new Plane(Vector3.up, new Vector3(0, Target.Focus.y, 0));
+            if (!plane.Raycast(ray, out float t) || t > before * 20f) return;
+            var anchor = ray.GetPoint(t);
+            var focus = anchor + (Target.Focus - anchor) * k;
+            focus.y = Target.Focus.y;
+            Target.Focus = Limits.FocusBounds.ClosestPoint(focus);
+        }
+
+        /// <summary>A short move that centres the camera on <paramref name="point"/> at <paramref name="distance"/>, keeping the angle.</summary>
+        public void FocusOn(Vector3 point, float distance, float seconds = 0.35f)
+        {
+            var to = Target; to.Focus = point; to.Distance = distance;
+            TransitionTo(to, seconds);
+        }
+
         public void Pan(Vector2 screenDelta)
         {
             // Pan on the reference plane, scaled by distance so it feels constant on screen.
