@@ -75,9 +75,9 @@ namespace RR.Game
                 case "silex":
                 case "silex_royal":
                     m.SetColor("_HullColor", new Color(0.70f, 0.69f, 0.67f)); m.SetColor("_HullColor2", new Color(0.48f, 0.48f, 0.5f));
-                    m.SetColor("_TrimColor", new Color(0.11f, 0.12f, 0.15f)); m.SetFloat("_Metal", 0.45f);
+                    m.SetColor("_TrimColor", key == "silex_royal" ? new Color(0.32f, 0.25f, 0.13f) : new Color(0.11f, 0.15f, 0.20f)); m.SetFloat("_Metal", 0.72f);
                     m.SetColor("_GlassColor", key == "silex_royal" ? new Color(1.0f, 0.74f, 0.38f) : new Color(0.32f, 0.64f, 1.0f));
-                    m.SetFloat("_GlowIntensity", 3.2f); m.SetFloat("_Stone", 1f); m.SetFloat("_HullRough", 0.72f); m.SetFloat("_DetailScale", 8f);
+                    m.SetFloat("_GlowIntensity", 2.2f); m.SetFloat("_Stone", 0.52f); m.SetFloat("_HullRough", 0.46f); m.SetFloat("_DetailScale", 8f);
                     break;
                 case "craigon":
                     m.SetColor("_HullColor", new Color(0.3f, 0.16f, 0.36f)); m.SetColor("_HullColor2", new Color(0.46f, 0.22f, 0.5f));

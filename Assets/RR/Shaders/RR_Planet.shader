@@ -73,8 +73,15 @@ Shader "RR/Planet"
                 float day = smoothstep(-0.12, 0.18, geoNdl);
                 float3 LOS = normalize(mul(transpose(o2w), L));
 
-                float cloud = SAMPLE_TEXTURECUBE(_CloudCube, sampler_CloudCube, RotY(dirOS, _CloudRot)).r * _CloudAmount;
-                float cloudSh = SAMPLE_TEXTURECUBE(_CloudCube, sampler_CloudCube, RotY(normalize(dirOS + LOS * 0.02), _CloudRot)).r * _CloudAmount;
+                // Intersect the view and sunlight with a thin cloud shell: parallax and cloud shadows
+                // share a physical height and remain tied to the star while the camera orbits.
+                float3 vos = normalize(mul(transpose(o2w), Vv));
+                float cv = dot(dirOS, vos), clight = dot(dirOS, LOS);
+                float shell2 = 1.016064;
+                float tv = -cv + sqrt(max(0, cv * cv + shell2 - 1));
+                float tl = -clight + sqrt(max(0, clight * clight + shell2 - 1));
+                float cloud = SAMPLE_TEXTURECUBE(_CloudCube, sampler_CloudCube, RotY(normalize(dirOS + vos * tv), _CloudRot)).r * _CloudAmount;
+                float cloudSh = SAMPLE_TEXTURECUBE(_CloudCube, sampler_CloudCube, RotY(normalize(dirOS + LOS * tl), _CloudRot)).r * _CloudAmount;
 
                 float ringSh = 1;
                 if (_RingOuter > 0)
@@ -94,9 +101,12 @@ Shader "RR/Planet"
                 float diff = RR_Diffuse(dot(n, L), 0.04) * smoothstep(-0.2, 0.05, geoNdl);
                 float water = det.b;
                 float rough = alb.a;
+                float microFade = 1 - smoothstep(0.003, 0.012, length(fwidth(dirOS)));
+                float micro = RR_Fbm(dirOS * 150, 3) * microFade * (1 - water);
+                alb.rgb *= 1 + micro * 0.12;
                 float3 surf = alb.rgb * starCol * diff * (1 - cloudSh * 0.55) * ringSh;
                 float3 specN = normalize(lerp(n, geoN, water));
-                surf += _SpecColor2.rgb * starCol * RR_GGX(specN, Vv, L, lerp(rough, 0.12, water)) * saturate(dot(specN, L)) * (water * 0.9 + 0.08) * ringSh * (1 - cloud);
+                surf += _SpecColor2.rgb * starCol * RR_GGX(specN, Vv, L, lerp(rough, 0.18, water)) * saturate(dot(specN, L)) * (water * 0.32 + 0.04) * ringSh * (1 - cloud);
                 if (_Glint > 0)
                 {
                     float sp = pow(saturate(RR_Noise(dirOS * 900) * 0.5 + 0.5), 18) * (1 - water);
@@ -107,7 +117,8 @@ Shader "RR/Planet"
                 surf += _CityColor.rgb * det.r * night * (1 - cloud * 0.85) * 1.6;
                 surf += _EmisColor.rgb * det.g * (0.35 + 0.65 * night) * (1 - cloud * 0.6);
                 float cDiff = RR_Diffuse(geoNdl, 0.18);
-                float3 cl = _CloudColor.rgb * (starCol * cDiff * ringSh + _RR_Ambient.rgb * 1.5);
+                float cloudDepth = lerp(0.76, 1.06, smoothstep(0.18, 0.72, cloud));
+                float3 cl = _CloudColor.rgb * (starCol * cDiff * ringSh * cloudDepth + _RR_Ambient.rgb * 1.5);
                 float3 col = lerp(surf, cl, saturate(cloud));
                 float fres = pow(1 - saturate(dot(geoN, Vv)), 3);
                 col += _AtmoColor.rgb * starCol * fres * RR_Diffuse(geoNdl, 0.3) * _AtmoStrength * 0.8;

@@ -1,134 +1,210 @@
-/* Rule and Ruin slice interface. Colour roles: charcoal and near-black blue surfaces, fine metallic framing,
-   restrained warm gold emphasis, ivory text, faction accents. States use shape and text as well as colour. */
+/* Fleet Operations UI kit. Layout and semantic states are shared; faction sheets override identity tokens. */
 :root {
-    --ivory: rgb(236, 230, 214);
-    --muted: rgb(150, 156, 166);
-    --dim: rgb(104, 110, 122);
-    --gold: rgb(201, 164, 92);
-    --gold-bright: rgb(232, 198, 120);
-    --metal: rgba(140, 150, 163, 0.55);
-    --metal-faint: rgba(140, 150, 163, 0.22);
-    --panel: rgba(10, 13, 20, 0.86);
-    --panel-solid: rgba(12, 15, 22, 0.97);
-    --danger: rgb(226, 86, 72);
-    --positive: rgb(120, 200, 150);
-    --silex: rgb(74, 168, 255);
-    --craigon: rgb(196, 82, 255);
-    color: var(--ivory);
-    font-size: 15px;
+    --navy: rgb(15, 28, 43); --navy-raised: rgb(25, 42, 59);
+    --paper: rgb(239, 243, 246); --paper-raised: rgb(250, 252, 254);
+    --ink: rgb(24, 43, 62); --ink-muted: rgb(77, 96, 112);
+    --accent: rgb(159, 199, 223); --accent-soft: rgb(215, 232, 242); --accent-ink: rgb(24, 66, 93);
+    --ivory: rgb(237, 245, 252); --muted: rgb(165, 187, 205); --dim: rgb(119, 140, 155);
+    --line: rgb(49, 73, 94); --line-light: rgb(197, 213, 226);
+    --control: rgb(25, 43, 61); --hover: rgb(36, 60, 81); --item: rgb(21, 37, 54);
+    --danger: rgb(183, 47, 56); --positive: rgb(111, 205, 171);
+    color: var(--ivory); font-size: 14px;
 }
-.layer { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
-.panel {
-    background-color: var(--panel);
-    border-width: 1px; border-color: var(--metal-faint);
-    border-top-color: var(--metal);
-    border-top-left-radius: 0; border-top-right-radius: 7px; border-bottom-left-radius: 7px; border-bottom-right-radius: 0;
-    padding: 12px 14px;
-}
-.panel-solid { background-color: var(--panel-solid); }
-.h-display { -unity-font-style: normal; font-size: 22px; color: var(--ivory); letter-spacing: 1px; -unity-text-align: middle-left; }
-.h-section { font-size: 12px; color: var(--gold); letter-spacing: 2px; margin-top: 10px; margin-bottom: 4px; -unity-font-style: bold; }
-.subtitle { font-size: 13px; color: var(--muted); -unity-font-style: italic; margin-bottom: 6px; white-space: normal; }
-.body { font-size: 14px; color: var(--ivory); white-space: normal; }
-.small { font-size: 12px; color: var(--muted); white-space: normal; }
-.num { font-size: 15px; color: var(--ivory); -unity-font-style: bold; }
-.row { flex-direction: row; align-items: center; }
+.layer { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.row { flex-direction: row; align-items: center; flex-shrink: 0; }
 .spacer { flex-grow: 1; }
-.divider { height: 1px; background-color: var(--metal-faint); margin-top: 8px; margin-bottom: 8px; }
-
-/* Buttons */
-.btn {
-    background-color: rgba(28, 33, 44, 0.95);
-    border-width: 1px; border-color: var(--metal-faint); border-top-color: var(--metal);
-    border-top-left-radius: 0; border-top-right-radius: 5px; border-bottom-left-radius: 5px; border-bottom-right-radius: 0;
-    color: var(--ivory); font-size: 14px; padding: 6px 12px; margin: 2px; -unity-text-align: middle-center;
-    transition-duration: 0.15s; transition-property: background-color, border-color;
+.panel { background-color: var(--navy); border-width: 1px; border-color: var(--line); padding: 16px; border-radius: 0; }
+.surface-light {
+    --ivory: var(--ink); --muted: var(--ink-muted); --dim: rgb(109, 126, 140);
+    --line: var(--line-light); --control: rgb(229, 237, 244); --hover: var(--accent-soft); --item: var(--paper-raised);
+    background-color: var(--paper); color: var(--ink);
 }
-.btn:hover { background-color: rgba(46, 52, 66, 0.98); border-color: var(--gold); }
-.btn:active { background-color: rgba(62, 56, 40, 1); }
-.btn-primary { border-color: var(--gold); color: var(--gold-bright); background-color: rgba(48, 40, 22, 0.95); }
-.btn-primary:hover { background-color: rgba(72, 58, 30, 1); }
-.btn-danger { border-color: rgba(226, 86, 72, 0.8); color: rgb(240, 170, 160); }
-.btn:disabled { color: var(--dim); border-color: rgba(90, 96, 108, 0.3); background-color: rgba(22, 25, 32, 0.8); }
-.btn-toggle-on { border-color: var(--gold); color: var(--gold-bright); }
-.btn-icon { width: 34px; height: 30px; padding: 0; }
+.h-display { font-size: 30px; color: var(--ivory); letter-spacing: 0.7px; white-space: normal; -unity-font-style: bold; margin: 4px 0 4px 0; }
+.h-section { font-size: 11px; -unity-font-style: bold; letter-spacing: 1.4px; color: var(--muted); margin-top: 12px; margin-bottom: 8px; }
+.eyebrow { color: var(--muted); font-size: 10px; letter-spacing: 1.6px; -unity-font-style: bold; margin: 0 0 6px 0; }
+.subtitle { color: var(--muted); font-size: 13px; white-space: normal; margin: 3px 0 14px 0; }
+.body { color: var(--ivory); font-size: 14px; white-space: normal; }
+.small { color: var(--muted); font-size: 12px; white-space: normal; }
+.num { color: var(--ivory); font-size: 14px; -unity-font-style: bold; }
+.text-danger { color: var(--danger); }
+.text-warning { color: rgb(245, 192, 151); }
+.divider { height: 1px; flex-shrink: 0; background-color: var(--line); margin: 10px 0; }
+.btn {
+    background-image: none; background-color: var(--control); color: var(--ivory); border-width: 1px; border-color: var(--line);
+    border-radius: 0; padding: 7px 12px; margin: 2px; min-height: 34px; font-size: 13px;
+    -unity-text-align: middle-center; white-space: normal; flex-shrink: 0;
+    transition-property: background-color, border-color; transition-duration: 0.12s;
+}
+.btn:hover { background-color: var(--hover); border-color: var(--accent); }
+.btn:active { background-color: var(--accent-soft); color: var(--ink); }
+.btn:focus { border-color: var(--accent-ink); border-bottom-width: 3px; }
+.btn-primary { background-color: var(--accent); color: var(--navy); border-color: var(--accent); -unity-font-style: bold; min-height: 36px; }
+.btn-primary:hover { background-color: rgb(191, 226, 252); color: var(--navy); border-color: var(--accent-ink); }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn:disabled { color: var(--dim); border-color: var(--line); background-color: var(--control); opacity: 0.65; }
+.btn-toggle-on { border-color: var(--accent); background-color: rgb(38, 69, 96); }
+.btn-icon { width: 30px; height: 30px; min-height: 30px; padding: 0; margin: 2px; }
+.btn-quiet { background-color: rgba(0,0,0,0); border-color: var(--line); }
+.reduced-motion .btn { transition-duration: 0s; }
 
-/* Top status strip */
-.topbar { position: absolute; left: 0; right: 0; top: 0; height: 46px; flex-direction: row; align-items: center; padding-left: 14px; padding-right: 10px;
-    background-color: rgba(8, 10, 16, 0.92); border-bottom-width: 1px; border-bottom-color: var(--metal); }
-.res { flex-direction: row; align-items: center; margin-right: 18px; }
-.res-value { font-size: 16px; -unity-font-style: bold; margin-left: 5px; }
-.res-income { font-size: 12px; color: var(--positive); margin-left: 4px; }
-.date { font-size: 14px; color: var(--ivory); margin-left: 8px; margin-right: 8px; min-width: 190px; -unity-text-align: middle-center; }
-.emblem-name { font-size: 18px; color: var(--ivory); margin-left: 8px; margin-right: 22px; letter-spacing: 1px; }
+/* Identity and resources. No game title in the gameplay chrome. */
+.topbar { position: absolute; top: 0; left: 0; right: 0; height: 72px; flex-direction: row; align-items: center; padding: 0 18px;
+    background-color: var(--navy); border-bottom-width: 2px; border-bottom-color: var(--accent); }
+.empire-identity { width: 250px; flex-direction: row; align-items: center; padding: 0; margin: 0 16px 0 0; border-width: 0; background-color: rgba(0,0,0,0); }
+.faction-crest { width: 40px; height: 40px; -unity-background-scale-mode: scale-to-fit; margin-right: 12px; flex-shrink: 0; }
+.emblem-name { font-size: 18px; -unity-font-style: bold; color: var(--ivory); letter-spacing: 1px; white-space: normal; }
+.identity-sub { color: var(--accent); font-size: 8px; letter-spacing: 1px; margin-top: 4px; }
+.res { flex-direction: row; align-items: center; border-left-width: 1px; border-left-color: var(--line); padding: 0 17px; flex-shrink: 0; }
+.res-detail { margin-left: 8px; }
+.res-label { font-size: 9px; letter-spacing: 1px; color: var(--muted); }
+.res-value { font-size: 20px; color: var(--ivory); -unity-font-style: bold; }
+.res-income { font-size: 11px; color: var(--positive); margin-left: 7px; }
+.time-status { width: 138px; align-items: center; margin-left: 6px; }
+.date { font-size: 13px; color: var(--ivory); }
+.speed-label { font-size: 9px; color: var(--accent); letter-spacing: 1px; margin-top: 3px; }
 
-/* Side panels */
-.outliner { position: absolute; left: 12px; top: 58px; width: 270px; }
-.inspector { position: absolute; right: 12px; top: 58px; width: 360px; max-height: 84%; }
-.ticker { position: absolute; left: 300px; right: 390px; bottom: 12px; align-items: center; }
-.ticker-line { font-size: 13px; color: var(--muted); -unity-text-align: middle-center; white-space: normal; }
-.toast { padding: 8px 14px; margin-top: 4px; font-size: 14px; white-space: normal; }
-.toast-ok { border-left-width: 3px; border-left-color: var(--gold); }
-.toast-bad { border-left-width: 3px; border-left-color: var(--danger); color: rgb(245, 196, 188); }
-.toast-danger { border-left-width: 3px; border-left-color: var(--danger); }
+/* Dossier and reusable tab/section/data components. */
+.inspector { position: absolute; top: 72px; bottom: 0; left: 0; width: 380px; padding: 22px 22px 14px 22px;
+    border-width: 0; border-right-width: 1px; border-right-color: var(--line-light); }
+.dossier-heading { flex-shrink: 0; }
+.kit-tabs { margin: 4px 0 8px 0; border-bottom-width: 1px; border-bottom-color: var(--line); }
+.kit-tab { flex-grow: 1; flex-basis: 0; min-width: 0; padding: 9px 2px; margin: 0; border-width: 0; border-bottom-width: 3px; border-bottom-color: rgba(0,0,0,0); background-color: rgba(0,0,0,0); font-size: 12px; }
+.kit-tab-selected { color: var(--accent-ink); border-bottom-color: var(--accent-ink); -unity-font-style: bold; }
+.kit-section { flex-shrink: 0; margin-top: 16px; margin-bottom: 10px; }
+.kit-section .h-section { margin: 0 8px; }
+.section-index { color: var(--accent-ink); font-size: 10px; -unity-font-style: bold; }
+.outliner .section-index { color: var(--accent); }
+.section-rule { height: 1px; background-color: var(--line); flex-grow: 1; }
+.data-row { padding: 9px 0; border-bottom-width: 1px; border-bottom-color: var(--line); align-items: flex-start; }
+.data-value { max-width: 62%; -unity-text-align: upper-right; flex-shrink: 1; }
+.item { padding: 12px; margin: 4px 0 0 0; background-color: var(--item); border-width: 0; border-left-width: 3px; border-left-color: rgba(0,0,0,0); border-bottom-width: 1px; border-bottom-color: var(--line); align-items: stretch; -unity-text-align: middle-left; }
+.item-selected { border-left-color: var(--accent-ink); background-color: var(--accent-soft); }
+.item-title { font-size: 15px; color: var(--ivory); -unity-font-style: bold; white-space: normal; margin: 0 0 3px 0; }
+.item-sub { font-size: 12px; color: var(--muted); white-space: normal; -unity-text-align: upper-left; }
+.world-row { padding-left: 62px; min-height: 76px; justify-content: center; }
+.world-glyph { position: absolute; left: 10px; top: 16px; width: 40px; height: 40px; }
+.dossier-footer { flex-shrink: 0; padding-top: 12px; margin-top: 10px; border-top-width: 1px; border-top-color: var(--line); }
+.dossier-footer .btn { margin: 0; min-height: 38px; }
+.roster-item { padding: 10px 0; flex-shrink: 0; border-bottom-width: 1px; border-bottom-color: var(--line); }
+.roster-info { flex-grow: 1; flex-shrink: 1; margin-left: 8px; }
 
-.item { flex-shrink: 0; padding: 6px 8px; margin-top: 2px; border-left-width: 2px; border-left-color: rgba(0,0,0,0); background-color: rgba(255,255,255,0.025); }
-.item:hover { background-color: rgba(255,255,255,0.07); }
-.item-selected { border-left-color: var(--gold); background-color: rgba(201, 164, 92, 0.12); }
-.item-title { font-size: 14px; color: var(--ivory); }
-.item-sub { font-size: 12px; color: var(--muted); white-space: normal; }
-.tag { font-size: 11px; padding: 1px 6px; margin-left: 4px; border-width: 1px; border-color: var(--metal-faint); color: var(--muted);
-    border-top-right-radius: 3px; border-bottom-left-radius: 3px; }
-.tag-danger { border-color: var(--danger); color: rgb(240, 170, 160); }
-.tag-gold { border-color: var(--gold); color: var(--gold-bright); }
-
-.bar { height: 6px; background-color: rgba(255,255,255,0.08); margin-top: 3px; }
-.bar-fill { height: 6px; background-color: var(--gold); }
-.bar-hp { background-color: rgb(120, 200, 150); }
+/* The dock replaces opposing sidebars. Portraits are renders of actual in-game hulls. */
+.command-dock { position: absolute; bottom: 0; left: 380px; right: 0; height: 220px; align-items: stretch; background-color: var(--navy);
+    border-top-width: 2px; border-top-color: var(--accent); }
+.outliner { width: 46%; padding: 0 20px 8px 20px; }
+.outliner .kit-section { margin-top: 17px; }
+.outliner .unity-scroll-view__content-container { flex-direction: row; align-items: stretch; }
+.fleet-card { width: 210px; margin: 0 10px 0 0; padding: 10px 12px; background-color: var(--navy-raised); align-items: stretch; -unity-text-align: upper-left; border-top-width: 2px; }
+.fleet-card .item-title { font-size: 13px; margin-left: 8px; }
+.fleet-card .item-sub { margin-top: 5px; }
+.fleet-card-selected { border-top-color: var(--accent); background-color: rgb(29, 55, 78); }
+.fleet-count { font-size: 13px; color: var(--ivory); -unity-font-style: bold; }
+.fleet-status { font-size: 9px; color: var(--accent); letter-spacing: 1px; margin-top: 4px; }
+.inspector-actions { flex-grow: 1; flex-basis: 0; padding: 18px 24px; border-left-width: 1px; border-left-color: var(--line-light); }
+.command-body { align-items: center; flex-grow: 1; flex-shrink: 1; }
+.command-info { flex-grow: 1; flex-shrink: 1; min-width: 0; }
+.command-title { font-size: 22px; -unity-font-style: bold; color: var(--ink); white-space: normal; margin-bottom: 4px; }
+.command-info .btn { margin: 7px 0 2px 0; flex-grow: 1; }
+.command-info .small { margin-top: 2px; }
+.ship-portrait { width: 185px; height: 126px; flex-shrink: 0; margin-right: 18px; -unity-background-scale-mode: scale-to-fit; align-items: center; justify-content: center; }
+.ship-portrait-small { width: 78px; height: 54px; margin-right: 8px; }
+.item > .ship-portrait-small { width: 100%; height: 68px; margin-right: 0; }
+.cost-row { margin-top: 6px; margin-bottom: 2px; }
+.cost-value { margin-right: 16px; }
+.cost-value .num { margin-left: 5px; }
+.context-strip { position: absolute; top: 102px; left: 414px; width: 340px; }
+.context-title { color: rgb(231, 243, 252); font-size: 26px; letter-spacing: 0.5px; -unity-font-style: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.95); }
+.context-strip .eyebrow { color: var(--accent); text-shadow: 0 1px 4px rgba(0,0,0,0.95); }
+.ticker { position: absolute; top: 96px; right: 24px; width: 360px; background-color: rgba(10, 26, 43, 0.95); border-left-width: 2px; border-left-color: var(--accent); padding: 10px 14px; }
+.ticker .eyebrow { font-size: 9px; letter-spacing: 1px; margin-bottom: 0; }
+.ticker-line { font-size: 12px; color: var(--muted); white-space: normal; margin-top: 6px; }
+.log-button { min-height: 22px; padding: 2px 7px; font-size: 10px; margin: 0; }
+.strategy-toasts { position: absolute; left: 410px; right: 400px; top: 180px; align-items: center; }
+.strategy-hint { position: absolute; left: 410px; right: 26px; bottom: 240px; -unity-text-align: middle-center; }
+.toast { padding: 10px 16px; margin-top: 5px; font-size: 14px; white-space: normal; }
+.toast-ok { border-left-width: 3px; border-left-color: var(--accent); }
+.toast-bad, .toast-danger { border-left-width: 3px; border-left-color: rgb(238, 124, 117); color: rgb(255, 210, 202); }
+.tag { font-size: 10px; padding: 2px 6px; margin-top: 4px; border-width: 1px; border-color: var(--line); color: var(--muted); align-self: flex-start; }
+.tag-danger { border-color: var(--danger); color: var(--danger); }
+.tag-gold, .leader { color: var(--accent-ink); }
+.bar { height: 4px; background-color: var(--line); flex-shrink: 0; margin: 6px 0; }
+.bar-fill { height: 4px; background-color: var(--accent-ink); }
+.bar-hp { background-color: rgb(49, 134, 111); }
 .bar-hp-low { background-color: var(--danger); }
 
-/* Labels anchored to the world */
-.label { position: absolute; font-size: 13px; color: var(--ivory); -unity-text-align: middle-center; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
-.label-sector { font-size: 26px; letter-spacing: 3px; color: rgba(240, 234, 220, 0.9); text-shadow: 0 0 6px rgba(0,0,0,0.95); }
-.label-sector-sub { font-size: 14px; color: rgba(222, 220, 228, 0.78); -unity-font-style: italic; text-shadow: 0 0 4px rgba(0,0,0,0.95); }
-.label-emblem { -unity-background-scale-mode: scale-to-fit; opacity: 0.92; }
-.label-system { font-size: 13px; }
+/* Diegetic labels stay legible against space, independent of the light dossier. */
+.label { position: absolute; color: rgb(236, 245, 252); font-size: 13px; -unity-text-align: middle-center; text-shadow: 0 1px 3px rgba(0,0,0,0.95); }
+.label-sector { font-size: 24px; letter-spacing: 3px; color: rgba(240, 246, 253, .9); }
+.label-sector-sub { font-size: 14px; color: rgba(222, 234, 248, .8); -unity-font-style: italic; }
+.label-emblem { -unity-background-scale-mode: scale-to-fit; opacity: .92; }
 .label-owned { color: rgb(190, 222, 255); }
 .label-hostile { color: rgb(232, 190, 255); }
-.label-fleet { font-size: 12px; color: var(--gold-bright); }
-.label-planet { font-size: 13px; color: var(--ivory); }
+.label-fleet { font-size: 12px; color: var(--accent); }
+.label-planet { font-size: 13px; background-color: rgba(6, 18, 31, .88); padding: 3px 8px; border-bottom-width: 1px; border-bottom-color: var(--accent); }
 
-/* Modals */
-.modal-back { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(2, 3, 6, 0.55); align-items: center; justify-content: center; }
-.modal { width: 1180px; max-height: 92%; flex-direction: column; }
-.modal-title { font-size: 28px; letter-spacing: 2px; color: var(--ivory); }
-.ship-row { flex-direction: row; align-items: center; padding: 6px 8px; margin-top: 3px; background-color: rgba(255,255,255,0.03); border-left-width: 3px; border-left-color: rgba(0,0,0,0); }
-.ship-row:hover { background-color: rgba(255,255,255,0.07); }
-.ship-row-on { border-left-color: var(--gold); background-color: rgba(201, 164, 92, 0.055); }
-.ship-row-off { opacity: 0.6; }
-.col-name { width: 230px; }
-.col-stat { width: 66px; -unity-text-align: middle-center; }
+/* Modal and battle surfaces use the same component roles. */
+.modal-back { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(2, 12, 23, .72); align-items: center; justify-content: center; }
+.modal { max-height: 92%; padding: 26px; border-top-width: 3px; border-top-color: var(--accent-ink); }
+.modal-title { font-size: 27px; -unity-font-style: bold; color: var(--ink); letter-spacing: 1px; margin-bottom: 12px; }
+.ship-row { flex-direction: row; align-items: center; padding: 10px; margin-top: 3px; flex-shrink: 0; background-color: var(--item); border-left-width: 3px; border-left-color: rgba(0,0,0,0); border-bottom-width: 1px; border-bottom-color: var(--line); }
+.ship-row:hover { background-color: var(--hover); }
+.ship-row-on { border-left-color: var(--accent-ink); background-color: var(--accent-soft); }
+.ship-row-off { opacity: .72; }
+.col-name { width: 210px; }
+.col-stat { width: 56px; -unity-text-align: middle-center; }
 .col-text { flex-grow: 1; flex-shrink: 1; }
 .budget { font-size: 16px; }
 .budget-over { color: var(--danger); }
-
-.loading { position: absolute; left: 0; right: 0; bottom: 70px; align-items: center; }
+.loading { position: absolute; left: 0; right: 0; bottom: 235px; align-items: center; }
 .fade { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.battle-top { position: absolute; top: 0; left: 0; right: 0; height: 64px; flex-direction: row; align-items: center; justify-content: center; background-color: var(--navy); border-bottom-width: 2px; border-bottom-color: var(--accent); }
+.battle-top .emblem-name { margin-right: 28px; }
+.battle-left { position: absolute; left: 16px; top: 84px; width: 266px; max-height: 76%; }
+.battle-right { position: absolute; right: 16px; top: 84px; width: 340px; max-height: 76%; }
+.battle-actions { position: absolute; bottom: 16px; left: 0; right: 0; flex-direction: row; justify-content: center; }
+.battle-preview { position: absolute; bottom: 78px; left: 290px; right: 360px; align-items: center; }
+.unit-card { padding: 10px 8px; flex-shrink: 0; margin-top: 4px; background-color: var(--item); border-left-width: 3px; border-left-color: rgba(0,0,0,0); }
+.unit-card-active { border-left-color: var(--accent-ink); background-color: var(--accent-soft); }
+.unit-card-done { opacity: .55; }
+.unit-card-dead { opacity: .3; }
+.kit-scroll { min-height: 0; min-width: 0; }
+.kit-scroll .unity-scroller--vertical { width: 7px; min-width: 7px; margin-left: 5px; }
+.kit-scroll .unity-scroller--horizontal { height: 7px; min-height: 7px; margin-top: 5px; }
+.kit-scroll .unity-base-slider { margin: 0; }
+.kit-scroll .unity-base-slider__tracker { background-color: var(--line); border-width: 0; }
+.kit-scroll .unity-base-slider__dragger { background-color: var(--muted); border-width: 0; border-radius: 0; min-width: 5px; min-height: 5px; }
+.kit-scroll .unity-base-slider__dragger-border { border-width: 0; }
+.kit-scroll .unity-scroll-view__content-container { padding-right: 3px; }
+.unity-toggle { margin-top: 8px; margin-bottom: 8px; color: var(--ivory); }
+.unity-base-field__label { color: var(--ivory); }
+.unity-base-slider__dragger { background-color: var(--accent-ink); }
 
-/* Battle HUD */
-.battle-top { position: absolute; left: 0; right: 0; top: 0; height: 50px; flex-direction: row; align-items: center; justify-content: center;
-    background-color: rgba(8, 10, 16, 0.9); border-bottom-width: 1px; border-bottom-color: var(--metal); }
-.battle-left { position: absolute; left: 12px; top: 62px; width: 260px; }
-.battle-right { position: absolute; right: 12px; top: 62px; width: 340px; }
-.battle-actions { position: absolute; left: 0; right: 0; bottom: 14px; flex-direction: row; justify-content: center; }
-.battle-preview { position: absolute; left: 0; right: 0; bottom: 70px; align-items: center; }
-.unit-card { padding: 5px 7px; margin-top: 3px; background-color: rgba(255,255,255,0.03); border-left-width: 3px; border-left-color: rgba(0,0,0,0); }
-.unit-card-active { border-left-color: var(--gold); }
-.unit-card-done { opacity: 0.55; }
-.unit-card-dead { opacity: 0.3; }
-.leader { color: var(--gold-bright); }
-.row { flex-shrink: 0; }
-.bar { flex-shrink: 0; }
-.unit-card { flex-shrink: 0; }
-.ship-row { flex-shrink: 0; }
-.inspector { flex-direction: column; }
+/* Logical panel pixels: enlarged accessibility scale gets the compact composition. */
+.compact .topbar { padding-left: 12px; padding-right: 10px; }
+.compact .empire-identity { width: 224px; margin-right: 6px; }
+.compact .emblem-name { font-size: 16px; }
+.compact .res { padding-left: 10px; padding-right: 10px; }
+.compact .res-value { font-size: 18px; }
+.compact .inspector { width: 310px; padding: 18px 16px 12px 16px; }
+.compact .h-display { font-size: 26px; }
+.compact .data-row { padding-top: 7px; padding-bottom: 7px; }
+.compact .command-dock { left: 310px; height: 210px; }
+.compact .outliner { width: 43%; padding-left: 14px; padding-right: 14px; }
+.compact .fleet-card { width: 184px; padding: 9px; }
+.compact .inspector-actions { padding: 14px 18px; }
+.compact .ship-portrait { width: 120px; height: 104px; margin-right: 12px; }
+.compact .ship-portrait-small { width: 66px; height: 48px; margin-right: 6px; }
+.compact .item > .ship-portrait-small { width: 100%; height: 60px; }
+.compact .command-title { font-size: 19px; }
+.compact .context-strip { left: 338px; top: 98px; width: 260px; }
+.compact .context-title { font-size: 23px; }
+.compact .ticker { width: 310px; top: 92px; right: 18px; }
+.compact .strategy-toasts { left: 335px; right: 340px; }
+.compact .strategy-hint { left: 335px; bottom: 230px; }
+.compact .col-name { width: 175px; }
+.compact .col-stat { width: 48px; }
+.compact .modal { padding: 20px; }
+.compact .battle-top .emblem-name { font-size: 15px; margin-right: 16px; }
+
+.turn-friendly { color: var(--accent); }
+.turn-enemy { color: rgb(217, 179, 255); }

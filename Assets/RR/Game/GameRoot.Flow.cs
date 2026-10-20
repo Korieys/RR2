@@ -75,7 +75,7 @@ namespace RR.Game
             var tintA = secA != null && secA.OwnerId != null ? Look.PolityColor(G, secA.OwnerId) : new Color(0.35f, 0.32f, 0.6f);
             Sky.SetColor("_BandTintA", tintA * 0.8f + new Color(0.1f, 0.1f, 0.12f));
             Sky.SetColor("_BandTintB", (secA != null && secA.OwnerId == "silex" ? Look.PolityColor(G, "craigon") : new Color(0.45f, 0.5f, 0.75f)) * 0.7f);
-            Sky.SetFloat("_BandStrength", 0.9f); Sky.SetFloat("_StarStrength", 1.15f);
+            Sky.SetFloat("_BandStrength", 0.34f); Sky.SetFloat("_StarStrength", 0.62f);
             Sky.SetVector("_GalNormal", new Vector4(0.12f, 0.95f, 0.28f, 0));
             Scale = ViewScale.System;
             // Start far out along the same view direction (the star sits where it was in the galaxy frame), then dolly in.
@@ -126,6 +126,9 @@ namespace RR.Game
             
         }
 
+        static Vector3 PlanetFramingFocus(Vector3 center, float radius, float yaw, float pitch)
+            => center - Quaternion.Euler(pitch, yaw, 0) * new Vector3(radius * .38f, radius * .07f, 0);
+
         public void InspectPlanet(string planetId)
         {
             var p = G.GetPlanet(planetId);
@@ -140,7 +143,10 @@ namespace RR.Game
             var toStar = (LocalSystem.Star.position - pv.Root.position).normalized;
             float dayYaw = Mathf.Atan2(toStar.x, toStar.z) * Mathf.Rad2Deg + 180f;
             Rig.Limits = new CamLimits { MinDistance = pv.Radius * 1.25f, MaxDistance = pv.Radius * 9f, MinPitch = -45, MaxPitch = 75, FocusBounds = new Bounds(pv.Root.position, Vector3.one * 1e4f) };
-            Rig.TransitionTo(new CamPose { Focus = pv.Root.position, Yaw = dayYaw + 32, Pitch = 14, Distance = pv.Radius * 3.1f, Fov = 38 }, Settings.ReducedMotion ? 0.12f : 0.95f);
+            // Compose the inspection shot in the open space beside the Prismatic dossier.
+            // This is a view preset only: selection, orbit input and system bookmarks are unchanged.
+            var framingFocus = PlanetFramingFocus(pv.Root.position, pv.Radius, dayYaw + 62, 14);
+            Rig.TransitionTo(new CamPose { Focus = framingFocus, Yaw = dayYaw + 62, Pitch = 14, Distance = pv.Radius * 4.1f, Fov = 38 }, Settings.ReducedMotion ? 0.12f : 0.95f);
             Audio.Play("transition_in", 0.4f);
             BuildSystemLabels();
             UI.Strategy.RefreshAll();
@@ -175,7 +181,7 @@ namespace RR.Game
                 Rig.TransitionTo(to, 0.35f);
             }
             else if (Scale == ViewScale.System) Rig.TransitionTo(new CamPose { Focus = LocalSystem.FramingFocus, Yaw = Rig.Current.Yaw, Pitch = 24, Distance = LocalSystem.OuterRadius * 0.62f, Fov = 42 }, 0.35f);
-            else if (Scale == ViewScale.Planet) { var pv = LocalSystem.Planet(Selection.PlanetId); if (pv != null) { var to = Rig.Current; to.Distance = pv.Radius * 3.1f; to.Pitch = 14; Rig.TransitionTo(to, 0.35f); } }
+            else if (Scale == ViewScale.Planet) { var pv = LocalSystem.Planet(Selection.PlanetId); if (pv != null) { var to = Rig.Current; to.Distance = pv.Radius * 4.1f; to.Pitch = 14; Rig.TransitionTo(to, 0.35f); } }
             else if (Scale == ViewScale.Battle) Rig.TransitionTo(BattlePose(), 0.35f);
         }
 
@@ -267,6 +273,7 @@ namespace RR.Game
         void FinishBattle()
         {
             _resultShown = true;
+            if(GroundExercise) { _resultDone=LeaveGroundExercise; UI.ShowResult(new BattleOutcome{WinnerSeat=Battle.S.Winner,Reason=Battle.S.VictoryReason.ToString(),Rounds=Battle.S.Round},_setup,"Proving grounds complete","The exercise is complete. Your campaign is unchanged.",CompleteResult);return; }
             var o = BattleBridge.Extract(_setup, Battle.S);
             var e = G.GetEngagement(_setup.EngagementId);
             var sys = G.GetSystem(e.SystemId);

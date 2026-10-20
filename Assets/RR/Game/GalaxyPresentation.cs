@@ -874,7 +874,11 @@ namespace RR.Game
             if (f.Moving) dir = GalaxyScale.ToWorld(_g.GetSystem(f.Order.Path[0])) - GalaxyScale.ToWorld(_g.GetSystem(f.SystemId));
             else dir = new Vector3(0, 0, 1);
             dir.y = 0;
-            if (dir.sqrMagnitude > 1e-4f) t.localRotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
+            if (dir.sqrMagnitude > 1e-4f)
+            {
+                var motion=t.GetComponent<FleetMotion>() ?? t.gameObject.AddComponent<FleetMotion>();
+                motion.SetCourse(Quaternion.LookRotation(dir.normalized,Vector3.up),f.Moving,Look.PolityColor(_g,f.OwnerId));
+            }
         }
 
         void LateUpdate()

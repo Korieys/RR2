@@ -70,13 +70,13 @@ namespace RR.Game
             var sc = Look.StarColor(Data.Star);
             var starMat = body.GetComponent<MeshRenderer>().sharedMaterial;
             starMat.SetColor("_Color", sc);
-            starMat.SetFloat("_Intensity", Data.Star == StarClass.Dim ? 1.1f : 1.7f);
+            starMat.SetFloat("_Intensity", Data.Star == StarClass.Dim ? 1.5f : 2.8f);
             var corona = Child(Star, "Corona", MeshFactory.Quad(), new Material(lib.corona));
             corona.transform.localScale = Vector3.one * StarRadius * 4.5f;
             var coronaMat = corona.GetComponent<MeshRenderer>().sharedMaterial;
             coronaMat.SetColor("_Color", sc);
             coronaMat.SetFloat("_StarRadius", 1f / 4.5f);
-            coronaMat.SetFloat("_Intensity", Data.Star == StarClass.Dim ? 0.35f : 0.6f);
+            coronaMat.SetFloat("_Intensity", Data.Star == StarClass.Dim ? 0.3f : 0.72f);
 
             // Planets: bake (or reuse) their surfaces off the main thread.
             var jobs = new List<(Planet p, PlanetBaker.Job job)>();
@@ -116,7 +116,7 @@ namespace RR.Game
 
         static int BakeSize(Planet p)
         {
-            return p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant && p.Size > 2 ? 768 : 384;
+            return p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant && p.Size > 2 ? 768 : 512;
         }
 
         static GameObject Child(Transform parent, string name, Mesh mesh, Material mat)
@@ -133,6 +133,7 @@ namespace RR.Game
 
         public static void ApplyShipMaterial(GameObject model, string defId)
         {
+            if (model.GetComponent<UnitVisual>() != null) return;
             var m = Look.ShipMaterial(defId);
             foreach (var mr in model.GetComponentsInChildren<MeshRenderer>())
             {
@@ -248,7 +249,7 @@ namespace RR.Game
             switch (k)
             {
                 case PlanetKind.Crystal: return new KindStyle { atmo = new Color(0.36f, 0.62f, 1f), sunset = new Color(1f, 0.6f, 0.4f), cloud = new Color(0.96f, 0.97f, 1f),
-                    city = new Color(0.55f, 0.85f, 1f), haze = 1.0f, clouds = 0.62f, atmoShell = 1.7f, thickness = 0.045f };
+                    city = new Color(0.55f, 0.85f, 1f), haze = 0.72f, clouds = 0.52f, atmoShell = 1.25f, thickness = 0.032f };
                 case PlanetKind.Terran: return new KindStyle { atmo = new Color(0.35f, 0.58f, 1f), sunset = new Color(1f, 0.55f, 0.32f), cloud = Color.white,
                     city = new Color(1f, 0.78f, 0.45f), haze = 1.0f, clouds = 0.85f, atmoShell = 1.6f, thickness = 0.045f };
                 case PlanetKind.Ocean: return new KindStyle { atmo = new Color(0.32f, 0.6f, 1f), sunset = new Color(1f, 0.55f, 0.32f), cloud = Color.white,
@@ -322,10 +323,11 @@ namespace RR.Game
                     }
                     t.localPosition = FormationSlot(i);
                     t.localRotation = Quaternion.identity;
+                    ShipSuspension.Attach(t,s.Uid);
                     float dmg = 1f - s.Hp / (float)Mathf.Max(1, ShipCatalog.MaxHp(s.DefId));
                     var block = new MaterialPropertyBlock();
                     if (dmg > 0.05f) block.SetFloat("_Damage", dmg);
-                    foreach (var mr in t.GetComponentsInChildren<MeshRenderer>()) mr.SetPropertyBlock(block);
+                    foreach (var mr in t.GetComponentsInChildren<Renderer>()) mr.SetPropertyBlock(block);
                 }
             }
         }
@@ -371,7 +373,7 @@ namespace RR.Game
         void Update()
         {
             if (!Ready) return;
-            float t = Time.unscaledDeltaTime * (Settings.ReducedMotion ? 0.3f : 1f);
+            float t = Time.unscaledDeltaTime * (Settings.ReducedMotion ? 0f : 1f);
             _spin += t;
             foreach (var p in Planets)
             {
@@ -386,7 +388,7 @@ namespace RR.Game
             var sc = Look.StarColor(Data.Star);
             Shader.SetGlobalVector("_RR_StarPosWS", new Vector4(Star.position.x, Star.position.y, Star.position.z, StarRadius));
             Shader.SetGlobalVector("_RR_StarColor", sc * Look.StarLight(Data.Star));
-            Shader.SetGlobalVector("_RR_Ambient", new Vector4(0.010f, 0.012f, 0.018f, 0.22f));
+            Shader.SetGlobalVector("_RR_Ambient", new Vector4(0.016f, 0.022f, 0.034f, 0.25f));
         }
     }
 }

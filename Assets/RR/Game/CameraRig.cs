@@ -68,12 +68,14 @@ namespace RR.Game
             return rig;
         }
 
-        public void Snap(CamPose p) { _tween = false; _panVel = Vector3.zero; Target = Current = Clamp(p); Apply(); }
+        void ResetVelocity() { _focusVel=_panVel=Vector3.zero; _distVel=_yawVel=_pitchVel=0; _pannedThisFrame=false; }
+
+        public void Snap(CamPose p) { _tween = false; _onDone=null; ResetVelocity(); Target = Current = Clamp(p); Apply(); }
 
         public void TransitionTo(CamPose to, float seconds, System.Action done = null)
         {
             if (Settings.ReducedMotion) seconds = Mathf.Min(seconds, 0.12f);
-            _panVel = Vector3.zero;
+            ResetVelocity();
             _from = Current; _to = Clamp(to); _t = 0; _dur = Mathf.Max(0.01f, seconds); _tween = true; _onDone = done;
         }
 
@@ -82,7 +84,7 @@ namespace RR.Game
         {
             if (!_tween) return;
             _tween = false;
-            Target = Current = _to;
+            Target = Current = _to; ResetVelocity();
             Apply();
             var d = _onDone; _onDone = null; d?.Invoke();
         }
@@ -122,14 +124,16 @@ namespace RR.Game
             float dt = Time.unscaledDeltaTime;
             if (_tween)
             {
-                _t += dt / _dur;
+                _t = Settings.ReducedMotion ? 1 : _t + dt / _dur;
                 float e = _t >= 1 ? 1 : Smoother(_t);
                 Current = CamPose.Lerp(_from, _to, e);
+                // Resolve subject acquisition just before the dolly settles, preserving exact endpoint framing.
+                if(!Settings.ReducedMotion) Current.Focus=Vector3.Lerp(_from.Focus,_to.Focus,MotionCurve.Smooth(_t/.9f));
                 Target = Current;
                 if (_t >= 1)
                 {
                     _tween = false;
-                    Current = Target = _to;
+                    Current = Target = _to; ResetVelocity();
                     var d = _onDone; _onDone = null; d?.Invoke();
                 }
             }

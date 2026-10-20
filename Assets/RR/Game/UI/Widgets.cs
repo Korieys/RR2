@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace RR.Game
 {
-    public enum IconKind { Energy, Materials, Credits, Influence, Fleet, Crown, Planet, Star, Pause, Play, Fast, Faster, Layers, Save, Load, Gear, Warning, Shield, Target, Move, Wait }
+    public enum IconKind { Energy, Materials, Credits, Influence, Fleet, Crown, Planet, Star, Pause, Play, Fast, Faster, Layers, Save, Load, Gear, Warning, Shield, Target, Move, Wait, Overview, Population, Development, Shipyard, Foundry, Location, Flag }
 
     // Vector icons drawn with Painter2D (crisp at every UI scale, no texture dependencies).
     public sealed class Icon : VisualElement
@@ -33,6 +33,28 @@ namespace RR.Game
             Vector2 P(float x, float y) => new Vector2(cx + x * s * 0.5f, cy + y * s * 0.5f);
             switch (Kind)
             {
+                case IconKind.Overview:
+                    p.BeginPath(); p.MoveTo(P(-.6f,-.85f)); p.LineTo(P(.2f,-.85f)); p.LineTo(P(.65f,-.4f)); p.LineTo(P(.65f,.85f)); p.LineTo(P(-.6f,.85f)); p.ClosePath(); p.Stroke();
+                    p.BeginPath(); p.MoveTo(P(.15f,-.85f)); p.LineTo(P(.15f,-.35f)); p.LineTo(P(.65f,-.35f)); p.MoveTo(P(-.3f,.05f)); p.LineTo(P(.35f,.05f)); p.MoveTo(P(-.3f,.4f)); p.LineTo(P(.35f,.4f)); p.Stroke(); break;
+                case IconKind.Population:
+                    p.BeginPath(); p.Arc(P(-.23f,-.4f),s*.18f,0,360); p.Stroke();
+                    p.BeginPath(); p.Arc(P(.45f,-.28f),s*.14f,220,510); p.Stroke();
+                    p.BeginPath(); p.MoveTo(P(-.8f,.7f)); p.LineTo(P(-.8f,.36f)); p.LineTo(P(-.45f,.08f)); p.LineTo(P(.05f,.08f)); p.LineTo(P(.4f,.36f)); p.LineTo(P(.4f,.7f)); p.ClosePath(); p.Stroke();
+                    p.BeginPath(); p.MoveTo(P(.55f,.15f)); p.LineTo(P(.85f,.4f)); p.LineTo(P(.85f,.7f)); p.Stroke(); break;
+                case IconKind.Development:
+                    for(int i=0;i<3;i++) { float x=-.65f+i*.5f, y=.3f-i*.45f; p.BeginPath(); p.MoveTo(P(x,.65f)); p.LineTo(P(x,y)); p.LineTo(P(x+.3f,y)); p.LineTo(P(x+.3f,.65f)); p.Stroke(); }
+                    p.BeginPath(); p.MoveTo(P(-.9f,.9f)); p.LineTo(P(.9f,.9f)); p.Stroke(); break;
+                case IconKind.Shipyard:
+                    p.BeginPath(); p.MoveTo(P(0,-.85f)); p.LineTo(P(.3f,-.35f)); p.LineTo(P(.85f,-.12f)); p.LineTo(P(.85f,.4f)); p.LineTo(P(.3f,.65f)); p.LineTo(P(-.3f,.65f)); p.LineTo(P(-.85f,.4f)); p.LineTo(P(-.85f,-.12f)); p.LineTo(P(-.3f,-.35f)); p.ClosePath(); p.Stroke();
+                    p.BeginPath(); p.MoveTo(P(-.85f,.15f)); p.LineTo(P(.85f,.15f)); p.MoveTo(P(-.3f,.65f)); p.LineTo(P(-.3f,.9f)); p.MoveTo(P(.3f,.65f)); p.LineTo(P(.3f,.9f)); p.Stroke(); break;
+                case IconKind.Foundry:
+                    p.BeginPath(); p.MoveTo(P(-.8f,-.2f)); p.LineTo(P(-.42f,-.7f)); p.LineTo(P(.42f,-.7f)); p.LineTo(P(.8f,-.2f)); p.LineTo(P(0,.9f)); p.ClosePath(); p.Stroke();
+                    p.BeginPath(); p.MoveTo(P(-.8f,-.2f)); p.LineTo(P(.8f,-.2f)); p.MoveTo(P(-.42f,-.7f)); p.LineTo(P(-.26f,-.2f)); p.LineTo(P(0,.9f)); p.LineTo(P(.26f,-.2f)); p.LineTo(P(.42f,-.7f)); p.Stroke(); break;
+                case IconKind.Location:
+                    p.BeginPath(); p.Arc(P(0,-.3f),s*.34f,180,360); p.LineTo(P(0,.95f)); p.ClosePath(); p.Stroke();
+                    p.BeginPath(); p.Arc(P(0,-.3f),s*.1f,0,360); p.Fill(); break;
+                case IconKind.Flag:
+                    p.BeginPath(); p.MoveTo(P(-.65f,.85f)); p.LineTo(P(-.65f,-.9f)); p.MoveTo(P(-.6f,-.7f)); p.LineTo(P(.0f,-.55f)); p.LineTo(P(.7f,-.75f)); p.LineTo(P(.6f,.05f)); p.LineTo(P(0,.25f)); p.LineTo(P(-.6f,.1f)); p.Stroke(); break;
                 case IconKind.Energy:
                     p.BeginPath(); p.MoveTo(P(0.15f, -0.95f)); p.LineTo(P(-0.55f, 0.12f)); p.LineTo(P(-0.02f, 0.12f)); p.LineTo(P(-0.18f, 0.95f));
                     p.LineTo(P(0.55f, -0.2f)); p.LineTo(P(0.02f, -0.2f)); p.ClosePath(); p.Fill(); break;
@@ -100,15 +122,38 @@ namespace RR.Game
         }
     }
 
+
+    public sealed class WorldGlyph : VisualElement
+    {
+        public WorldGlyph(RR.Strategy.PlanetKind kind)
+        {
+            AddToClassList("world-glyph"); pickingMode = PickingMode.Ignore;
+            generateVisualContent += ctx =>
+            {
+                var p = ctx.painter2D;
+                var c = kind == RR.Strategy.PlanetKind.Toxic ? new Color(0.46f, 0.59f, 0.25f) : kind == RR.Strategy.PlanetKind.GasGiant ? new Color(0.68f, 0.51f, 0.31f) : kind == RR.Strategy.PlanetKind.Barren ? new Color(0.51f, 0.49f, 0.45f) : kind == RR.Strategy.PlanetKind.Volcanic ? new Color(0.7f, 0.33f, 0.2f) : new Color(0.3f, 0.55f, 0.72f);
+                p.fillColor = c * 0.2f; p.strokeColor = c; p.lineWidth = 1;
+                p.BeginPath(); p.Arc(new Vector2(22,22), 17, 0, 360); p.ClosePath(); p.Fill(); p.Stroke();
+                p.strokeColor = c * 0.65f;
+                p.BeginPath(); p.MoveTo(new Vector2(7,17)); p.LineTo(new Vector2(37,17)); p.MoveTo(new Vector2(7,27)); p.LineTo(new Vector2(37,27)); p.Stroke();
+                p.strokeColor = c; p.BeginPath(); p.Arc(new Vector2(22,22), 21, 220, 295); p.Stroke();
+            };
+        }
+    }
+
     public static class UIX
     {
-        public static VisualElement Div(params string[] classes) { var v = new VisualElement(); foreach (var c in classes) v.AddToClassList(c); return v; }
-        public static Label Text(string text, params string[] classes) { var l = new Label(text); foreach (var c in classes) l.AddToClassList(c); return l; }
+        public static VisualElement Div(params string[] classes) { var v = new VisualElement(); foreach (var c in classes) v.AddToClassList(c); Prismatic.Decorate(v); return v; }
+        public static Label Text(string text, params string[] classes) { var l = new Label(text); foreach (var c in classes) l.AddToClassList(c);
+            foreach (var c in classes) if (c == "summary-value" || c == "summary-status" || c == "roster-hull" || c == "fleet-selection" || c == "setting-title" || c == "setting-value" || c == "shortcut-key" || c == "item-title" || c == "command-title" || c == "orbit-title" || c == "data-value" || c == "yield-number" || c == "res-value" || c == "fleet-count" || c == "num" || c == "h-section" || c == "emblem-name" || c == "modal-title")
+                { if (ArtLibrary.I.bodySemiBold != null) l.style.unityFontDefinition = FontDefinition.FromFont(ArtLibrary.I.bodySemiBold); break; }
+            Prismatic.Decorate(l); return l; }
         public static Button Btn(string text, Action click, params string[] classes)
         {
-            var b = new Button(click) { text = text };
+            var b = new PrismaticButton(click) { text = text };
             b.AddToClassList("btn");
             foreach (var c in classes) b.AddToClassList(c);
+            Prismatic.Decorate(b);
             return b;
         }
         public static Button IconBtn(IconKind icon, Action click, string tooltip)
@@ -118,6 +163,7 @@ namespace RR.Game
             var ic = new Icon(icon, new Color32(236, 230, 214, 255), 15);
             ic.style.alignSelf = Align.Center;
             b.Add(ic);
+            Prismatic.Decorate(b);
             return b;
         }
         public static VisualElement Bar(float fill, string fillClass = null)

@@ -114,7 +114,7 @@ namespace RR.Game
                         var t2 = Vector3.Cross(d, t1);
                         float h1 = fn((d + t1 * eps).normalized).Height, h2 = fn((d + t2 * eps).normalized).Height;
                         var g = (t1 * (h1 - s.Height) + t2 * (h2 - s.Height)) / eps;
-                        nrm = (d - g * bump * 0.035f).normalized;
+                        nrm = (d - g * bump * 0.014f).normalized;
                     }
                     int i = y * n + x;
                     job.Albedo[f][i] = new Color(s.Albedo.r, s.Albedo.g, s.Albedo.b, s.Rough);
@@ -182,9 +182,9 @@ namespace RR.Game
             }
             land = Mathf.Max(land, 0.0005f);
             float coast = 1 - S(0.0f, 0.03f, land);
-            Color low = crystal ? Color.Lerp(new Color(0.36f, 0.34f, 0.29f), new Color(0.27f, 0.31f, 0.26f), moist)
+            Color low = crystal ? Color.Lerp(new Color(0.40f, 0.44f, 0.47f), new Color(0.23f, 0.32f, 0.35f), moist)
                                 : Color.Lerp(new Color(0.42f, 0.36f, 0.24f), new Color(0.13f, 0.24f, 0.1f), moist);
-            Color high = crystal ? new Color(0.7f, 0.69f, 0.66f) : new Color(0.38f, 0.33f, 0.28f);
+            Color high = crystal ? new Color(0.73f, 0.79f, 0.82f) : new Color(0.38f, 0.33f, 0.28f);
             Color c = Color.Lerp(low, high, S(0.1f, 0.6f, mount + land * 0.4f));
             c = Color.Lerp(c, new Color(0.62f, 0.58f, 0.5f), coast * 0.7f);
             float crystalField = 0;

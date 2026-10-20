@@ -148,6 +148,7 @@ namespace RR.EditorTools
             lib.condensed = Load<Font>(Root + "/UI/Fonts/BarlowCondensed-SemiBold.ttf");
             lib.panelSettings = BuildPanelSettings();
             lib.models = All<GameObject>("t:GameObject", Root + "/Art/Models");
+            foreach(var guid in AssetDatabase.FindAssets("t:Prefab",new[]{Root+"/Art/Units"})) {var assetPath=AssetDatabase.GUIDToAssetPath(guid);if(!assetPath.EndsWith(".prefab"))continue;var asset=Load<GameObject>(assetPath);if(asset!=null&&!asset.name.Contains("__variant")){lib.models.RemoveAll(m=>m!=null&&m.name==asset.name);lib.models.Add(asset);}}
             lib.audio = All<AudioClip>("t:AudioClip", Root + "/Audio");
             lib.icons = All<Texture2D>("t:Texture2D", Root + "/UI/Icons");
             EditorUtility.SetDirty(lib);

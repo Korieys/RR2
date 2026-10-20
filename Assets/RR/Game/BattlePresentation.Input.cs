@@ -28,7 +28,7 @@ namespace RR.Game
                     if (u.Id == Selected) block.SetColor("_RimTint", new Color(1f, 0.82f, 0.45f, 0.9f));
                     else if (RosterRules.Inert(u)) block.SetColor("_RimTint", new Color(0.8f, 0.4f, 1f, 0.7f));
                     else block.SetColor("_RimTint", u.Owner == PlayerSeat ? new Color(0.35f, 0.65f, 1f, 0.35f) : new Color(0.8f, 0.4f, 1f, 0.35f));   // ownership by rim as well as ring
-                    foreach (var mr in v.Model.GetComponentsInChildren<MeshRenderer>()) mr.SetPropertyBlock(block);
+                    foreach (var mr in v.Model.GetComponentsInChildren<Renderer>()) mr.SetPropertyBlock(block);
                     v.RingMat.SetFloat("_Fade", RosterRules.Done(S, u) ? 0.35f : 1f);
                 }
             }
@@ -133,7 +133,7 @@ namespace RR.Game
         public void ToggleAbility()
         {
             var u = Selected != 0 ? S.Unit(Selected) : null;
-            if (u == null) { Say("Select one of your ships first.", "bad"); return; }
+            if (u == null) { Say("Select one of your units first.", "bad"); return; }
             if (!AbilityMode)
             {
                 var v = RosterRules.CanAct(S, u, false);
@@ -162,7 +162,7 @@ namespace RR.Game
         public void Wait()
         {
             var u = Selected != 0 ? S.Unit(Selected) : (S.ActiveUnitId != 0 ? S.Unit(S.ActiveUnitId) : null);
-            if (u == null) { Say("Select a ship to hold position with.", "bad"); return; }
+            if (u == null) { Say("Select a unit to hold position with.", "bad"); return; }
             Submit(Command.Wait(PlayerSeat, u.Id));
         }
 
@@ -254,8 +254,14 @@ namespace RR.Game
         void Update()
         {
             float t = Time.unscaledTime;
-            if (!Settings.ReducedMotion)
-                foreach (var v in Units.Values) if (!v.Dead) v.Model.localPosition = new Vector3(0, 0.32f + Mathf.Sin(t * 0.8f + v.Bob) * 0.03f, 0);
+            foreach (var v in Units.Values) if (!v.Dead)
+            {
+                if(v.Drive!=null){v.Drive.emitting=v.MotionOwned && !v.Ground && !Settings.ReducedMotion;if(Settings.ReducedMotion)v.Drive.Clear();}
+                v.Recoil=Mathf.Lerp(v.Recoil,0,MotionCurve.Damping(13,Time.unscaledDeltaTime));
+                float idle=v.Ground || Settings.ReducedMotion || v.MotionOwned ? 0 : Mathf.Sin(t*.65f+v.Bob)*.018f;
+                v.Model.localPosition=new Vector3(0,(v.Ground?0:.32f)+idle,Settings.ReducedMotion?0:-v.Recoil);
+                v.Model.localRotation=Quaternion.Euler(0,0,Settings.ReducedMotion?0:v.Bank);
+            }
             if (S.IsOver || Animating) return;
             if (S.ActiveSeat != PlayerSeat)
             {
@@ -287,6 +293,20 @@ namespace RR.Game
                     case GameEventType.FreeMove:
                         if (e.From != e.To) yield return Jump(e.UnitId, e.From, e.To, k);
                         break;
+                    case GameEventType.AbilityActivated:
+                        if (Units.TryGetValue(e.UnitId,out var av) && av.Visual!=null)
+                        {
+                            av.Visual.Play("Ability",.65f*k);
+                            yield return new WaitForSecondsRealtime(.325f*k);
+                            var actor=S.Unit(e.UnitId);var effect=actor?.R?.Active!=null?UnitEffects.For(actor.R.Active.Code):UnitEffect.Rally;
+                            UnitEffects.Spawn(transform,av.Visual.Socket(false),av.Visual.Energy,.7f,effect);
+                            if(Units.TryGetValue(e.TargetUnitId,out var targetView))UnitEffects.Spawn(transform,targetView.Visual!=null?targetView.Visual.Socket(false):targetView.T.position,av.Visual.Energy,.65f,effect);
+                            yield return new WaitForSecondsRealtime(.325f*k);
+                        }
+                        break;
+                    case GameEventType.UnitHealed:
+                        if(Units.TryGetValue(e.TargetUnitId,out var healed))UnitEffects.Spawn(transform,healed.T.position+Vector3.up*.6f,new Color(.35f,1,.7f),.6f,UnitEffect.Mend);
+                        break;
                     case GameEventType.AttackResolved:
                         yield return Fire(e.UnitId, e.To, k);
                         break;
@@ -299,8 +319,10 @@ namespace RR.Game
                     case GameEventType.ShieldAbsorbed:
                         var su = S.Unit(e.TargetUnitId);
                         Float(World(su != null ? su.Position : e.To), "Shield absorbs " + e.Amount, new Color(0.6f, 0.85f, 1f));
+                        MotionBurst.Spawn(transform,World(su != null?su.Position:e.To)+Vector3.up*.4f,new Color(.4f,.75f,1f),.85f,.55f*k,MotionBeat.Shield);
                         break;
                     case GameEventType.DamageApplied:
+                        if(Units.TryGetValue(e.TargetUnitId,out var hit) && hit.Visual!=null) {hit.Visual.Play("Hit",.24f*k); UnitEffects.Spawn(transform,hit.Visual.Socket(false),hit.Visual.Energy,.4f,UnitEffect.Impact);}
                         Float(World(e.To), "-" + e.Amount, e.Lethal ? Look.Danger : new Color(1f, 0.85f, 0.6f));
                         Flash(World(e.To) + Vector3.up * 0.4f, new Color(1f, 0.6f, 0.3f) * 3, 0.9f, 0.25f * k);
                         _root.Audio.Play("impact", 0.6f);
@@ -325,6 +347,7 @@ namespace RR.Game
                     case GameEventType.ObjectiveClaimed:
                         Float(World(e.To), "Objective held", Look.GoldBright);
                         _root.Audio.Play("objective", 0.6f);
+                        MotionBurst.Spawn(transform,World(e.To)+Vector3.up*.05f,Look.GoldBright,.9f,.65f*k,MotionBeat.Objective);
                         break;
                     case GameEventType.RoundStarted:
                         Say("Round " + e.Amount + " begins.", "ok");
@@ -352,16 +375,23 @@ namespace RR.Game
             UnitView v;
             if (!Units.TryGetValue(id, out v)) yield break;
             _root.Audio.Play("engine", 0.45f);
+            v.MotionOwned=true;
+            if(v.Visual!=null)v.Visual.Play("Move");
             int n = path.Count - 1;
             float total = Mathf.Min(1.3f, 0.26f * n) * k;
             var pts = path.Select(World).ToList();
             float len = 0; for (int i = 0; i < n; i++) len += Vector3.Distance(pts[i], pts[i + 1]);
+            if(n<=0){v.MotionOwned=false;yield break;}
+            var initialHeading=v.T.localRotation;
+            var heading=Quaternion.LookRotation((pts[1]-pts[0]).normalized,Vector3.up);
+            float anticipation=Settings.ReducedMotion?0:.12f*k, prepare=0;
+            while(prepare<anticipation){prepare+=Time.unscaledDeltaTime;v.T.localRotation=Quaternion.Slerp(initialHeading,heading,MotionCurve.Smooth(prepare/anticipation));yield return null;}
             float t = 0;
             while (t < total)
             {
                 t += Time.unscaledDeltaTime;
                 float u = Mathf.Clamp01(t / total);
-                float ease = u * u * (3 - 2 * u);
+                float ease = MotionCurve.Smooth(u);
                 float d = ease * len, acc = 0;
                 for (int i = 0; i < n; i++)
                 {
@@ -371,7 +401,13 @@ namespace RR.Game
                         float f = seg > 0 ? Mathf.Clamp01((d - acc) / seg) : 1;
                         v.T.localPosition = Vector3.Lerp(pts[i], pts[i + 1], f);
                         var dir = pts[i + 1] - pts[i];
-                        if (dir.sqrMagnitude > 1e-4f) v.T.localRotation = Quaternion.Slerp(v.T.localRotation, Quaternion.LookRotation(dir.normalized, Vector3.up), Time.unscaledDeltaTime * 10f);
+                        if (dir.sqrMagnitude > 1e-4f)
+                        {
+                            var goal=Quaternion.LookRotation(dir.normalized,Vector3.up);
+                            float delta=Mathf.DeltaAngle(v.T.localEulerAngles.y,goal.eulerAngles.y);
+                            v.Bank=Settings.ReducedMotion?0:Mathf.Lerp(v.Bank,Mathf.Clamp(-delta*.12f,-7,7)*Mathf.Sin(u*Mathf.PI),MotionCurve.Damping(12,Time.unscaledDeltaTime));
+                            v.T.localRotation=Quaternion.Slerp(v.T.localRotation,goal,MotionCurve.Damping(12,Time.unscaledDeltaTime));
+                        }
                         break;
                     }
                     acc += seg;
@@ -379,6 +415,8 @@ namespace RR.Game
                 yield return null;
             }
             v.T.localPosition = pts[n];   // arrives exactly on the legal hex
+            v.Bank=0;v.MotionOwned=false;
+            if(v.Visual!=null){v.Visual.Play("Idle");if(v.Ground)UnitEffects.Spawn(transform,v.T.position+Vector3.up*.06f,v.Visual.Energy,.25f,UnitEffect.Step);}
         }
 
         IEnumerator Jump(int id, Commandfall.Core.Hex from, Commandfall.Core.Hex to, float k)
@@ -387,16 +425,16 @@ namespace RR.Game
             if (!Units.TryGetValue(id, out v)) yield break;
             var a = World(from); var b = World(to);
             float total = 0.45f * k, t = 0;
-            Flash(a + Vector3.up * 0.4f, new Color(0.6f, 0.8f, 1f) * 2, 0.8f, 0.25f * k);
+            MotionBurst.Spawn(transform,a+Vector3.up*.4f,new Color(.45f,.75f,1f),.8f,.4f*k,MotionBeat.Jump);
             while (t < total)
             {
                 t += Time.unscaledDeltaTime;
                 float u = Mathf.Clamp01(t / total);
-                v.T.localPosition = Vector3.Lerp(a, b, u * u * (3 - 2 * u)) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.8f;
+                v.T.localPosition = Vector3.Lerp(a, b, MotionCurve.Smooth(u)) + Vector3.up * Mathf.Sin(u * Mathf.PI) * (Settings.ReducedMotion?0:.55f);
                 yield return null;
             }
             v.T.localPosition = b;
-            Flash(b + Vector3.up * 0.4f, new Color(0.6f, 0.8f, 1f) * 2, 0.8f, 0.25f * k);
+            MotionBurst.Spawn(transform,b+Vector3.up*.4f,new Color(.45f,.75f,1f),.8f,.4f*k,MotionBeat.Jump);
         }
 
         IEnumerator Fire(int attackerId, Commandfall.Core.Hex target, float k)
@@ -407,12 +445,18 @@ namespace RR.Game
             var dir = to - v.T.localPosition; dir.y = 0;
             float turn = 0, turnTime = 0.18f * k;
             var q0 = v.T.localRotation; var q1 = Quaternion.LookRotation(dir.sqrMagnitude > 1e-4f ? dir.normalized : Vector3.forward, Vector3.up);
-            while (turn < turnTime) { turn += Time.unscaledDeltaTime; v.T.localRotation = Quaternion.Slerp(q0, q1, turn / turnTime); yield return null; }
-            var from = v.T.localPosition + Vector3.up * 0.42f + (q1 * Vector3.forward) * 0.5f;
+            while (turn < turnTime) { turn += Time.unscaledDeltaTime; v.T.localRotation = Quaternion.Slerp(q0, q1, MotionCurve.Smooth(turn / turnTime)); yield return null; }
+            var from = v.Visual!=null?v.Visual.Socket(true):v.T.localPosition + Vector3.up * 0.42f + (q1 * Vector3.forward) * 0.5f;
+            if(v.Visual!=null)v.Visual.Play("Attack",.55f*k);
             bool craigon = v.DefId.Contains("craigon");
             var col = craigon ? new Color(0.85f, 0.4f, 1f) : new Color(0.45f, 0.75f, 1f);
+            yield return new WaitForSecondsRealtime(.209f*k);
+            if(v.Visual!=null)from=v.Visual.Socket(true);
+            UnitEffects.Spawn(transform,from,col,.32f,UnitEffect.Discharge,to-from);
+            v.Recoil=Settings.ReducedMotion?0:.09f;
             _root.Audio.Play(craigon ? "fire_bio" : "fire_crystal", 0.6f);
-            yield return Beam(from, to, col * 4f, 0.32f * k, craigon);
+            if(v.Ground && S.Unit(attackerId).Weapon.MaxRange<=1) { UnitEffects.Spawn(transform,to,col,.5f,UnitEffect.Impact);yield return new WaitForSecondsRealtime(.32f*k); }
+            else yield return Beam(from, to, col * 4f, 0.32f * k, craigon);
         }
 
         IEnumerator Beam(Vector3 a, Vector3 b, Color c, float seconds, bool bolt)
@@ -426,6 +470,7 @@ namespace RR.Game
             var m = Look.Unlit(lib.fx, c, "Beam");
             m.SetFloat("_Soft", 0.6f);
             mr.sharedMaterial = m;
+            var owned=go.AddComponent<MotionResourceOwner>();owned.Mesh=mesh;owned.Material=m;
             float t = 0;
             Flash(a, c * 0.6f, 0.45f, seconds);
             while (t < seconds)
@@ -445,7 +490,7 @@ namespace RR.Game
                 yield return null;
             }
             Destroy(go);
-            Flash(b, c * 0.8f, 0.9f, 0.3f);
+            MotionBurst.Spawn(transform,b,c*.35f,.65f,.32f,MotionBeat.Impact);
         }
 
         IEnumerator Destroyed(int id, float k)
@@ -454,15 +499,17 @@ namespace RR.Game
             if (!Units.TryGetValue(id, out v)) yield break;
             _root.Audio.Play("explosion");
             var p = v.T.localPosition + Vector3.up * 0.4f;
-            Flash(p, new Color(1f, 0.55f, 0.25f) * 5, 2.2f, 0.7f * k);
+            if(v.Visual!=null){v.Visual.Play("Death",.8f*k);UnitEffects.Spawn(transform,p,v.Visual.Energy,1.1f,UnitEffect.Shatter);}
+            MotionBurst.Spawn(transform,p,new Color(1f,.48f,.17f)*1.8f,1.5f,.85f*k,MotionBeat.Destruction);
             float t = 0, total = 0.8f * k;
             while (t < total)
             {
                 t += Time.unscaledDeltaTime;
                 var block = new MaterialPropertyBlock();
-                block.SetFloat("_Dissolve", Mathf.Clamp01(t / total));
+                block.SetFloat("_Dissolve", MotionCurve.Smooth(t / total));
+                v.Bank=Settings.ReducedMotion?0:Mathf.Sin(t/total*Mathf.PI)*12;
                 block.SetFloat("_Damage", 1);
-                foreach (var mr in v.Model.GetComponentsInChildren<MeshRenderer>()) mr.SetPropertyBlock(block);
+                foreach (var mr in v.Model.GetComponentsInChildren<Renderer>()) mr.SetPropertyBlock(block);
                 yield return null;
             }
             v.Dead = true;
@@ -471,19 +518,7 @@ namespace RR.Game
 
         void Flash(Vector3 p, Color c, float size, float seconds)
         {
-            var lib = ArtLibrary.I;
-            var go = Mesh("Flash", MeshFactory.Quad(), new Material(lib.corona));
-            var m = go.GetComponent<MeshRenderer>().sharedMaterial;
-            m.SetColor("_Color", c); m.SetFloat("_StarRadius", 0.05f); m.SetFloat("_Intensity", 1.2f);
-            go.transform.localPosition = p; go.transform.localScale = Vector3.one * size;
-            StartCoroutine(FadeOut(go, m, seconds));
-        }
-
-        IEnumerator FadeOut(GameObject go, Material m, float seconds)
-        {
-            float t = 0, i0 = m.GetFloat("_Intensity");
-            while (t < seconds) { t += Time.unscaledDeltaTime; m.SetFloat("_Intensity", i0 * (1 - t / seconds)); yield return null; }
-            Destroy(go);
+            MotionBurst.Spawn(transform,p,c*.35f,size,seconds,MotionBeat.Impact);
         }
 
         public readonly List<Floater> Floaters = new List<Floater>();

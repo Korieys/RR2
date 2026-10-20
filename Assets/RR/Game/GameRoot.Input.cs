@@ -25,6 +25,14 @@ namespace RR.Game
             bool overUI = UI.PointerOverUI(pos);
             bool modal = UI.ModalOpen;
 
+            // Modal controls own the keyboard; navigation must never fire map or save shortcuts behind them.
+            if (modal)
+            {
+                if (kb.escapeKey.wasPressedThisFrame && G.PendingEngagement == null) UI.CloseModal();
+                _leftDown = _rightDown = _midDown = false;
+                return;
+            }
+
             // ---- keyboard
             if (kb.escapeKey.wasPressedThisFrame) { if (Scale == ViewScale.Battle && Battle != null) Battle.UndoPick(); else Back(); }
             if (kb.tabKey.wasPressedThisFrame && Scale != ViewScale.Battle) ToggleOverlays();
@@ -78,7 +86,11 @@ namespace RR.Game
             {
                 var h = overUI ? (Commandfall.Core.Hex?)null : RayHex(pos);
                 Battle.Hover(h);
-                if (mouse.leftButton.wasReleasedThisFrame && _leftDown && !_dragged && h.HasValue) Battle.ClickHex(h.Value);
+                if (mouse.leftButton.wasReleasedThisFrame && _leftDown && !_dragged && h.HasValue) {
+                    var unit=Battle.S.UnitAt(h.Value);
+                    if(unit!=null && !Battle.AbilityMode && ((kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed) || unit.Id==Battle.Selected || Battle.Selected==0 && unit.Owner!=Battle.PlayerSeat)) InspectUnit(unit.Def.Id);
+                    else Battle.ClickHex(h.Value);
+                }
                 if (mouse.rightButton.wasReleasedThisFrame && _rightDown && !_rightDragged) Battle.UndoPick();
             }
             else if (Scale == ViewScale.Galaxy)
@@ -172,6 +184,10 @@ namespace RR.Game
         void HandleSystemClick(Vector2 pos)
         {
             var cam = Rig.Cam;
+            var ray=cam.ScreenPointToRay(pos);UnitVisual nearest=null;float distance=float.MaxValue;
+            foreach(var candidate in LocalSystem.GetComponentsInChildren<UnitVisual>())
+                if(UnitVisual.BoundsOf(candidate.gameObject).IntersectRay(ray,out float hit) && hit<distance){distance=hit;nearest=candidate;}
+            if(nearest!=null){InspectUnit(nearest.UnitId);return;}
             string fleet = null; float bf = 40 * 40;
             foreach (var fv in LocalSystem.Fleets.Values)
             {
