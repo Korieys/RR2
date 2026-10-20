@@ -7,8 +7,10 @@ on the real Commandfall rules, and back again. Start with [Docs/HANDOFF.md](Docs
 ## Play it
 
 ```bash
-./Builds/W1/RuleAndRuin.exe -screen-width 1920 -screen-height 1080 -screen-fullscreen 0
+./Builds/CinematicUI/RuleAndRuin.exe -screen-width 1920 -screen-height 1080 -screen-fullscreen 0
 ```
+
+The current cinematic UI build is in `Builds/CinematicUI`. See [the effects and validation record](Docs/CINEMATIC_UI.md). The accepted reference layout is retained from `Builds/CommandGlass`. See [the UI direction](Docs/COMMAND_GLASS.md), [reusable UI kit](Docs/UI_KIT.md) and [runtime validation](Captures/CommandGlass/VALIDATION.md). The spacing and motion system is retained; its guide is in [the motion and spacing review](Docs/MOTION_REVIEW.md). Earlier builds, including W1, Premium and SpacingMotion, are preserved. Read [the visual audit and validation record](Docs/VISUAL_REVIEW.md) for the changes, captures, and remaining art limits.
 
 The playable sequence takes 5 to 10 minutes:
 1. **Survey the galaxy.** Seven sector nebulae sit where they do on the approved faction map, with The Eclipse Sector south of the
@@ -30,7 +32,7 @@ reduced motion, interface size, volumes, mute, and a launcher for planetary Comm
 ## Build and test
 
 ```bash
-"/c/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe" -batchmode -quit -projectPath . -executeMethod RR.EditorTools.BuildTools.BuildWindows -rrSetup -rrBuildOut Builds/W1/RuleAndRuin.exe -logFile Logs/build.log
+"/c/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe" -batchmode -quit -projectPath . -executeMethod RR.EditorTools.BuildTools.BuildWindows -rrSetup -rrBuildOut Builds/CinematicUI/RuleAndRuin.exe -logFile Logs/build.log
 ```
 
 ```bash
@@ -58,6 +60,9 @@ If a build fails with `CreateDirectory ... PlayerDataCache ... Access is denied`
 | Flag | Effect |
 |---|---|
 | `-rrTour <dir>` | The whole sequence through the real game. Captures every bookmark, transition frames, chart-versus-space pans and orbits, battle, result, save and load, plus frame-time samples and a `tour_log.txt`. `-rrTourPlan intercept` plays the other legal choice. |
+| `-rrReview <dir>` / `-rrReviewStay` | Capture Prismvale and Aurelith, check UI bounds at 100%, 125%, and 140%, and verify unchanged authoritative state. The optional Stay flag leaves the game open. |
+| `-rrSavePath <file>` | Use a separate save file for review runs; omit for the normal player save slot. |
+| `-rrRes 1600x900` | Set a native window resolution for captures. |
 | `-rrOffscreen 2560x1440` | Renders scene and interface offscreen at that size; shots are composited (both displays here are 1080p). |
 | `-rrUiScale 1.25` / `-rrReducedMotion` / `-rrUncapped` | Enlarged text, reduced motion, vsync off for measurements. |
 | `-rrShipSheet <dir>` | Every model in-engine, two fixed views each. |
@@ -77,3 +82,17 @@ Assets/RR/Art        Blender-generated FBX models          Tools/Blender: genera
 Assets/RR/Audio      synthesised WAV cues and beds          Tools/Audio: generator
 Docs                 handoff, decisions, references, provenance, progress, evidence
 ```
+## Fleet Operations UI kit
+
+The previous Fleet Operations interface is preserved in `Builds/FleetOperations/RuleAndRuin.exe`. It implements the selected Option B design in Silex light blue, white and navy, with no game title in gameplay chrome. See [the UI kit](Docs/UI_KIT.md) for theme tokens, components, portrait generation, responsive layout and expansion rules, and [the UI review](Docs/UI_KIT_REVIEW.md) for real captures and verification.
+
+Run `-rrReview <dir> -rrUiKitOrders -rrSavePath <disposable-file>` to check UI layout, tab events, commissioning, cancellation and development. This order-check flag requires an explicit disposable save path. Ordinary presentation review does not change authoritative state.
+## Prismatic UI (Direction B)
+
+The enhanced Direction B build is in `Builds/Prismatic/RuleAndRuin.exe`. It adds scalable faceted frames, Blender-rendered crystal relief, stronger typography, grouped production data, and event-driven UI motion. The editable Blender source is in `ArtSource/UI/Prismatic`.
+
+See [the Prismatic system](Docs/PRISMATIC_UI.md) for components, faction theming, motion and extension rules, and [the actual-player review](Docs/PRISMATIC_REVIEW.md) for captures and validation. Add `-rrPrismaticReview -rrMotionClip` to a visible `-rrReview` run to test animation cleanup, Reduced Motion, input routing and capture the motion sequence.
+
+### Cinematic UI validation
+
+Run the visible player with `-rrUiSmoke <capture-directory> -rrCinematicReview -rrMotionRecord -rrRes 1920x1080 -rrSavePath <disposable-save.json>` to verify finite lighting, portrait layering/input bounds, disabled controls, Reduced Motion and settings. The recording follows the timing assertions to keep PNG readback overhead out of those checks. See [CINEMATIC_UI.md](Docs/CINEMATIC_UI.md) for the final build and evidence.

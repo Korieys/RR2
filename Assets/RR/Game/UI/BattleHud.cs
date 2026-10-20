@@ -13,7 +13,7 @@ namespace RR.Game
         readonly GameRoot _root;
         public VisualElement Root { get; private set; }
         Label _round, _turn, _obj, _preview;
-        VisualElement _left, _right, _toasts, _floaters, _options;
+        VisualElement _left, _right, _rightPanel, _toasts, _floaters, _options;
         Button _ability, _wait, _threat, _speed;
         readonly List<Label> _floatLabels = new List<Label>();
         int _lastSig = -1;
@@ -24,12 +24,16 @@ namespace RR.Game
             Root = UIX.Div("layer"); Root.pickingMode = PickingMode.Ignore; parent.Add(Root);
             _floaters = UIX.Div("layer"); _floaters.pickingMode = PickingMode.Ignore; Root.Add(_floaters);
             var top = UIX.Div("battle-top"); Root.Add(top);
-            var title = UIX.Text("ORBITAL COMMANDFALL", "emblem-name"); UIRoot.Display(title); top.Add(title);
+            var title = UIX.Text(b.S.Config.Domain==BattleDomain.Planetary?"PLANETARY COMMANDFALL":"ORBITAL COMMANDFALL", "emblem-name"); UIRoot.Display(title); top.Add(title);
             _round = UIX.Text("", "body"); _round.style.marginRight = 24; top.Add(_round);
             _turn = UIX.Text("", "body"); _turn.style.marginRight = 24; top.Add(_turn);
             _obj = UIX.Text("", "body"); top.Add(_obj);
-            _left = UIX.Div("panel", "battle-left"); Root.Add(_left);
-            _right = UIX.Div("panel", "battle-right"); Root.Add(_right);
+            var rosterPanel = UIX.Div("panel", "battle-left"); Root.Add(rosterPanel);
+            var rosterScroll = new ScrollView(ScrollViewMode.Vertical); rosterScroll.style.flexShrink = 1;
+            UIRoot.StyleScroll(rosterScroll); rosterPanel.Add(rosterScroll); _left = rosterScroll.contentContainer;
+            _rightPanel = UIX.Div("panel", "battle-right"); Root.Add(_rightPanel);
+            var detailScroll = new ScrollView(); detailScroll.style.flexShrink = 1; UIRoot.StyleScroll(detailScroll);
+            _rightPanel.Add(detailScroll); _right = detailScroll.contentContainer;
             var prev = UIX.Div("battle-preview"); prev.pickingMode = PickingMode.Ignore; Root.Add(prev);
             _preview = UIX.Text("", "panel", "body"); _preview.style.maxWidth = 900; _preview.pickingMode = PickingMode.Ignore; prev.Add(_preview);
             var bar = UIX.Div("battle-actions"); Root.Add(bar);
@@ -37,6 +41,7 @@ namespace RR.Game
             _ability = UIX.Btn("Ability (3)", () => _b.ToggleAbility()); bar.Add(_ability);
             _wait = UIX.Btn("Wait (Space)", () => _b.Wait()); bar.Add(_wait);
             _threat = UIX.Btn("Threat map (T)", () => { _b.ShowThreat = !_b.ShowThreat; _b.RefreshCells(); }); bar.Add(_threat);
+            if(root.GroundExercise)bar.Add(UIX.Btn("Leave exercise",root.LeaveGroundExercise));
             _speed = UIX.Btn("Animations 1x (F)", () => CycleSpeed()); bar.Add(_speed);
             _toasts = UIX.Div(); _toasts.style.position = Position.Absolute; _toasts.style.top = 62; _toasts.style.left = 300; _toasts.style.right = 370;
             _toasts.style.alignItems = Align.Center; _toasts.pickingMode = PickingMode.Ignore; Root.Add(_toasts);
@@ -51,11 +56,13 @@ namespace RR.Game
 
         public void Toast(string text, string kind)
         {
+            // Repeated threat notices share one visible message during their lifetime.
+            if (_toasts.Children().OfType<Label>().Any(t => t.text == text)) return;
             var t = UIX.Text(text, "panel", "toast", kind == "bad" ? "toast-bad" : kind == "danger" ? "toast-danger" : "toast-ok");
             t.pickingMode = PickingMode.Ignore;
             _toasts.Add(t);
             while (_toasts.childCount > 3) _toasts.RemoveAt(0);
-            t.schedule.Execute(() => t.RemoveFromHierarchy()).StartingIn(3200);
+            t.schedule.Execute(() => UiMotion.Leave(t, t.RemoveFromHierarchy)).StartingIn(3200);
         }
 
         public void Dispose() { _b.Notice -= Toast; Root.RemoveFromHierarchy(); }
@@ -64,13 +71,15 @@ namespace RR.Game
         {
             var S = _b.S;
             int seat = _b.PlayerSeat;
+            string speedText = "Animations " + _b.AnimSpeed.ToString("0") + "x (F)";
+            if (_speed.text != speedText) _speed.text = speedText;
             _round.text = "Round " + S.Round + " of " + S.Config.RoundLimit;
             bool mine = S.ActiveSeat == seat && !S.IsOver;   // nothing stays enabled once the battle is over (D-05)
-            _turn.text = S.IsOver ? "The battle is over." : mine ? (S.ActiveUnitId != 0 ? "Your activation: finish with " + S.Unit(S.ActiveUnitId).Def.Name : "Your activation: choose a ship") : "Enemy activation";
-            _turn.style.color = mine ? Look.GoldBright : new Color(0.85f, 0.7f, 1f);
+            _turn.text = S.IsOver ? "The battle is over." : mine ? (S.ActiveUnitId != 0 ? "Your activation: finish with " + S.Unit(S.ActiveUnitId).Def.Name : "Your activation: choose a unit") : "Enemy activation";
+            _turn.EnableInClassList("turn-friendly", mine); _turn.EnableInClassList("turn-enemy", !mine);
             int heldMine = S.Objectives.Count(o => o.Owner == seat), heldTheirs = S.Objectives.Count(o => o.Owner == 1 - seat);
             _obj.text = "Objectives: you " + heldMine + ", enemy " + heldTheirs + " of " + S.Objectives.Count;
-            _preview.text = _b.PreviewText ?? (mine && !S.IsOver ? (_b.Selected == 0 ? "Select one of your ships that has not acted this round." : _b.AbilityMode ? AbilityPrompt() : "Gold hexes are legal moves; red hexes are legal targets. Right-click to deselect.") : "");
+            _preview.text = _b.PreviewText ?? (mine && !S.IsOver ? (_b.Selected == 0 ? "Select one of your units that has not acted this round." : _b.AbilityMode ? AbilityPrompt() : "Gold hexes are legal moves; red hexes are legal targets. Right-click to deselect.") : "");
             _preview.style.display = string.IsNullOrEmpty(_preview.text) ? DisplayStyle.None : DisplayStyle.Flex;
             var u = _b.Selected != 0 ? S.Unit(_b.Selected) : null;
             _ability.text = u != null ? (_b.AbilityMode ? "Cancel " + u.R.ActiveName : u.R.ActiveName + (u.Cooldown > 0 ? " (" + u.Cooldown + ")" : "") + " (3)") : "Ability (3)";
@@ -104,8 +113,8 @@ namespace RR.Game
             _right.Clear();
             var sel = _b.Selected != 0 ? S.Unit(_b.Selected) : null;
             if (sel == null && _b.HoverHex.HasValue) sel = _b.Seen.UnitAt(_b.HoverHex.Value);
-            if (sel == null) { _right.style.display = DisplayStyle.None; }
-            else { _right.style.display = DisplayStyle.Flex; Detail(sel); }
+            if (sel == null) { _rightPanel.style.display = DisplayStyle.None; }
+            else { _rightPanel.style.display = DisplayStyle.Flex; Detail(sel); }
             _options.Clear();
             var su = _b.Selected != 0 ? S.Unit(_b.Selected) : null;
             if (su != null && su.R.Active != null && su.R.Active.Options != null && su.R.Active.Options.Length > 1)
@@ -126,13 +135,12 @@ namespace RR.Game
             else if (RosterRules.Done(S, u)) c.AddToClassList("unit-card-done");
             if (u.Id == _b.Selected || u.Id == S.ActiveUnitId) c.AddToClassList("unit-card-active");
             var row = UIX.Div("row");
-            if (S.Players[u.Owner].CommanderId == u.Id) { var ic = new Icon(IconKind.Crown, Look.GoldBright, 12); ic.style.marginRight = 4; row.Add(ic); }
-            var name = UIX.Text(u.Def.Name, "item-title");
+            if (S.Players[u.Owner].CommanderId == u.Id) { var ic = UiKit.ContentIcon(IconKind.Crown, 12); ic.style.marginRight = 4; row.Add(ic); }
+            var name = UIX.Text(u.Def.Name, "item-title", "unit-name");
             name.style.fontSize = 13;
             row.Add(name);
-            row.Add(UIX.Div("spacer"));
             bool seen = mine || _b.Visible(u);   // under fog of war an unseen enemy ship shows only that it exists
-            row.Add(UIX.Text(!seen ? "out of sight" : u.Alive ? u.Hp + "/" + u.MaxHp : (u.HasR(RStatusType.Captured) ? "captured" : "lost"), "small"));
+            row.Add(UIX.Text(!seen ? "out of sight" : u.Alive ? u.Hp + "/" + u.MaxHp : (u.HasR(RStatusType.Captured) ? "captured" : "lost"), "small", "unit-status"));
             c.Add(row);
             if (u.Alive && seen)
             {
@@ -140,6 +148,8 @@ namespace RR.Game
                 c.Add(UIX.Bar(f, f < 0.4f ? "bar-hp-low" : "bar-hp"));
             }
             if (mine && u.Alive) c.RegisterCallback<ClickEvent>(e => _b.Select(u.Id));
+            var inspect=UIX.Btn("Inspect",()=>_root.InspectUnit(u.Def.Id),"btn-quiet");inspect.name="battle-inspect-"+u.Id;
+            inspect.RegisterCallback<ClickEvent>(e=>e.StopPropagation());c.Add(inspect);
             return c;
         }
 
@@ -147,9 +157,10 @@ namespace RR.Game
         {
             var S = _b.S;
             var t = UIX.Text(u.Def.Name.ToUpperInvariant(), "h-display"); UIRoot.Display(t); _right.Add(t);
+            _right.Add(UIX.Btn("Inspect unit",()=>_root.InspectUnit(u.Def.Id)));
             bool leader = S.Players[u.Owner].CommanderId == u.Id;
             _right.Add(UIX.Text(StrategyHud.RoleText(u.Def) + (leader ? ". Leader: if it is destroyed, its side loses at once." : "."), "subtitle"));
-            Row("Hull", u.Hp + " of " + u.MaxHp + (u.ShieldHp > 0 ? ", shields " + u.ShieldHp : ""));
+            Row(u.R.IsShip?"Hull":"Health", u.Hp + " of " + u.MaxHp + (u.ShieldHp > 0 ? ", shields " + u.ShieldHp : ""));
             Row("Armor", u.BaseArmor.ToString());
             Row("Movement", StrategyHud.MoveText(u.Def));
             Row("Weapon", u.Weapon.Name + ": " + u.Weapon.Damage + " at " + u.Weapon.MinRange + " to " + u.Weapon.MaxRange);
@@ -173,7 +184,7 @@ namespace RR.Game
             if (RosterCombat.GuardCapable(u)) Row("Intercepts", RosterCombat.InterceptsLeft(S, u) + " left this round; never chains");
             var statuses = u.RStatuses != null ? string.Join(", ", u.RStatuses.Where(x => x.Type != RStatusType.Facing && x.Type != RStatusType.Heat).Select(x => x.Type.ToString())) : "";
             if (!string.IsNullOrEmpty(statuses)) Row("Statuses", statuses);
-            if (RosterRules.Done(S, u)) _right.Add(UIX.Text("This ship has already acted this round.", "small"));
+            if (RosterRules.Done(S, u)) _right.Add(UIX.Text("This unit has already acted this round.", "small"));
         }
 
         void Row(string k, string v)
@@ -197,12 +208,12 @@ namespace RR.Game
                 if (i >= list.Count || panel == null) { l.style.display = DisplayStyle.None; continue; }
                 var f = list[i];
                 float age = now - f.Born;
-                var sp = cam.WorldToScreenPoint(f.Pos + Vector3.up * age * 0.6f);
+                var sp = cam.WorldToScreenPoint(f.Pos + Vector3.up * (Settings.ReducedMotion?0:MotionCurve.Out(age/.8f)*.55f));
                 if (sp.z <= 0) { l.style.display = DisplayStyle.None; continue; }
                 var pp = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(sp.x, cam.pixelHeight - sp.y));
                 l.style.display = DisplayStyle.Flex;
                 l.text = f.Text;
-                l.style.color = new Color(f.Color.r, f.Color.g, f.Color.b, Mathf.Clamp01(1.4f - age));
+                l.style.color = new Color(f.Color.r, f.Color.g, f.Color.b, Mathf.Clamp01(age/.06f)*Mathf.Clamp01((1.4f-age)/.35f));
                 l.style.left = pp.x - 60; l.style.top = pp.y - 10; l.style.width = 120;
             }
         }

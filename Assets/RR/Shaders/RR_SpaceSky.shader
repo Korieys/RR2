@@ -85,15 +85,15 @@ Shader "RR/SpaceSky"
             {
                 float3 d = normalize(i.dir);
                 float g = dot(d, normalize(_GalNormal.xyz));
-                float band = exp(-g * g / 0.09) * 0.75 + exp(-g * g / 0.012) * 0.6;
+                float band = exp(-g * g / 0.045) * 0.6 + exp(-g * g / 0.006) * 0.9;
                 float clouds = RR_Fbm(d * 3.0, 5) * 0.5 + 0.5;
                 float dust = smoothstep(0.45, 0.7, RR_Fbm(d * 6.0 + 11, 4) * 0.5 + 0.5);
                 float3 neb = lerp(_BandTintA.rgb, _BandTintB.rgb, saturate(RR_Fbm(d * 1.5 + 3, 3) + 0.5));
                 float3 col = neb * band * clouds * (1 - dust * 0.8) * _BandStrength;
                 float starBoost = 1 + band * 2.5;
-                col += StarLayer(d, 160, 0.55, 0.06) * 0.35 * _StarStrength;
-                col += StarLayer(d, 380, 0.5 * starBoost / 3.5, 0.05) * 0.22 * _StarStrength;
-                col += StarLayer(d.zxy, 800, 0.35 * starBoost / 3.5, 0.045) * 0.14 * _StarStrength;
+                col += StarLayer(d, 160, 0.22, 0.045) * 0.30 * _StarStrength;
+                col += StarLayer(d, 380, 0.20 * starBoost / 3.5, 0.035) * 0.13 * _StarStrength;
+                col += StarLayer(d.zxy, 800, 0.10 * starBoost / 3.5, 0.03) * 0.07 * _StarStrength;
                 col += DistantGalaxies(d) * _StarStrength;
                 return float4(col, 1);
             }

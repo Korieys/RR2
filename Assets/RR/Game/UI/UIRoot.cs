@@ -23,7 +23,7 @@ namespace RR.Game
 
         public static void Display(VisualElement e)
         {
-            var f = ArtLibrary.I.displayFont;
+            var f = ArtLibrary.I.bodySemiBold != null ? ArtLibrary.I.bodySemiBold : ArtLibrary.I.bodyBold;
             if (f != null) e.style.unityFontDefinition = FontDefinition.FromFont(f);
         }
 
@@ -36,6 +36,7 @@ namespace RR.Game
             Root = Doc.rootVisualElement;
             Root.styleSheets.Add(UnityEngine.Resources.Load<StyleSheet>("RR/RR_Style"));
             if (lib.bodyFont != null) Root.style.unityFontDefinition = FontDefinition.FromFont(lib.bodyFont);
+            UiKit.Install(Root, game.G.Player.Id);
             Root.pickingMode = PickingMode.Ignore;
             HudLayer = UIX.Div("layer"); HudLayer.pickingMode = PickingMode.Ignore; Root.Add(HudLayer);
             Strategy = new StrategyHud(game, HudLayer);
@@ -50,6 +51,37 @@ namespace RR.Game
             Root.Add(_loading);
             _fade = UIX.Div("fade"); _fade.pickingMode = PickingMode.Ignore; _fade.style.display = DisplayStyle.None; Root.Add(_fade);
             ApplyScale();
+        }
+
+        public static void StyleScroll(ScrollView view)
+        {
+            view.AddToClassList("kit-scroll");
+            // A vertical dossier must not acquire a horizontal bar during a row reveal.
+            if (view.mode == ScrollViewMode.Vertical)
+                view.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            foreach (var sc in new[] { view.verticalScroller, view.horizontalScroller })
+            {
+                bool vertical = sc == view.verticalScroller;
+                if (vertical)
+                {
+                    sc.style.width = sc.style.minWidth = sc.style.maxWidth = 6;
+                    sc.slider.style.width = sc.slider.style.minWidth = sc.slider.style.maxWidth = 6;
+                }
+                else
+                {
+                    sc.style.height = sc.style.minHeight = sc.style.maxHeight = 6;
+                    sc.slider.style.height = sc.slider.style.minHeight = sc.slider.style.maxHeight = 6;
+                }
+                sc.slider.style.marginLeft = sc.slider.style.marginRight = sc.slider.style.marginTop = sc.slider.style.marginBottom = 0;
+                sc.lowButton.style.display = DisplayStyle.None; sc.highButton.style.display = DisplayStyle.None;
+                foreach (var name in new[] { "unity-tracker", "unity-dragger-border", "unity-dragger" })
+                {
+                    var part = sc.slider.Q(name); if (part == null) continue;
+                    part.style.borderLeftWidth = part.style.borderRightWidth = part.style.borderTopWidth = part.style.borderBottomWidth = 0;
+                    if (vertical) part.style.minWidth = part.style.maxWidth = 6;
+                    else part.style.minHeight = part.style.maxHeight = 6;
+                }
+            }
         }
 
         public void ApplyScale()
@@ -109,7 +141,7 @@ namespace RR.Game
         public VisualElement OpenModal(float width = 1180)
         {
             CloseModal();
-            var back = UIX.Div("modal-back");
+            var back = UIX.Div("modal-back"); CinematicUi.Backdrop(back);
             var m = UIX.Div("panel", "panel-solid", "modal");
             m.style.width = width;
             m.style.maxWidth = Length.Percent(96);
@@ -143,7 +175,7 @@ namespace RR.Game
             var cols = UIX.Div("row"); cols.style.alignItems = Align.Stretch; cols.style.flexGrow = 1; cols.style.flexShrink = 1; cols.style.minHeight = 0;
             m.Add(cols);
             var left = UIX.Div(); left.style.flexGrow = 1; left.style.flexShrink = 1; left.style.marginRight = 14; left.style.minHeight = 0; cols.Add(left);
-            var rightScroll = new ScrollView(ScrollViewMode.Vertical); rightScroll.style.width = 330; rightScroll.style.flexShrink = 1; cols.Add(rightScroll);
+            var rightScroll = new ScrollView(ScrollViewMode.Vertical); StyleScroll(rightScroll); rightScroll.style.width = 330; rightScroll.style.flexShrink = 1; cols.Add(rightScroll);
             var right = rightScroll.contentContainer;
             var budget = UIX.Text("", "budget"); var errors = UIX.Text("", "small");
             Button go = null;
@@ -159,7 +191,7 @@ namespace RR.Game
                     var row = UIX.Div("ship-row", on ? "ship-row-on" : "ship-row-off");
                     var nameCol = UIX.Div("col-name");
                     var nm = UIX.Div("row");
-                    if (ShipCatalog.IsLeader(s.DefId)) { var c = new Icon(IconKind.Crown, Look.GoldBright, 13); c.style.marginRight = 5; nm.Add(c); }
+                    if (ShipCatalog.IsLeader(s.DefId)) { var c = UiKit.ContentIcon(IconKind.Crown, 13); c.style.marginRight = 5; nm.Add(c); }
                     var prof = G.Slice?.Profile(s.Uid);
                     nm.Add(UIX.Text(prof?.Name != null ? prof.Name + " (" + d.Name + ")" : d.Name, "item-title"));
                     nameCol.Add(nm);
@@ -188,11 +220,11 @@ namespace RR.Game
                 budget.text = "Battle line cost " + report.Cost + " of " + report.Budget + ", ships " + selection.Count + " of " + report.MaxUnits;
                 if (report.Cost > report.Budget) budget.AddToClassList("budget-over"); else budget.RemoveFromClassList("budget-over");
                 errors.text = report.Valid ? "The battle line is ready." : string.Join(" ", report.Errors);
-                errors.style.color = report.Valid ? Look.Positive : new Color(0.95f, 0.7f, 0.65f);
+                errors.style.color = report.Valid ? new Color(.43f, .86f, .74f) : new Color(.96f, .57f, .55f);
                 if (go != null) go.SetEnabled(report.Valid);
             };
             left.Add(UIX.Text("YOUR FORCE: " + mine.Name.ToUpperInvariant(), "h-section"));
-            var sv = new ScrollView(ScrollViewMode.Vertical); sv.style.flexGrow = 1; sv.style.flexShrink = 1; sv.Add(rows); left.Add(sv);
+            var sv = new ScrollView(ScrollViewMode.Vertical); StyleScroll(sv); sv.style.flexGrow = 1; sv.style.flexShrink = 1; sv.Add(rows); left.Add(sv);
             if (G.Slice != null && G.Slice.Active)
             {
                 right.Add(UIX.Text("WHAT IS AT STAKE", "h-section"));
@@ -205,7 +237,7 @@ namespace RR.Game
                 var d = ShipCatalog.Def(s.DefId);
                 var it = UIX.Div("item");
                 var line = UIX.Div("row");
-                if (ShipCatalog.IsLeader(s.DefId)) { var c = new Icon(IconKind.Crown, Look.GoldBright, 13); c.style.marginRight = 5; line.Add(c); }
+                if (ShipCatalog.IsLeader(s.DefId)) { var c = UiKit.ContentIcon(IconKind.Crown, 13); c.style.marginRight = 5; line.Add(c); }
                 line.Add(UIX.Text(d.Name, "item-title")); line.Add(UIX.Div("spacer")); line.Add(UIX.Text(s.Hp + "/" + d.MaxHp, "small"));
                 it.Add(line);
                 it.Add(UIX.Text(StrategyHud.RoleText(d) + ", armor " + d.Armor + ", " + d.Weapon.Damage + " damage at " + d.Weapon.MinRange + " to " + d.Weapon.MaxRange + ". " + d.Roster.ActiveName + ".", "item-sub"));
@@ -242,7 +274,7 @@ namespace RR.Game
             bool won = o.WinnerSeat == setup.PlayerSeat;
             var m = OpenModal(860);
             var t = UIX.Text(won ? "VICTORY" : "DEFEAT", "modal-title");
-            t.style.color = won ? Look.GoldBright : Look.Danger;
+            if (!won) t.AddToClassList("text-danger");
             Display(t);
             m.Add(t);
             m.Add(UIX.Text(summary, "body"));
@@ -258,14 +290,14 @@ namespace RR.Game
                     var defId = setup.Config.Players[seat].Army.Units[i].UnitId;
                     string state = so.Destroyed ? "destroyed" : so.Captured ? "captured" : so.Hp + " hull remaining";
                     var line = UIX.Text(ShipCatalog.Name(defId) + ": " + state + ".", "item-sub");
-                    if (so.Destroyed || so.Captured) line.style.color = new Color(0.95f, 0.7f, 0.65f);
+                    if (so.Destroyed || so.Captured) line.AddToClassList("text-danger");
                     col.Add(line);
                 }
                 cols.Add(col);
             }
             m.Add(cols);
             var foot = UIX.Div("row"); foot.style.marginTop = 12; foot.Add(UIX.Div("spacer"));
-            foot.Add(UIX.Btn("Return to the system", () => { CloseModal(); done(); }, "btn-primary"));
+            foot.Add(UIX.Btn(_game.GroundExercise?"Return to the galaxy":"Return to the system", () => { CloseModal(); done(); }, "btn-primary"));
             m.Add(foot);
         }
 
@@ -273,32 +305,90 @@ namespace RR.Game
 
         public void ShowSettings()
         {
-            var m = OpenModal(560);
+            var m = OpenModal(820); m.AddToClassList("settings-console");
+            m.Add(UIX.Text(_game.G.Player.Name.ToUpperInvariant() + " / COMMAND CONSOLE", "eyebrow"));
             var t = UIX.Text("SETTINGS", "modal-title"); Display(t); m.Add(t);
-            var reduced = new Toggle("Reduced motion: shorter transitions and calmer ambient movement") { value = Settings.ReducedMotion };
-            reduced.RegisterValueChangedCallback(e => { Settings.ReducedMotion = e.newValue; Settings.Save(); });
-            m.Add(reduced);
-            var mute = new Toggle("Mute all sound") { value = Settings.Muted };
-            mute.RegisterValueChangedCallback(e => { Settings.Muted = e.newValue; Settings.Save(); _game.Audio.ApplyVolumes(); });
-            m.Add(mute);
-            m.Add(Slider("Interface size", 0.85f, 1.4f, Settings.UiScale, v => { Settings.UiScale = v; Settings.Save(); ApplyScale(); }));
-            m.Add(Slider("Master volume", 0, 1, Settings.Master, v => { Settings.Master = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
-            m.Add(Slider("Music", 0, 1, Settings.Music, v => { Settings.Music = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
-            m.Add(Slider("Effects", 0, 1, Settings.Effects, v => { Settings.Effects = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
-            m.Add(UIX.Text("Controls: left click selects, double click enters a system, right click orders the selected fleet, the mouse wheel zooms, " +
-                           "right or middle drag orbits, WASD pans, Home recenters, Escape returns to the previous scale, Space pauses and Tab toggles the overlay.", "small"));
-            // Planetary Commandfall stays its own game (Commandfall 0.15); the slice launches the existing build when present.
-            m.Add(UIX.Text("PLANETARY COMMANDFALL", "h-section"));
+            m.Add(UIX.Text("Shape your view of the expanse.", "subtitle"));
+            var tabs = UIX.Div("settings-tabs"); m.Add(tabs);
+            var scroll = new ScrollView(ScrollViewMode.Vertical); StyleScroll(scroll);
+            scroll.AddToClassList("settings-scroll"); m.Add(scroll);
+            var preferences = UIX.Div("settings-page"); preferences.name = "settings-preferences";
+            var controls = UIX.Div("settings-page"); controls.name = "settings-controls";
+            scroll.Add(preferences); scroll.Add(controls);
+            Button preferencesTab = null, controlsTab = null;
+            void SelectPage(bool shortcuts)
+            {
+                preferences.style.display = shortcuts ? DisplayStyle.None : DisplayStyle.Flex;
+                controls.style.display = shortcuts ? DisplayStyle.Flex : DisplayStyle.None;
+                preferencesTab.EnableInClassList("btn-primary", !shortcuts);
+                controlsTab.EnableInClassList("btn-primary", shortcuts);
+                preferencesTab.MarkDirtyRepaint(); controlsTab.MarkDirtyRepaint();
+                scroll.scrollOffset = Vector2.zero;
+            }
+            preferencesTab = UIX.Btn("Preferences", () => SelectPage(false)); preferencesTab.name = "settings-tab-preferences";
+            controlsTab = UIX.Btn("Controls & companion", () => SelectPage(true)); controlsTab.name = "settings-tab-controls";
+            tabs.Add(preferencesTab); tabs.Add(controlsTab);
+            preferences.Add(UiKit.Section("01", "DISPLAY & COMFORT"));
+            preferences.Add(PreferenceSlider("Interface size", "Scale text and controls together.", "settings-scale", .85f, 1.4f, Settings.UiScale,
+                v => { Settings.UiScale = v; Settings.Save(); ApplyScale(); }));
+            preferences.Add(PreferenceToggle("Reduced motion", "Calmer movement and immediate interface transitions.", "settings-motion", Settings.ReducedMotion,
+                v => { Settings.ReducedMotion = v; Root.EnableInClassList("reduced-motion", v); Settings.Save(); }));
+            preferences.Add(UiKit.Section("02", "AUDIO"));
+            preferences.Add(PreferenceToggle("Mute all sound", "Keep your volume mix while listening silently.", "settings-mute", Settings.Muted,
+                v => { Settings.Muted = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
+            preferences.Add(PreferenceSlider("Master volume", null, "settings-master", 0, 1, Settings.Master,
+                v => { Settings.Master = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
+            preferences.Add(PreferenceSlider("Music", null, "settings-music", 0, 1, Settings.Music,
+                v => { Settings.Music = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
+            preferences.Add(PreferenceSlider("Effects", null, "settings-effects", 0, 1, Settings.Effects,
+                v => { Settings.Effects = v; Settings.Save(); _game.Audio.ApplyVolumes(); }));
+            controls.Add(UiKit.Section("01", "NAVIGATION & ORDERS"));
+            foreach (var pair in new[] { ("Left click", "Select a world or fleet"), ("Double click", "Enter a star system"),
+                ("Right click", "Order the selected fleet"), ("Mouse wheel", "Zoom in or out"), ("Right / middle drag", "Orbit the view"),
+                ("W A S D", "Pan the camera"), ("Home", "Recenter the view"), ("Escape", "Close a panel or return to the previous scale"),
+                ("Space", "Pause or resume time"), ("Tab", "Toggle the strategic overlay") })
+            {
+                var row = UIX.Div("shortcut-row"); row.Add(UIX.Text(pair.Item1, "shortcut-key")); row.Add(UIX.Text(pair.Item2, "shortcut-action")); controls.Add(row);
+            }
+            controls.Add(UiKit.Section("02", "PLANETARY COMMANDFALL"));
+            controls.Add(UIX.Text("Play a Silex versus Craigon exercise. Campaign progress is preserved.", "setting-hint"));
+            foreach(var item in new[]{("Line infantry",0),("Specialists",1),("War engines",2)})
+            { int g=item.Item2;var btn=UIX.Btn(item.Item1,()=>_game.StartGroundExercise(g));btn.SetEnabled(_game.Scale!=ViewScale.Battle);controls.Add(btn); }
+            controls.Add(UIX.Btn("Inspect units and animations",()=>{CloseModal();UnitGallery.Open(_game);}));
+
             string exe = CommandfallExe();
-            var launch = UIX.Btn("Open planetary Commandfall (separate game)", () =>
+            controls.Add(UIX.Text(exe != null ? "Companion game ready. Opens in its own window." : "Companion game unavailable on this installation.", "setting-hint"));
+            var launch = UIX.Btn("Open planetary Commandfall", () =>
             {
                 try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe) { WorkingDirectory = System.IO.Path.GetDirectoryName(exe) }); }
-                catch (Exception ex) { Debug.LogWarning("[RR] could not start Commandfall: " + ex.Message); }
+                catch (Exception ex) { Debug.LogWarning("[RR] could not start Commandfall: " + ex.Message); Strategy.Toast("Commandfall could not open. Check the companion installation.", "bad"); }
             });
-            launch.SetEnabled(exe != null);
-            m.Add(launch);
-            m.Add(UIX.Text(exe != null ? "Ground battles use the existing Commandfall build at " + exe + "." : "The Commandfall build was not found. Pass -rrCommandfallExe with its path to enable this.", "small"));
-            var foot = UIX.Div("row"); foot.Add(UIX.Div("spacer")); foot.Add(UIX.Btn("Close", CloseModal, "btn-primary")); m.Add(foot);
+            launch.SetEnabled(exe != null); controls.Add(launch);
+            var foot = UIX.Div("settings-footer");
+            foot.Add(UIX.Text("Changes save automatically", "setting-hint")); foot.Add(UIX.Div("spacer"));
+            var close = UIX.Btn("Done", CloseModal, "btn-primary"); close.name = "settings-done"; foot.Add(close); m.Add(foot);
+            SelectPage(false);
+        }
+
+        static VisualElement PreferenceToggle(string title, string hint, string name, bool value, Action<bool> set)
+        {
+            var row = UIX.Div("setting-row"); var copy = UIX.Div("setting-copy");
+            copy.Add(UIX.Text(title, "setting-title")); copy.Add(UIX.Text(hint, "setting-hint")); row.Add(copy);
+            var toggle = new Toggle { name = name, value = value, tooltip = title }; toggle.AddToClassList("setting-switch");
+            var state = UIX.Text(value ? "ON" : "OFF", "setting-state"); state.name = name + "-state";
+            toggle.RegisterValueChangedCallback(e => { state.text = e.newValue ? "ON" : "OFF"; set(e.newValue); });
+            row.Add(state); row.Add(toggle); return row;
+        }
+
+        static VisualElement PreferenceSlider(string title, string hint, string name, float lo, float hi, float value, Action<float> set)
+        {
+            var row = UIX.Div("setting-row", "setting-range"); var heading = UIX.Div("row");
+            heading.Add(UIX.Text(title, "setting-title")); heading.Add(UIX.Div("spacer"));
+            var number = UIX.Text(Mathf.RoundToInt(value * 100) + "%", "setting-value"); number.name = name + "-value"; heading.Add(number); row.Add(heading);
+            if (hint != null) row.Add(UIX.Text(hint, "setting-hint"));
+            var slider = new Slider(lo, hi) { name = name, value = value, tooltip = title }; slider.AddToClassList("setting-slider");
+            slider.RegisterValueChangedCallback(e => { number.text = Mathf.RoundToInt(e.newValue * 100) + "%"; set(e.newValue); });
+            row.Add(slider); return row;
         }
 
         public static string CommandfallExe()
@@ -313,11 +403,5 @@ namespace RR.Game
             return null;
         }
 
-        static VisualElement Slider(string label, float lo, float hi, float v, Action<float> set)
-        {
-            var s = new Slider(label, lo, hi) { value = v };
-            s.RegisterValueChangedCallback(e => set(e.newValue));
-            return s;
-        }
     }
 }

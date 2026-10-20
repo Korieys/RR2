@@ -1,0 +1,56 @@
+{
+  "source_index": 31,
+  "id": "silex_crown_warden",
+  "category": "Infantry",
+  "source_triangles": 1435430,
+  "lod_triangles": [
+    32000,
+    8000,
+    1999
+  ],
+  "bones": 15,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 24.3,
+  "provisional": true,
+  "animation_pass": "close-view-2",
+  "animation_role": "hammer",
+  "clip_details": {
+    "Idle": {
+      "frames": 120,
+      "seconds": 3.966666666666667,
+      "contact": null
+    },
+    "Move": {
+      "frames": 38,
+      "seconds": 1.2333333333333334,
+      "contact": null
+    },
+    "Attack": {
+      "frames": 34,
+      "seconds": 1.1,
+      "contact": 0.38
+    },
+    "Ability": {
+      "frames": 72,
+      "seconds": 2.3666666666666667,
+      "contact": 0.5
+    },
+    "Hit": {
+      "frames": 22,
+      "seconds": 0.7,
+      "contact": null
+    },
+    "Death": {
+      "frames": 64,
+      "seconds": 2.1,
+      "contact": null
+    }
+  }
+}

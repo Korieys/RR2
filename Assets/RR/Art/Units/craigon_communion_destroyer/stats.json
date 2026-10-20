@@ -1,0 +1,56 @@
+{
+  "source_index": 41,
+  "id": "craigon_communion_destroyer",
+  "category": "Ships",
+  "source_triangles": 1481888,
+  "lod_triangles": [
+    26000,
+    8000,
+    2000
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 24.9,
+  "provisional": false,
+  "animation_pass": "close-view-2",
+  "animation_role": "cruising",
+  "clip_details": {
+    "Idle": {
+      "frames": 120,
+      "seconds": 3.966666666666667,
+      "contact": null
+    },
+    "Move": {
+      "frames": 38,
+      "seconds": 1.2333333333333334,
+      "contact": null
+    },
+    "Attack": {
+      "frames": 34,
+      "seconds": 1.1,
+      "contact": 0.38
+    },
+    "Ability": {
+      "frames": 72,
+      "seconds": 2.3666666666666667,
+      "contact": 0.5
+    },
+    "Hit": {
+      "frames": 22,
+      "seconds": 0.7,
+      "contact": null
+    },
+    "Death": {
+      "frames": 64,
+      "seconds": 2.1,
+      "contact": null
+    }
+  }
+}

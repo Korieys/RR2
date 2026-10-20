@@ -1,0 +1,56 @@
+{
+  "source_index": 13,
+  "id": "craigon_ascendant_ark",
+  "category": "Ships",
+  "source_triangles": 1467318,
+  "lod_triangles": [
+    25999,
+    8000,
+    2000
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 21.9,
+  "provisional": false,
+  "animation_pass": "close-view-2",
+  "animation_role": "capital",
+  "clip_details": {
+    "Idle": {
+      "frames": 150,
+      "seconds": 4.966666666666667,
+      "contact": null
+    },
+    "Move": {
+      "frames": 48,
+      "seconds": 1.5666666666666667,
+      "contact": null
+    },
+    "Attack": {
+      "frames": 40,
+      "seconds": 1.3,
+      "contact": 0.38
+    },
+    "Ability": {
+      "frames": 72,
+      "seconds": 2.3666666666666667,
+      "contact": 0.5
+    },
+    "Hit": {
+      "frames": 22,
+      "seconds": 0.7,
+      "contact": null
+    },
+    "Death": {
+      "frames": 64,
+      "seconds": 2.1,
+      "contact": null
+    }
+  }
+}

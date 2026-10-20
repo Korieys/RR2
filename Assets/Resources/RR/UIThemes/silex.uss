@@ -1,0 +1,13 @@
+/* Silex identity. Add other faction-id sheets beside this file; shared components need no forks. */
+.rr-ui {
+    --navy: rgb(10, 28, 47);
+    --navy-raised: rgb(20, 42, 64);
+    --paper: rgb(241, 247, 252);
+    --paper-raised: rgb(252, 254, 255);
+    --ink: rgb(19, 45, 70);
+    --ink-muted: rgb(70, 96, 119);
+    --accent: rgb(139, 207, 252);
+    --accent-soft: rgb(215, 235, 250);
+    --accent-ink: rgb(25, 87, 132);
+    --line-light: rgb(194, 216, 233);
+}

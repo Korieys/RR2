@@ -101,7 +101,7 @@ namespace RR.Game
             UI.Strategy.Root.style.display = DisplayStyle_None;
             // Chart the hero system up front (honest loading: shown with progress).
             var hero = G.GetSystem(SliceScenario.HeroSystem);
-            var jobs = hero.Planets.Select(p => PlanetBaker.Start(p, p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant ? 768 : 384)).ToList();
+            var jobs = hero.Planets.Where(p => !Args.Has("-rrUiSmoke")).Select(p => PlanetBaker.Start(p, p.Id == SliceScenario.HeroPlanet ? 1024 : p.Kind == PlanetKind.GasGiant ? 768 : 384)).ToList();
             while (jobs.Any(j => !j.Work.IsCompleted))
             {
                 UI.ShowLoading("Charting the Aurelith system", jobs.Count(j => j.Work.IsCompleted) / (float)jobs.Count);
@@ -117,12 +117,21 @@ namespace RR.Game
             Selection.SelectFleet(G, SliceScenario.PlayerFleet);
             Audio.Bed("amb_galaxy");
             PlaytestMetrics.Init(SavePath);
+            var assetReview=Args.Value("-rrUnitReview");
+            if(Args.Has("-rrPolishReview")){gameObject.AddComponent<UnitReviewCapture>();StartCoroutine(UnitPolishReview.Run(this,Args.Value("-rrPolishReview")));yield break;}
+            if(OffscreenScene!=null && (assetReview!=null || Args.Has("-rrUnitCapture")))gameObject.AddComponent<UnitReviewCapture>();
+            if(assetReview!=null){StartCoroutine(UnitGallery.Review(this,assetReview));yield break;}
+            if(Args.Has("-rrGround")){StartGroundExercise();yield break;}
+            var uiSmoke = Args.Value("-rrUiSmoke");
+            if(uiSmoke != null) { StartCoroutine(Automation.UiSmoke(this,uiSmoke)); yield break; }
             var tour = Args.Value("-rrTour");
             if (tour != null) StartCoroutine(Automation.FullTour(this, tour));
             var soak = Args.Value("-rrSoak");
             if (soak != null) StartCoroutine(Automation.Soak(this, soak, 10));
             var sheet = Args.Value("-rrShipSheet");
             if (sheet != null) { UI.Strategy.Root.style.display = DisplayStyle_None; StartCoroutine(Automation.ShipSheet(this, sheet)); }
+            var review = Args.Value("-rrReview");
+            if (review != null) StartCoroutine(Automation.PresentationReview(this, review));
             var cap = Args.Value("-rrCapture");
             if (cap != null) StartCoroutine(Automation.SystemTourFromGalaxy(this, cap));
             var passageTour = Args.Value("-rrPassageTour");
@@ -200,10 +209,10 @@ namespace RR.Game
             // The galaxy view has its own grade, faded in and out with the scale (about a third of a second).
             if (GalaxyGrade != null)
             {
-                float want = Scale == ViewScale.Galaxy ? 1f : 0f;
+                float want = Scale == ViewScale.Galaxy && !ShipSheetMode ? 1f : 0f;
                 GalaxyGrade.weight = Mathf.MoveTowards(GalaxyGrade.weight, want, Time.unscaledDeltaTime / (Settings.ReducedMotion ? 0.1f : 0.35f));
             }
-            Rig.PitchForDistance = Scale == ViewScale.Galaxy ? GalaxyPitch : (Func<float, float>)null;
+            Rig.PitchForDistance = !UnitGallery.Active && Scale == ViewScale.Galaxy ? GalaxyPitch : (Func<float, float>)null;
             if (G == null || Galaxy == null) return;
             Clock.Blocked = Busy || Scale == ViewScale.Battle || UI.ModalOpen;
             Clock.Tick(G, Time.unscaledDeltaTime);
@@ -211,18 +220,18 @@ namespace RR.Game
             else if (Scale == ViewScale.Galaxy) { Galaxy.RefreshFleets(Clock.Fraction); GalaxyLighting(); }
             else if (LocalSystem != null && LocalSystem.Ready && Scale != ViewScale.Battle) LocalSystem.ApplyLighting();
             else if (Scale == ViewScale.Battle && Battle != null) BattleLighting();
-            if (Scale == ViewScale.Planet && LocalSystem != null && Selection.PlanetId != null)
+            if (!UnitGallery.Active && Scale == ViewScale.Planet && LocalSystem != null && Selection.PlanetId != null)
             {
                 var pv = LocalSystem.Planet(Selection.PlanetId);
-                if (pv != null && !Rig.Transitioning) Rig.Target.Focus = pv.Root.position;
+                if (pv != null && !Rig.Transitioning) Rig.Target.Focus = PlanetFramingFocus(pv.Root.position, pv.Radius, Rig.Target.Yaw, Rig.Target.Pitch);
             }
-            HandleInput();
+            if(!UnitGallery.Active)HandleInput();
             CampaignUpdate();
             UI.Strategy.RefreshTop();
             UI.Strategy.UpdateLabels(Rig.Cam, Settings.Overlays && !Busy && Scale != ViewScale.Battle);
             if (_battleHud != null) _battleHud.Update(Rig.Cam);
             if (_slicePanel != null) _slicePanel.Update(Rig.Cam);
-            if (Scale == ViewScale.Battle && Battle != null && Battle.Over && !_resultShown && ReviewDone()) FinishBattle();
+            if (!UnitGallery.Active && Scale == ViewScale.Battle && Battle != null && Battle.Over && !_resultShown && ReviewDone()) FinishBattle();
             bool loading = Busy && !string.IsNullOrEmpty(LoadingText);
             if (loading) { UI.ShowLoading(LoadingText, LoadingProgress); _loadingShown = true; }
             else if (_loadingShown) { UI.HideLoading(); _loadingShown = false; }
@@ -241,7 +250,7 @@ namespace RR.Game
             var d = Battle.StarDir;
             var p = Battle.transform.position + d * 2600;
             Shader.SetGlobalVector("_RR_StarPosWS", new Vector4(p.x, p.y, p.z, 34));
-            Shader.SetGlobalVector("_RR_StarColor", Look.StarColor(G.GetSystem(BattleSystemId).Star) * 2.1f);
+            Shader.SetGlobalVector("_RR_StarColor", Look.StarColor(G.GetSystem(GroundExercise ? SliceScenario.HeroSystem : BattleSystemId).Star) * 2.1f);
             Shader.SetGlobalVector("_RR_Ambient", new Vector4(0.02f, 0.024f, 0.034f, 0.35f));
         }
 

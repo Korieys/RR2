@@ -45,8 +45,8 @@ Shader "RR/Corona"
                 float r = length(i.uv);
                 float rs = _StarRadius;
                 float x = saturate((r - rs) / (1 - rs));
-                float glow = exp(-x * 9) * 0.9 + exp(-x * 3) * 0.12;
-                float streak = RR_Fbm(i.dirWS * 3.5 + _RR_Time * 0.01, 3) * 0.5 + 0.5;
+                float glow = exp(-x * 18) * 1.4 + exp(-x * 5.5) * 0.16;
+                float streak = RR_Fbm(i.dirWS * 3.5 + _RR_Time * _RR_Motion * 0.01, 3) * 0.5 + 0.5;
                 glow *= lerp(0.75, 1.25, streak);
                 glow *= saturate(1 - x) * step(rs * 0.98, r);
                 return float4(_Color.rgb * glow * _Intensity, 0);

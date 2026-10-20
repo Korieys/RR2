@@ -1,0 +1,56 @@
+{
+  "source_index": 22,
+  "id": "craigon_convergence_hauler",
+  "category": "GroundVehicles",
+  "source_triangles": 1913325,
+  "lod_triangles": [
+    26000,
+    8000,
+    2000
+  ],
+  "bones": 14,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 35.9,
+  "provisional": false,
+  "animation_pass": "close-view-2",
+  "animation_role": "suspension",
+  "clip_details": {
+    "Idle": {
+      "frames": 150,
+      "seconds": 4.966666666666667,
+      "contact": null
+    },
+    "Move": {
+      "frames": 48,
+      "seconds": 1.5666666666666667,
+      "contact": null
+    },
+    "Attack": {
+      "frames": 40,
+      "seconds": 1.3,
+      "contact": 0.38
+    },
+    "Ability": {
+      "frames": 72,
+      "seconds": 2.3666666666666667,
+      "contact": 0.5
+    },
+    "Hit": {
+      "frames": 22,
+      "seconds": 0.7,
+      "contact": null
+    },
+    "Death": {
+      "frames": 64,
+      "seconds": 2.1,
+      "contact": null
+    }
+  }
+}

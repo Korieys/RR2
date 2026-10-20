@@ -1,0 +1,56 @@
+{
+  "source_index": 14,
+  "id": "craigon_sporewing_fighter",
+  "category": "Ships",
+  "source_triangles": 1898455,
+  "lod_triangles": [
+    26000,
+    8000,
+    2000
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 31.6,
+  "provisional": false,
+  "animation_pass": "close-view-2",
+  "animation_role": "agile",
+  "clip_details": {
+    "Idle": {
+      "frames": 120,
+      "seconds": 3.966666666666667,
+      "contact": null
+    },
+    "Move": {
+      "frames": 30,
+      "seconds": 0.9666666666666667,
+      "contact": null
+    },
+    "Attack": {
+      "frames": 28,
+      "seconds": 0.9,
+      "contact": 0.38
+    },
+    "Ability": {
+      "frames": 72,
+      "seconds": 2.3666666666666667,
+      "contact": 0.5
+    },
+    "Hit": {
+      "frames": 22,
+      "seconds": 0.7,
+      "contact": null
+    },
+    "Death": {
+      "frames": 64,
+      "seconds": 2.1,
+      "contact": null
+    }
+  }
+}

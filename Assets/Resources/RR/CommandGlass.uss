@@ -1,0 +1,184 @@
+/* Command Glass. Semantic surface roles; faction accent remains supplied by UIThemes. */
+.rr-ui {
+    --navy: rgba(5, 17, 30, .99); --navy-raised: rgba(12, 33, 53, .99);
+    --ink: rgb(229, 241, 252); --ink-muted: rgb(156, 185, 207);
+    --ivory: rgb(229, 241, 252); --muted: rgb(156, 185, 207); --dim: rgb(112, 145, 169);
+    --accent-ink: var(--accent); --accent-soft: rgba(100, 193, 244, .14);
+    --line: rgba(95, 159, 199, .38); --line-light: rgb(190, 215, 234);
+    --control: rgb(14, 34, 53); --hover: rgb(24, 53, 76); --item: rgba(23, 51, 74, .42);
+    --danger: rgb(245, 145, 142); --positive: rgb(110, 220, 189);
+    color: var(--ivory);
+}
+.rr-ui .surface-light {
+    --ink: rgb(17, 41, 63); --ink-muted: rgb(72, 103, 130);
+    --ivory: rgb(17, 41, 63); --muted: rgb(72, 103, 130); --dim: rgb(112, 134, 152);
+    --accent-ink: rgb(24, 87, 132); --accent-soft: rgb(217, 237, 250);
+    --line: rgb(194, 218, 235); --control: rgb(226, 239, 248); --hover: rgb(204, 231, 249);
+    --item: rgb(244, 249, 253); --danger: rgb(171, 46, 55);
+    color: var(--ink);
+}
+.topbar { height: 72px; padding: 0 22px; }
+.empire-identity { width: 266px; margin-right: 20px; }
+.emblem-name { font-size: 19px; letter-spacing: .7px; }
+.identity-sub { letter-spacing: .6px; font-size: 8px; }
+.res { padding: 0 22px; }
+.res-value { font-size: 23px; }
+.res-income { color: rgb(97, 214, 219); }
+.inspector { left: 12px; top: 90px; bottom: 12px; width: 420px; padding: 24px 26px 24px 26px; }
+.dossier-heading .eyebrow { color: var(--muted); letter-spacing: .6px; }
+.dossier-heading .h-display { font-size: 34px; letter-spacing: 1.3px; margin: 8px 0 3px 0; }
+.subtitle { font-size: 15px; margin: 3px 0 14px 0; }
+.kit-tabs { margin-bottom: 14px; border-bottom-width: 1px; }
+.kit-tab { min-height: 46px; padding: 10px 4px; margin-right: 8px; }
+.kit-tab-last { margin-right: 0; }
+.kit-tab .tab-label { color: var(--muted); margin: 0; padding: 0; font-size: 14px; letter-spacing: .1px; }
+.kit-tab-selected .tab-label { color: var(--accent); }
+.kit-section .h-section { color: var(--muted); font-size: 12px; letter-spacing: .4px; }
+.section-index { color: var(--muted); font-size: 11px; }
+.inspector .kit-section { margin-top: 17px; margin-bottom: 12px; }
+.inspector .data-row { min-height: 46px; padding: 8px 0; align-items: center; }
+.data-icon { display: none; }
+.data-row .small { font-size: 14px; }
+.data-value { font-size: 16px; }
+.data-population .data-value { font-size: 22px; -unity-font-style: bold; }
+.development-segment { height: 10px; background-color: rgba(94, 159, 206, .34); }
+.development-segment-on { background-color: var(--accent); }
+.development-meter { max-width: 148px; margin: 0 12px; }
+.yield-grid { background-color: rgba(0,0,0,0); padding: 6px 0 18px 0; border-bottom-width: 1px; border-bottom-color: var(--line); }
+.yield-cell { padding: 0 8px; }
+.yield-cell .small { font-size: 13px; }
+.yield-number { font-size: 26px; }
+.orbit-status { background-color: rgba(0,0,0,0); border-left-width: 0; padding: 4px 0 8px 0; }
+.orbit-copy { margin-left: 14px; }
+.orbit-title { font-size: 16px; margin-bottom: 8px; }
+.orbit-copy .small { font-size: 14px; }
+.dossier-footer { padding-top: 14px; margin-top: 8px; }
+.dossier-footer .btn { min-height: 50px; font-size: 15px; padding-left: 28px; }
+.command-dock { left: 442px; min-height: 238px; height: auto; padding-top: 0; }
+.outliner { width: 55%; padding: 0 20px 18px 20px; }
+.outliner .kit-section { margin: 15px 0 14px 0; }
+.outliner .kit-section .h-section { color: var(--muted); }
+.outliner .section-index { color: var(--muted); }
+.fleet-card { width: 348px; min-height: 160px; padding: 16px; margin-right: 16px; justify-content: flex-start; }
+.fleet-card .item-title { font-size: 16px; }
+.fleet-selection { display: none; }
+.fleet-card-body { margin-top: 14px; flex-grow: 1; align-items: center; }
+.fleet-card .ship-portrait-small { width: 145px; height: 95px; margin-right: 12px; }
+.fleet-card-stats { flex-grow: 1; flex-shrink: 1; min-width: 0; padding-left: 18px; border-left-width: 1px; border-left-color: var(--line); }
+.fleet-card .fleet-count { font-size: 16px; white-space: nowrap; }
+.fleet-status { font-size: 11px; letter-spacing: .4px; margin-top: 3px; }
+.fleet-location, .compact .fleet-location { border-top-width: 0; padding: 0; margin-top: 18px; }
+.fleet-location .item-sub { margin: 0; font-size: 14px; }
+.inspector-actions { margin: 0; padding: 14px 14px 16px 16px; border-left-width: 1px; border-left-color: var(--line); min-width: 0; }
+.inspector-actions > .eyebrow { color: var(--muted); margin: 0 0 9px 4px; font-size: 11px; letter-spacing: .4px; }
+.command-card { padding: 18px 20px; flex-grow: 1; flex-shrink: 0; min-width: 0; }
+.command-body > .ship-portrait { width: 175px; height: 142px; padding-right: 18px; margin-right: 20px; border-right-color: var(--line); }
+.command-title { font-size: 23px; letter-spacing: .1px; }
+.command-info .small { font-size: 14px; }
+.command-info .cost-row { margin-top: 10px; margin-bottom: 0; }
+.command-info .btn { margin-top: 14px; height: 46px; min-height: 46px; font-size: 15px; }
+.command-buttons { margin-top: 14px; }
+.command-buttons .btn { margin-top: 0; }
+.command-info .command-hint { font-size: 12px; margin-top: 10px; }
+.cost-value { padding-right: 13px; margin-right: 13px; border-right-width: 1px; border-right-color: var(--line); }
+.cost-value-last { padding-right: 0; margin-right: 0; border-right-width: 0; }
+.context-strip { left: 468px; top: 105px; }
+.world-inspection .context-strip { display: none; }
+.strategy-hint { left: 464px; }
+.strategy-toasts { left: 464px; }
+.ticker { top: 98px; right: 16px; width: 422px; padding: 14px 22px; }
+.ticker .eyebrow { color: var(--muted); font-size: 11px; letter-spacing: .3px; }
+.ticker-line { font-size: 14px; margin-top: 8px; }
+.log-button { min-height: 26px; min-width: 48px; font-size: 12px; }
+.panel, .item, .ship-row, .unit-card, .tag, .roster-item { border-radius: 4px; }
+.roster-item { background-color: rgba(72, 135, 179, .09); }
+.roster-flagship { background-color: rgba(72, 135, 179, .17); }
+.project-meta { color: var(--muted); }
+.item-selected .project-meta { color: var(--accent); }
+.dossier-summary { margin-bottom: 12px; }
+.setting-switch .unity-toggle__checkmark { background-color: var(--control); border-color: var(--muted); }
+.setting-switch:checked .unity-toggle__checkmark { background-color: var(--accent); border-color: var(--accent); }
+.setting-slider .unity-base-slider__dragger { background-color: var(--accent); border-color: var(--navy); }
+.shortcut-key { border-radius: 3px; }
+.modal { padding: 30px; }
+.modal-title { color: var(--ivory); }
+.battle-left, .battle-right { padding: 23px; }
+.compact .topbar { height: 70px; }
+.compact .inspector { top: 82px; width: 310px; padding: 22px 19px 17px 19px; }
+.compact .dossier-heading .h-display { font-size: 26px; }
+.compact .kit-tab { min-height: 40px; padding: 8px 2px; }
+.compact .kit-tab .tab-label { margin: 0; font-size: 12px; letter-spacing: 0; }
+.compact .inspector .data-row { min-height: 42px; padding: 8px 0; }
+.compact .data-population .data-value { font-size: 18px; }
+.compact .development-meter { max-width: 98px; margin: 0 6px; }
+.compact .development-segment { height: 8px; }
+.compact .yield-cell .small { font-size: 10px; }
+.compact .orbit-status { padding: 2px 0 6px 0; }
+.compact .orbit-copy .small { font-size: 12px; }
+.compact .command-dock { left: 326px; min-height: 224px; }
+.compact .outliner { width: 48%; padding: 0 14px 14px 14px; }
+.compact .outliner .kit-section { margin-top: 14px; margin-bottom: 12px; }
+.compact .fleet-card { width: 258px; min-height: 142px; padding: 12px; margin-right: 12px; }
+.compact .fleet-card .ship-portrait-small { width: 104px; height: 78px; margin-right: 8px; }
+.compact .fleet-card-stats { padding-left: 10px; }
+.compact .fleet-card .fleet-count { font-size: 13px; }
+.compact .fleet-location .item-sub { font-size: 12px; }
+.compact .inspector-actions { margin: 0; padding: 12px 10px 14px 12px; }
+.compact .inspector-actions > .eyebrow { font-size: 10px; }
+.compact .command-card { padding: 18px; }
+.compact .command-body > .ship-portrait { width: 108px; height: 112px; margin-right: 14px; padding-right: 12px; }
+.compact .command-title { font-size: 20px; }
+.compact .command-info .small { font-size: 12px; }
+.compact .command-info .btn { height: 40px; min-height: 40px; font-size: 13px; margin-top: 12px; }
+.compact .command-buttons { margin-top: 12px; }
+.compact .command-buttons .btn { margin-top: 0; }
+.compact .cost-value { padding-right: 8px; margin-right: 8px; }
+.compact .cost-value-last { padding-right: 0; margin-right: 0; }
+.compact .context-strip { left: 344px; top: 98px; }
+.compact .ticker { width: 310px; top: 90px; right: 14px; }
+.compact .ticker .eyebrow { font-size: 9px; }
+.compact .ticker-line { font-size: 12px; }
+.compact .strategy-toasts { left: 340px; }
+.compact .strategy-hint { left: 340px; }
+
+/* Resolve palette aliases on each generated surface, including inherited faction tokens. */
+.rr-ui .prism-surface {
+    --surface-navy: var(--navy); --surface-raised: var(--navy-raised);
+    --surface-paper: var(--paper); --surface-white: var(--paper-raised);
+    --surface-accent: var(--accent); --surface-line: var(--line);
+    --surface-control: var(--control); --surface-hover: var(--hover); --surface-ink: var(--ink);
+}
+.rr-ui .content-icon { --content-color: var(--ivory); }
+.rr-ui .accent-icon { --icon-accent: var(--accent); }
+.settings-console { height: 920px; }
+.dossier-heading .h-display, .emblem-name, .command-title, .modal-title, .setting-title, .res-value { -unity-font-style: normal; }
+
+.item-title, .data-population .data-value, .yield-number, .kit-section .h-section, .fleet-count { -unity-font-style: normal; }
+
+/* Status semantics take precedence over secondary-copy typography. */
+.rr-ui .text-danger { color: var(--danger); }
+
+/* Cinematic optics remain inside component bounds; dimensions and hit areas are unchanged. */
+.rr-ui .portrait-optics { --portrait-accent: var(--accent); }
+.ship-portrait-image { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.rr-ui .cinematic-backdrop { background-color: rgba(2, 12, 23, .65); }
+.cinematic-ui .fleet-card-selected .fleet-status { color: var(--accent); }
+.cinematic-ui .development-segment-on { border-top-width: 1px; border-top-color: rgba(231, 247, 255, .65); border-bottom-width: 1px; border-bottom-color: rgba(3, 29, 49, .45); }
+
+/* A distinct inspection target inside a selectable fleet card. */
+.inspect-portrait { padding: 0; margin: 0; border-width: 0; background-color: transparent; flex-shrink: 0; position: relative; }
+.inspect-portrait .ship-portrait { margin-right: 0; }
+.inspect-portrait .ship-portrait-image { bottom: 14px; }
+.inspect-hint { position: absolute; bottom: 0; left: 0; right: 0; font-size: 9px; letter-spacing: 1px; color: var(--accent); -unity-text-align: middle-center; opacity: .6; }
+.inspect-portrait:hover .inspect-hint, .inspect-portrait:focus .inspect-hint { opacity: 1; }
+.fleet-card .inspect-portrait { margin-right: 12px; }
+.fleet-card .ship-portrait-small { height: 105px; }
+.compact .fleet-card .inspect-portrait { margin-right: 8px; }
+.compact .fleet-card .ship-portrait-small { height: 82px; }
+.roster-body .inspect-portrait { margin-right: 10px; }
+.unit-inspector { position: absolute; left: 24px; top: 70px; bottom: 52px; width: 300px; padding: 20px; }
+.unit-inspector .h-display { font-size: 24px; white-space: normal; }
+.unit-inspector .body { white-space: normal; }
+.unit-inspector .row { flex-wrap: wrap; margin-top: 10px; }
+.unit-inspector .btn { margin-bottom: 5px; }
+.unit-inspector .clip-active { border-bottom-color: var(--accent); border-bottom-width: 2px; }

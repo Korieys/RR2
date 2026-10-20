@@ -15,9 +15,13 @@ namespace RR.Game
         public int Owner;
         public string DefId;
         public Transform T, Model, Ring, LeaderRing;
+        public UnitVisual Visual;
+        public bool Ground;
         public Material RingMat;
         public bool Dead;
-        public float Bob;
+        public float Bob, Bank, Recoil;
+        public bool MotionOwned;
+        public TrailRenderer Drive;
     }
 
     // Orbital Commandfall in the same universe as the strategy layer. The rules (legality, previews, resolution, AI)
@@ -83,9 +87,9 @@ namespace RR.Game
         void Construct()
         {
             _starDir = new Vector3(-0.85f, 0.32f, 0.25f).normalized;
-            BuildBackdrop();
+            if (S.Config.Domain == BattleDomain.Planetary) BuildGround(); else BuildBackdrop();
             BuildGrid();
-            BuildTerrain();
+            if (S.Config.Domain == BattleDomain.Planetary) BuildGroundTerrain(); else BuildTerrain();
             foreach (var u in S.Units.Where(u => u.Alive)) CreateUnitView(u);
             SyncAll(true);
         }
@@ -102,21 +106,21 @@ namespace RR.Game
                 var m = new Material(lib.planet) { name = "Battle planet" };
                 m.SetTexture("_AlbedoCube", tex.Albedo); m.SetTexture("_NormalCube", tex.Normal); m.SetTexture("_DetailCube", tex.Detail); m.SetTexture("_CloudCube", tex.Clouds);
                 bool airy = host.Kind == PlanetKind.Crystal || host.Kind == PlanetKind.Terran || host.Kind == PlanetKind.Ocean || host.Kind == PlanetKind.Toxic;
-                m.SetFloat("_CloudAmount", airy ? 0.8f : 0f);
+                m.SetFloat("_CloudAmount", airy ? 0.52f : 0f);
                 m.SetColor("_AtmoColor", host.Kind == PlanetKind.Toxic ? new Color(0.55f, 0.75f, 0.3f) : new Color(0.36f, 0.62f, 1f)); m.SetFloat("_AtmoStrength", airy ? 1f : 0.2f);
                 m.SetColor("_CityColor", new Color(0.55f, 0.85f, 1f)); m.SetFloat("_Glint", host.Kind == PlanetKind.Crystal ? 1.2f : 0);
-                m.SetColor("_EmisColor", host.Kind == PlanetKind.Toxic ? new Color(0.65f, 0.25f, 1f) * 0.8f : new Color(1f, 0.35f, 0.06f) * 2f);
+                m.SetColor("_EmisColor", host.Kind == PlanetKind.Toxic ? new Color(0.65f, 0.25f, 1f) * 0.8f : new Color(1f, 0.25f, 0.04f) * 0.85f);
                 var planet = Mesh("Planet below", MeshFactory.Sphere(128), m);
                 // Off to the right and behind the board: a lit crescent frames the encounter without becoming its floor.
-                planet.transform.localPosition = new Vector3(300, -120, 480);
-                planet.transform.localScale = Vector3.one * 260;
+                planet.transform.localPosition = new Vector3(330, -90, 520);
+                planet.transform.localScale = Vector3.one * 170;
                 planet.transform.localRotation = Quaternion.Euler(18, 40, 0);
                 if (airy)
                 {
                     var am = new Material(lib.atmosphere); am.SetColor("_AtmoColor", new Color(0.36f, 0.62f, 1f)); am.SetFloat("_Intensity", 1.6f);
                     am.SetFloat("_PlanetRadius", 1f / 1.03f);
                     var atmo = Mesh("Atmosphere", MeshFactory.Sphere(96), am);
-                    atmo.transform.localPosition = planet.transform.localPosition; atmo.transform.localScale = Vector3.one * 260 * 1.03f;
+                    atmo.transform.localPosition = planet.transform.localPosition; atmo.transform.localScale = Vector3.one * 170 * 1.03f;
                     atmo.transform.localRotation = planet.transform.localRotation;
                 }
             }
@@ -250,14 +254,17 @@ namespace RR.Game
             var m = Instantiate(model, root);
             SystemPresentation.ApplyShipMaterial(m, u.DefId);
             float len = 1f;
+            var visual=m.GetComponent<UnitVisual>();
             var mf = m.GetComponentInChildren<MeshFilter>();
-            if (mf != null) len = Mathf.Max(mf.sharedMesh.bounds.size.z, mf.sharedMesh.bounds.size.x);
+            if (visual!=null) { var b=UnitVisual.BoundsOf(m); len=visual.Ground?Mathf.Max(b.size.y,b.size.x,b.size.z):Mathf.Max(b.size.z,b.size.x); }
+            else if (mf != null) len = Mathf.Max(mf.sharedMesh.bounds.size.z, mf.sharedMesh.bounds.size.x);
             float scale = Mathf.Clamp(1.75f / Mathf.Max(0.4f, len), 0.5f, 1.6f) * (u.R.IsCapital ? 1.1f : u.R.IsSmallCraft ? 0.85f : 1f);
             m.transform.localScale = Vector3.one * scale;
-            m.transform.localPosition = new Vector3(0, 0.32f, 0);
+            m.transform.localPosition = new Vector3(0, visual!=null && visual.Ground ? 0 : 0.32f, 0);
             ShipModules.Attach(m, SliceRules.ModulesOf(u.Equipment), u.DefId);   // fitted modules are visible on the hull
             var fleet = Setup.FleetIds[u.Owner] != null ? _root.G.GetFleet(Setup.FleetIds[u.Owner]) : null;
-            var col = fleet != null ? Look.PolityColor(_root.G, fleet.OwnerId) : FactionColor(_root.G, S.Players[u.Owner].Faction);
+            var col = visual!=null && visual.Ground ? (u.Owner==PlayerSeat?new Color(.3f,.75f,1):new Color(1,.4f,.52f))
+                    : fleet != null ? Look.PolityColor(_root.G, fleet.OwnerId) : FactionColor(_root.G, S.Players[u.Owner].Faction);
             var ringMat = Look.Unlit(lib.fx, col * 1.1f, "Owner ring");
             if (u.Owner != Setup.PlayerSeat) ringMat.SetFloat("_Dash", 20);   // ownership by pattern as well as colour: enemy rings are dashed
             var ring = Mesh("Ring", MeshFactory.Circle(0.66f, 0.06f, 48), ringMat);
@@ -272,8 +279,13 @@ namespace RR.Game
                 lr.transform.localPosition = new Vector3(0, 0.05f, 0);
                 leader = lr.transform;
             }
+            var driveObject=new GameObject("Combat drive wake");driveObject.transform.SetParent(root,false);
+            driveObject.transform.localPosition=new Vector3(0,.32f,-.6f);
+            var drive=driveObject.AddComponent<TrailRenderer>();drive.time=.24f;drive.minVertexDistance=.04f;drive.startWidth=.07f;drive.endWidth=0;drive.numCapVertices=2;drive.emitting=false;
+            var driveMaterial=Look.Unlit(lib.fx,col*.8f,"Combat drive wake");drive.sharedMaterial=driveMaterial;
+            driveObject.AddComponent<MotionResourceOwner>().Material=driveMaterial;
             root.localPosition = World(u.Position);
             root.localRotation = Quaternion.Euler(0, u.Owner == 0 ? 0 : 180, 0);
-            Units[u.Id] = new UnitView { Id = u.Id, Owner = u.Owner, DefId = u.DefId, T = root, Model = m.transform, Ring = ring.transform, RingMat = ringMat, LeaderRing = leader, Bob = (u.Id * 0.37f) % 6.28f };
+            Units[u.Id] = new UnitView { Id = u.Id, Owner = u.Owner, DefId = u.DefId, T = root, Model = m.transform, Ring = ring.transform, RingMat = ringMat, LeaderRing = leader, Drive = drive, Visual=visual, Ground=visual!=null && visual.Ground, Bob = (u.Id * 0.37f) % 6.28f };
         }    }
 }
