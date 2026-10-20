@@ -28,6 +28,14 @@ def git(*args):
     return subprocess.check_output(['git', '-c', 'safe.directory=*'] + list(args), cwd=ROOT, text=True).strip()
 
 
+def built_at():
+    # The player's .exe stub is not rewritten by incremental builds; the game's own assemblies are.
+    managed = os.path.join(BUILD, 'RuleAndRuin_Data', 'Managed')
+    times = [os.path.getmtime(os.path.join(managed, f)) for f in os.listdir(managed) if f.startswith('RR.') and f.endswith('.dll')] if os.path.isdir(managed) else []
+    t = max(times) if times else os.path.getmtime(os.path.join(BUILD, 'RuleAndRuin.exe'))
+    return datetime.datetime.fromtimestamp(t).isoformat(timespec='seconds')
+
+
 def main():
     if not os.path.exists(os.path.join(BUILD, 'RuleAndRuin.exe')): sys.exit('No build at Builds/VS; build first.')
     rev = git('rev-parse', '--short', 'HEAD')
@@ -37,7 +45,7 @@ def main():
     path = os.path.join(out_dir, name + '.zip')
     manifest = {
         'package': name, 'revision': rev, 'branch': git('rev-parse', '--abbrev-ref', 'HEAD'),
-        'source_modified_since_commit': bool(dirty), 'built': datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(BUILD, 'RuleAndRuin.exe'))).isoformat(timespec='seconds'),
+        'source_modified_since_commit': bool(dirty), 'built': built_at(),
         'packaged': datetime.datetime.now().isoformat(timespec='seconds'),
         'rules_and_content': open(os.path.join(ROOT, 'Docs/campaign-alpha/manifest/ship_manifest.md'), encoding='utf-8').read().splitlines()[2],
         'private': 'Private campaign alpha for invited testers only. Not for redistribution or public release.',
