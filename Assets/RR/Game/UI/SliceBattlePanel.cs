@@ -82,7 +82,7 @@ namespace RR.Game
             bool canOc = u != null && SliceRules.CanOverclock(S, u) == null;
             _overclock.style.display = u != null && SliceRules.OverclockCapable(u) ? DisplayStyle.Flex : DisplayStyle.None;
             _overclock.SetEnabled(_b.PlayersTurn && (canOc || _b.OverclockMode));
-            _overclock.text = _b.OverclockMode ? "Cancel overclock (O)" : u != null && SliceRules.OverclockCapable(u) ? $"Overclock (O): heat {SliceRules.Heat(u)}/{SliceRules.OverheatAt}" : "Overclock (O)";
+            _overclock.text = _b.OverclockMode ? "Cancel overclock (O)" : u != null && SliceRules.OverclockCapable(u) ? $"Overclock (O): heat {SliceRules.Heat(u)}/{SliceRules.OverheatAtOf(u)}" : "Overclock (O)";
             _turn.style.display = u != null && SliceRules.HasArc(u) ? DisplayStyle.Flex : DisplayStyle.None;
             _turn.SetEnabled(_b.PlayersTurn);
             _turn.text = _b.TurnMode ? "Cancel turn (R)" : "Turn (R)";

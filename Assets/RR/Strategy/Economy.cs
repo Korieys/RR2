@@ -99,8 +99,11 @@ namespace RR.Strategy
             if (Built(g, polity, "convoy_office"))
             {
                 net = net ?? Supply.Of(g, polity);
-                if (net.Has(FreePort)) r = r + new Resources(0, 0, polity == "inhumanus" ? InhumanusConvoyYield : PygmaeiConvoyYield, 0);
+                if (net.Has(FreePort)) r = r + new Resources(0, 0, (polity == "inhumanus" ? InhumanusConvoyYield : PygmaeiConvoyYield) + (Doctrines.Has(g, polity, "inh_free_port_charter") ? 2 : 0), 0);
             }
+            // Foundry quotas (Prompt 18): +2 materials at each of the polity's unblockaded worlds in the scenario.
+            if (Doctrines.Has(g, polity, "pyg_foundry_quotas"))
+                r = r + new Resources(0, 2 * g.Systems.Where(s => PassageWar.InScope(g, s.Id) && !s.Blockaded).SelectMany(s => s.Planets).Count(p => p.OwnerId == polity), 0, 0);
             return r;
         }
 

@@ -285,6 +285,7 @@ namespace RR.Game
         void FinishBattle()
         {
             if (_setup.Scenario == "expedition") { FinishExpedition(); return; }
+            if (_setup.Scenario == Operations.Scenario) { FinishOperationBattle(); return; }
             if (_setup.EngagementId == null) { FinishSkirmish(); return; }
             _resultShown = true;
             if(GroundExercise) { _resultDone=LeaveGroundExercise; UI.ShowResult(new BattleOutcome{WinnerSeat=Battle.S.Winner,Reason=Battle.S.VictoryReason.ToString(),Rounds=Battle.S.Round},_setup,"Proving grounds complete","The exercise is complete. Your campaign is unchanged.",CompleteResult);return; }

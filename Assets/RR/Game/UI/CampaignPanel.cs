@@ -51,7 +51,7 @@ namespace RR.Game
             var s = g.Slice;
             string sig = $"{g.Day}|{g.Log.Count}|{s.History.Count}|{s.Wrecks.Count(w => w.Salvaged)}|{g.Player.Stock}|{g.PendingEngagement?.Id}|{_root.Scale}|" +
                          $"{(_root.LocalSystem != null ? _root.LocalSystem.Data.Id : "-")}|{string.Join(",", g.Fleets.Select(f => f.SystemId + f.Ships.Count + (f.Moving ? "m" : "")))}|" +
-                         $"{string.Join(",", s.Ships.Values.Select(x => x.Name + x.Modules.Count))}|{s.Objectives.Count}|{(Expeditions.Of(g)?.State.ToString() ?? "")}|{_version}|{_expanded}|{PassageWar.Of(g)?.Outcome}|{PassageWar.Of(g)?.Freeform}|{PassageWar.Of(g)?.HoldCount}|{_root.SupplyOverlay}|{Economy.Arrears(g, g.Player.Id)}";
+                         $"{string.Join(",", s.Ships.Values.Select(x => x.Name + x.Modules.Count))}|{s.Objectives.Count}|{(Expeditions.Of(g)?.State.ToString() ?? "")}|{_version}|{_expanded}|{PassageWar.Of(g)?.Outcome}|{PassageWar.Of(g)?.Freeform}|{PassageWar.Of(g)?.HoldCount}|{_root.SupplyOverlay}|{Economy.Arrears(g, g.Player.Id)}|{g.Slice.Operations.Count}|{Operations.Active(g)?.Phase}|{PassageWar.Of(g)?.Pending?.Day}|{PassageWar.Of(g)?.Researched.Count}|{g.Slice.Ground.Sum(x => x.Units.Count + (x.FleetId != null ? 100 : 0))}";
             if (sig != _sig) { _sig = sig; Rebuild(g, s); }
             Labels(g, s, cam);
         }
@@ -78,11 +78,29 @@ namespace RR.Game
                 foreach (var w in PassageWar.Warnings(g)) _body.Add(Line(w, "text-danger"));
                 var next = PassageWar.NextActions(g).FirstOrDefault();
                 if (next != null && !sc.Ended) _body.Add(Line("Next: " + next.Text, "slice-notice"));
+                if (sc.Pending != null && !sc.Ended)
+                    _body.Add(Line($"{g.GetPolity(sc.Pending.From).Name} has made a proposal ({(sc.Pending.Kind == "rights" ? $"{sc.Pending.Payment} credits for passage rights" : "a status-quo truce")}); answer it in the mandate window before day {sc.Pending.Expires}.", "slice-notice"));
                 var arrears = Economy.ArrearsProblem(g, me);
                 if (arrears != null && !sc.Ended) _body.Add(Line(arrears, "text-danger"));
                 var mrow = UIX.Div("slice-actions");
                 Btn(mrow, "Mandate", () => _root.OpenMandate());
+                // Prompt 16: operations, invasions and troops.
+                var op = Operations.Active(g);
+                if (op != null) { _body.Add(Line("Operation: " + Operations.Next(g, op), "slice-notice")); Btn(mrow, "Operation", () => _root.OpenOperation()); }
+                else foreach (var f in g.Fleets.Where(x => x.OwnerId == me && !x.Moving && x.EngagementId == null))
+                {
+                    var aboard = Operations.Embarked(g, f.Id)?.Units.Count ?? 0;
+                    var target = _root.InvasionTarget(f.SystemId, f);
+                    if (target != null && aboard > 0)
+                    {
+                        var why = Operations.LaunchProblem(g, f.Id, target.Id);
+                        Btn(mrow, "Invade " + target.Name, () => _root.Invade(f.Id, target.Id), why == null, why);
+                    }
+                    bool garrison = g.GetSystem(f.SystemId).Planets.Any(p => Operations.Garrison(g, p.Id)?.OwnerId == me && Operations.Garrison(g, p.Id).Units.Count > 0);
+                    if (garrison && aboard < Operations.Capacity(f)) Btn(mrow, $"Embark troops ({aboard}/{Operations.Capacity(f)})", () => _root.EmbarkAll(f.Id));
+                }
                 Btn(mrow, "Treasury", () => _root.OpenTreasury());
+                Btn(mrow, "Doctrine", () => _root.OpenDoctrine());
                 Btn(mrow, _root.SupplyOverlay ? "Hide supply" : "Supply", () => { _root.ToggleSupply(); Invalidate(); });
                 if (sc.Ended) Btn(mrow, "Ending", () => _root.ShowEnding());
                 else Btn(mrow, "Treaty", () => _root.OpenTreaty(), PassageWar.CanPropose(g, me, 0) == null, PassageWar.CanPropose(g, me, 0));

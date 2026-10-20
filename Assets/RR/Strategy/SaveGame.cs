@@ -290,6 +290,12 @@ namespace RR.Strategy
             {
                 g.ActiveBattle = BattleSession.FromData(battle, out error);
                 if (g.ActiveBattle == null) return null;
+                if (g.ActiveBattle.Setup.OperationId != null)
+                {
+                    var op = g.Slice?.Operations.FirstOrDefault(o => o.Id == g.ActiveBattle.Setup.OperationId);
+                    if (op == null || op.Ended || g.AppliedBattles.Contains(g.ActiveBattle.Setup.BattleId))
+                    { error = "The save holds an operation battle whose operation is no longer in progress."; return null; }
+                }
                 if (g.ActiveBattle.Setup.Scenario == null)
                 {
                     var e = g.GetEngagement(g.ActiveBattle.Setup.EngagementId);

@@ -68,6 +68,8 @@ namespace RR.Strategy
                         var plan = StrategyRules.PlanRoute(g, f, p.SystemId);
                         if (plan.Legal) list.Add(new NextAction($"Send {f.Name} to {g.GetSystem(p.SystemId).Name} ({plan.Days} days).", "move"));
                     }
+                    else if (f != null && f.SystemId == p.SystemId && !f.Moving)
+                        list.Add(new NextAction($"Hold {g.GetSystem(p.SystemId).Name}: unopposed at the settlement on day {NextSettlementDay(g)}, you take access by occupation."));
                 }
             }
             else

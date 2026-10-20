@@ -15,17 +15,19 @@ namespace RR.Game
     {
         bool _endingShown;
 
-        public void StartPassageWar(FactionId f)
+        public void StartPassageWar(FactionId f) => StartPassageWar(f, Variants.Standard);
+
+        public void StartPassageWar(FactionId f, string variant)
         {
             if (Busy || Scale == ViewScale.Battle) return;
             UI.CloseModal();
-            var g = PassageWar.Create(f);
+            var g = PassageWar.Create(f, variant);
             _endingShown = false;
             StartCoroutine(ReplaceStateThen(g, $"{PassageWar.Title}: your mandate is in the passage panel.", () =>
             {
                 var mine = G.Fleets.FirstOrDefault(x => x.OwnerId == G.Player.Id);
                 if (mine != null) Selection.SelectFleet(G, mine.Id);
-                PlaytestMetrics.Decision("started " + PassageWar.Id + " as " + f);
+                PlaytestMetrics.Decision("started " + PassageWar.Id + " (" + variant + ") as " + f);
                 OpenMandate();
             }));
         }
@@ -51,6 +53,19 @@ namespace RR.Game
                     "Working scenario title; the conditions below are provisional design values.", 13));
             m.Add(P(PassageWar.Progress(G)));
             foreach (var w in PassageWar.Warnings(G)) m.Add(P(w, 13, new Color(1f, 0.55f, 0.5f)));
+            if (sc.Pending != null)
+            {
+                // Prompt 17: a proposal from the rival waits for the player's answer (it expires at the next settlement).
+                var pr = sc.Pending;
+                m.Add(UIX.Text("PROPOSAL", "h-section"));
+                m.Add(P(pr.Kind == "rights"
+                    ? $"{G.GetPolity(pr.From).Name} offers {pr.Payment} credits for passage rights through Umbra, with a truce. Accepting gives them access by treaty (your mandate then needs access back, by treaty or by breaking the truce, which costs standing)."
+                    : $"{G.GetPolity(pr.From).Name} proposes a truce that leaves the passage as it stands. Accepting ends the campaign as an inconclusive, negotiated status quo.", 13));
+                m.Add(P($"Answer before day {pr.Expires}; unanswered, it lapses.", 12));
+                var prow = Row(); m.Add(prow);
+                B(prow, "Accept", () => { Report(PassageWar.AnswerProposal(G, true), "Accepted."); PlaytestMetrics.Decision("accepted a " + pr.Kind + " proposal"); OpenMandate(); });
+                B(prow, "Decline", () => { Report(PassageWar.AnswerProposal(G, false), "Declined."); PlaytestMetrics.Decision("declined a " + pr.Kind + " proposal"); OpenMandate(); });
+            }
             m.Add(UIX.Text("NEXT", "h-section"));
             foreach (var a in PassageWar.NextActions(G))
             {

@@ -317,6 +317,37 @@ namespace RR.Tests
         }
 
         [Test]
+        public void Occupation_AnUnopposedFleetAtThePassage_TakesAccessAtTheSettlement_AndCanWin()
+        {
+            // Campaign alpha Prompt 20 (CA-27): without it, a rival that never came to Umbra left no lawful military route.
+            var g = War.New();
+            var me = g.Player.Id;
+            Camp.Theirs(g).AIControlled = false;   // the rival stays home in this fixture
+            Assert.IsTrue(SliceCampaign.DeclareObjective(g, me, "umbra").Ok);
+            Camp.Theirs(g).AITarget = null;
+            Assert.IsTrue(StrategyRules.OrderMove(g, Camp.Mine(g).Id, "umbra").Ok);
+            for (int i = 0; i < 60 && !(Camp.Mine(g).SystemId == "umbra" && !Camp.Mine(g).Moving); i++) StrategyRules.AdvanceDay(g);
+            Assert.IsNull(War.Passage(g).AccessHolderId, "arriving is not yet holding");
+            Assert.IsTrue(PassageWar.NextActions(g).Any(a => a.Text.Contains("occupation")), string.Join(" | ", PassageWar.NextActions(g).Select(a => a.Text)));
+            War.ToDay(g, PassageWar.NextSettlementDay(g));
+            Assert.AreEqual(me, War.Passage(g).AccessHolderId, "occupied at the settlement");
+            Assert.AreEqual(PassageWar.Battle, War.Passage(g).Basis);
+            Assert.AreEqual(0, War.Sc(g).HoldCount, "the hold counts from the next settlement");
+            War.Run(g, 40, win: true);
+            Assert.IsTrue(War.Sc(g).Ended || War.Sc(g).HoldCount >= 1, War.Sc(g).HoldNote);
+            // An enemy fleet able to fight at the passage prevents it.
+            var h = War.New();
+            Assert.IsTrue(SliceCampaign.DeclareObjective(h, h.Player.Id, "umbra").Ok);
+            Camp.Mine(h).SystemId = "umbra";
+            var rival = Camp.Theirs(h); rival.AIControlled = false; rival.AITarget = null; rival.SystemId = "umbra"; rival.Order = null;
+            h.Slice.RelationOf("pygmaei", "inhumanus").Status = "war";
+            PassageWar.OnDay(h);   // not a settlement day: nothing
+            War.Sc(h).HoldRequired = 99;
+            for (int i = 0; i < 10; i++) { StrategyRules.AdvanceDay(h); if (h.PendingEngagement != null) break; }
+            Assert.IsNull(h.Slice.Passage("umbra").AccessHolderId, "contested while the enemy holds there too");
+        }
+
+        [Test]
         public void TwoFailedObjectives_CountAsTwo_NotThree()
         {
             // Defect D-20: each objective record carries the running count of failures, so summing them counted the first

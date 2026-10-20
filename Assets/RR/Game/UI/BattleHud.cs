@@ -172,7 +172,7 @@ namespace RR.Game
             _right.Add(UIX.Text(u.R.PassiveText, "item-sub"));
             if (RR.Strategy.SliceRoster.Classes(u.Def.Faction).Contains(u.DefId)) _right.Add(UIX.Text("Model: first-pass generated art, pending approval. Values: codex 0.1 draft.", "small"));
             if (SliceRules.OverclockCapable(u))
-                Row("Heat", SliceRules.Heat(u) + " of " + SliceRules.OverheatAt + (SliceRules.Overheated(u) ? ": OVERHEATED, armour −" + SliceRules.OverheatArmor + ", no overclock" : ""));
+                Row("Heat", SliceRules.Heat(u) + " of " + SliceRules.OverheatAtOf(u) + (SliceRules.Overheated(u) ? ": OVERHEATED, armour −" + SliceRules.OverheatArmor + ", no overclock" : ""));
             if (SliceRules.HasArc(u)) Row("Facing", SliceRules.FacingNames[SliceRules.Facing(u)] + "; main battery blind in the 120° astern");
             if (SliceRules.IsContracted(u)) Row("Contract", SliceRules.InReserve(u) ? "under way: " + SliceRules.ContractLane(u) + " entry " + SliceRules.EntryHex(S.Map, u.Owner, SliceRules.ContractLane(u)) + ", from round " + SliceRules.ContractArrivalRound : "arrived");
             foreach (var st in u.RStatuses.Where(x => x.Type == RStatusType.Protected || x.Type == RStatusType.Intercepted))

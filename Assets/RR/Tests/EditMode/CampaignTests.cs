@@ -179,7 +179,7 @@ namespace RR.Tests
             Assert.IsFalse(SliceCampaign.Rename(g, uid, "   ").Ok);
             Assert.IsFalse(SliceCampaign.Rename(g, uid, new string('x', 40)).Ok);
             var opts = SliceCampaign.RefitOptions(g, uid);
-            Assert.AreEqual(3, opts.Count);
+            Assert.AreEqual(SliceRules.Modules.Length, opts.Count, "one option per module in the content (campaign alpha Prompt 19 added a fourth)");
             Assert.IsTrue(SliceCampaign.ApplyRefit(g, uid, "heavy_battery").Ok, opts.First(o => o.Module.Id == "heavy_battery").Blocked);
             Assert.IsFalse(SliceCampaign.ApplyRefit(g, uid, "heavy_battery").Ok, "already fitted");
             Assert.IsFalse(SliceCampaign.ApplyRefit(g, uid, "warp_cannon").Ok, "unknown module");

@@ -26,13 +26,11 @@ namespace RR.Strategy
         public static bool IsCapital(string defId) => ShipCatalog.IsLeader(defId);
 
         /// <summary>Refit prices (experimental values).</summary>
-        public static Resources ModuleCost(string id) => id switch
+        public static Resources ModuleCost(string id)
         {
-            "afterburners" => new Resources(10, 20, 30, 0),
-            "ablative_plating" => new Resources(0, 40, 30, 0),
-            "heavy_battery" => new Resources(10, 30, 40, 0),
-            _ => new Resources(0, 0, 0, 0),
-        };
+            var m = SliceRules.Module(id);
+            return m == null ? default : new Resources(m.CostEnergy, m.CostMaterials, m.CostCredits, 0);   // content data (Prompt 19)
+        }
 
         /// <summary>A fleet is at an eligible refit location when it holds at a system with its own shipyard.</summary>
         public static string RefitLocationProblem(GalaxyState g, Fleet f)
@@ -57,12 +55,17 @@ namespace RR.Strategy
             var p = g.Slice?.Profile(uid);
             if (ship == null || p == null || !IsCapital(ship.DefId)) return list;
             var where = RefitLocationProblem(g, FleetOf(g, uid));
+            // Field refits (Prompt 18): a forward dock fits modules too, a quarter cheaper in credits.
+            bool field = where != null && Doctrines.Has(g, p.OwnerId, "pyg_field_refits") && Economy.AtDock(g, FleetOf(g, uid));
+            if (field) where = null;
             var pol = g.GetPolity(p.OwnerId);
             foreach (var m in SliceRules.Modules)
             {
                 var current = p.Modules.FirstOrDefault(x => SliceRules.Module(x)?.Slot == m.Slot);
                 bool spare = SpareKey(g, p.OwnerId, m.Id) != null;
-                var o = new RefitOption { Module = m, Fitted = p.Modules.Contains(m.Id), Replaces = current, Cost = spare ? default : ModuleCost(m.Id),
+                var price = ModuleCost(m.Id);
+                if (field) price = new Resources(price.Energy, price.Materials, price.Credits * 3 / 4, price.Influence);
+                var o = new RefitOption { Module = m, Fitted = p.Modules.Contains(m.Id), Replaces = current, Cost = spare ? default : price,
                     Compare = m.Summary + (spare ? " A salvaged spare covers the cost." : "") };
                 o.Blocked = o.Fitted ? "Already fitted." : where ?? (Economy.Active(g) ? Economy.ArrearsProblem(g, p.OwnerId) : null) ??
                             (pol != null && !pol.Stock.Covers(o.Cost) ? $"Not enough resources: needs {o.Cost}, you have {pol.Stock}." : null);
@@ -98,7 +101,10 @@ namespace RR.Strategy
             var s = Ship(g, uid);
             if (s == null) return default;
             int missing = Math.Max(0, MaxHull(g, s) - s.Hp);
-            return new Resources(RepairPerHull.Energy * missing, RepairPerHull.Materials * missing, RepairPerHull.Credits * missing, 0);
+            int credits = RepairPerHull.Credits * missing;
+            var owner = FleetOf(g, uid)?.OwnerId;
+            if (owner != null && Doctrines.Has(g, owner, "inh_underwritten_escorts")) credits /= 2;   // Underwritten repairs (Prompt 18)
+            return new Resources(RepairPerHull.Energy * missing, RepairPerHull.Materials * missing, credits, 0);
         }
 
         public static StratResult Repair(GalaxyState g, int uid)

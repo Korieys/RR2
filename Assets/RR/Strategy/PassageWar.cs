@@ -57,7 +57,30 @@ namespace RR.Strategy
         public Dictionary<string, int> Arrears = new Dictionary<string, int>(StringComparer.Ordinal);
         /// <summary>The player's supplied systems and known threats as last announced (so each change is announced once).</summary>
         public List<string> SupplyKnown, ThreatsKnown;
+        /// <summary>The rival's current movement plan per AI power (commitment against oscillation) and its developer log
+        /// (reasons; never shown in the player's interface).</summary>
+        public Dictionary<string, string> AiPlan = new Dictionary<string, string>(StringComparer.Ordinal);
+        public List<string> AiLog = new List<string>();
+        /// <summary>Automation only: the rival planner also commands the player's side (AI-against-AI campaign runs).</summary>
+        public bool AutoPlayer;
+        /// <summary>The starting situation (Prompt 19) and the setup seed, stored so a reload never changes the world.</summary>
+        public string Variant = Variants.Standard;
+        public int SetupSeed;
+        /// <summary>Doctrine projects (Prompt 18): one under way per power, the adopted ones ("polity:id"), and each power's path.</summary>
+        public Dictionary<string, DoctrineResearch> Researching = new Dictionary<string, DoctrineResearch>(StringComparer.Ordinal);
+        public HashSet<string> Researched = new HashSet<string>(StringComparer.Ordinal);
+        public Dictionary<string, string> DoctrinePath = new Dictionary<string, string>(StringComparer.Ordinal);
+        /// <summary>A treaty an AI power proposed to the player, waiting for the player's answer (expires at the next settlement).</summary>
+        public Proposal Pending;
         public bool Ended => Outcome != CampaignOutcome.None;
+    }
+
+    /// <summary>A proposal from an AI power that the player answers.</summary>
+    public sealed class Proposal
+    {
+        public string From, Kind;   // "rights": the proposer buys passage rights; "statusquo": a truce leaving access as it is
+        public int Payment, Day, Expires;
+        public string Reason;
     }
 
     public static partial class PassageWar
@@ -77,20 +100,35 @@ namespace RR.Strategy
             ["inhumanus"] = new[] { "dividend", "ledgerhold" },
         };
 
-        public static GalaxyState Create(FactionId player)
+        public static GalaxyState Create(FactionId player) => Create(player, Variants.Standard);
+
+        public static GalaxyState Create(FactionId player, string variant)
         {
             var g = SliceCampaign.Create(player);
             var sc = new ScenarioState { Id = Id, Title = Title };
             sc.ActiveSystems.AddRange(ActiveSystems);
             foreach (var kv in DesignatedSystems) sc.Designated[kv.Key] = kv.Value.ToList();
             g.Slice.Scenario = sc;
+            // Ground forces (Prompt 16): an expeditionary legion at each home world and a garrison on each second world. Real units
+            // from the existing planetary rosters; they move only by embarking in fleets (a flagship carries two, other ships one).
+            Operations.NewForce(g, "pygmaei", HomeWorld(g, "forgefall", "pygmaei"), null, "pygmaei_iron_marshal", "pygmaei_rush_trooper", "pygmaei_rush_trooper", "pygmaei_volt_striker",
+                "pygmaei_ember_vanguard", "pygmaei_combat_engineer", "pygmaei_blast_furnace_tank", "pygmaei_razorbug_speeder");
+            Operations.NewForce(g, "pygmaei", HomeWorld(g, "ironmouth", "pygmaei"), null, "pygmaei_iron_marshal", "pygmaei_forge_warden", "pygmaei_rush_trooper", "pygmaei_rush_trooper",
+                "pygmaei_ember_vanguard", "pygmaei_shock_medic", "pygmaei_combat_engineer");
+            Operations.NewForce(g, "inhumanus", HomeWorld(g, "dividend", "inhumanus"), null, "inhumanus_executive_adjudicator", "inhumanus_contract_trooper", "inhumanus_contract_trooper",
+                "inhumanus_vector_sniper", "inhumanus_asset_recovery_walker", "inhumanus_gravity_weaver", "inhumanus_security_drone", "inhumanus_spectrum_analyst");
+            Operations.NewForce(g, "inhumanus", HomeWorld(g, "ledgerhold", "inhumanus"), null, "inhumanus_executive_adjudicator", "inhumanus_contract_trooper", "inhumanus_contract_trooper",
+                "inhumanus_contract_trooper", "inhumanus_asset_recovery_agent", "inhumanus_phase_auditor", "inhumanus_vector_skimmer", "inhumanus_security_drone");
             g.Log.Clear();
+            Variants.Apply(g, variant);
             g.Note("order", $"{Title}: secure durable access through the Umbra passage and keep {DesignatedNames(g, g.Player.Id)} operational. " +
                             "Win access in battle and hold it, or obtain passage rights by treaty. The mandate panel states every condition.");
             return g;
         }
 
         public static ScenarioState Of(GalaxyState g) => g?.Slice?.Scenario;
+        static string HomeWorld(GalaxyState g, string systemId, string polity) =>
+            g.GetSystem(systemId).Planets.Where(p => p.OwnerId == polity).OrderBy(p => p.Id, StringComparer.Ordinal).First().Id;
         /// <summary>The scenario is deciding outcomes (it exists, has not ended, and the player has not switched to freeform).</summary>
         public static bool Running(GalaxyState g) { var sc = Of(g); return sc != null && !sc.Ended && !sc.Freeform; }
         public static bool InScope(GalaxyState g, string systemId) { var sc = Of(g); return sc == null || sc.ActiveSystems.Contains(systemId); }
@@ -133,6 +171,8 @@ namespace RR.Strategy
                       "(a declared objective and a fleet that can fight).");
             lines.Add($"At each settlement both powers pay fleet upkeep ({Economy.UpkeepPerPoint} credit per fleet point). Upkeep that cannot be paid becomes arrears: " +
                       "projects pause and repairs, refits and new projects wait until income has paid it.");
+            lines.Add("Access by arms comes from winning a battle at Umbra, or from occupation: at war over the passage, your fleet led by a flagship holds Umbra at a " +
+                      "settlement with no enemy fleet able to fight there. The same rule applies to the rival.");
             lines.Add($"Victory by treaty: hold passage rights granted by a settlement or a treaty, still in force at the next settlement, with {mine} operational.");
             lines.Add("If the rival has no way left to contest the passage (no fleet that can fight, none being built, none it can pay for, or no attempts left), the next " +
                       "settlement that counts ends the campaign at once.");
@@ -258,6 +298,7 @@ namespace RR.Strategy
             var sc = Of(g);
             if (!Running(g) || g.Day <= 0 || g.Day % sc.Interval != 0) return;
             if (!g.Slice.Applied.Add("settlement:" + g.Day)) return;
+            if (sc.Pending != null && sc.Pending.Expires <= g.Day) { g.Note("info", $"{g.GetPolity(sc.Pending.From).Name}'s proposal expired unanswered."); sc.Pending = null; }
             var rep = new SettlementReport { Day = g.Day };
             int prev = g.Day - sc.Interval;
             string me = g.Player.Id, them = Other(me);
@@ -298,8 +339,37 @@ namespace RR.Strategy
             else if (g.Day >= sc.MandateDay)
                 End(g, CampaignOutcome.Inconclusive, $"The mandate ran out on day {sc.MandateDay}. " +
                     (p.AccessHolderId == null ? "The passage remains contested." : $"{g.GetPolity(p.AccessHolderId).Name} holds access."));
+            if (!sc.Ended) Occupation(g, p, rep);
             if (sc.Ended) rep.Lines.Add($"{OutcomeLabel(sc.Outcome)}: {sc.EndText}");
             g.Note(sc.Ended ? (sc.Outcome == CampaignOutcome.Defeat ? "danger" : "result") : "info", $"Settlement, day {g.Day}: {sc.HoldNote}");
+        }
+
+        /// <summary>Occupation (campaign alpha Prompt 20, CA-27): a power at war over the passage whose fleet led by a flagship holds
+        /// position there at a settlement, with no hostile fleet able to fight present, takes access by arms. Its hold starts
+        /// counting at the next settlement. Applied after the hold check, once per settlement, to either power.</summary>
+        static void Occupation(GalaxyState g, PassageState p, SettlementReport rep)
+        {
+            foreach (var pol in new[] { "pygmaei", "inhumanus" })
+            {
+                if (p.AccessHolderId == pol) continue;
+                string other = Other(pol);
+                if (AtPeace(g, pol, other)) continue;
+                if (!g.Slice.Objectives.Any(o => o.PolityId == pol && o.SystemId == p.SystemId && o.Status == ObjectiveStatus.Declared)) continue;
+                var mine = g.Fleets.Where(f => f.OwnerId == pol && f.SystemId == p.SystemId && !f.Moving && f.EngagementId == null && StrategyRules.CanFight(f)).OrderBy(f => f.Id, StringComparer.Ordinal).FirstOrDefault();
+                if (mine == null) continue;
+                if (g.Fleets.Any(f => f.OwnerId == other && f.SystemId == p.SystemId && !f.Moving && StrategyRules.CanFight(f))) continue;
+                if (!g.Slice.Applied.Add($"occupation:{pol}:{g.Day}")) continue;
+                p.AccessHolderId = pol; p.Basis = Battle; p.SinceDay = g.Day;
+                foreach (var obj in g.Slice.Objectives.Where(x => x.SystemId == p.SystemId && x.Status == ObjectiveStatus.Declared && x.PolityId == pol))
+                { obj.Status = ObjectiveStatus.Secured; obj.Note = $"Secured by occupation on day {g.Day}."; }
+                if (pol == g.Player.Id) Of(g).HoldCount = 0;
+                string text = $"{g.GetPolity(pol).Name} took access through {p.Name} by holding {g.GetSystem(p.SystemId).Name} unopposed with {mine.Name}.";
+                SliceCampaign.RecordEvent(g, "passage", p.SystemId, null, text);
+                ForPolity(g, pol, "occupation", $"Took access through {p.Name} by occupation", default);
+                rep.Lines.Add(text);
+                g.Note(pol == g.Player.Id ? "result" : "danger", text + (pol == g.Player.Id ? " Your hold counts from the next settlement." : ""));
+                return;
+            }
         }
 
         static void End(GalaxyState g, CampaignOutcome o, string text)

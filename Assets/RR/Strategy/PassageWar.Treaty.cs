@@ -41,7 +41,8 @@ namespace RR.Strategy
             v.Valid = true;
             string decider = Other(polity);
             int pressure = 0;
-            if (payment >= 4) { pressure += payment / 4; v.Factors.Add($"+{payment / 4}: {payment} credits for the rights"); }
+            int per = Doctrines.Has(g, polity, "inh_toll_brokerage") ? 3 : 4;   // Toll brokerage (Prompt 18): payments weigh a third more
+            if (payment >= per) { pressure += payment / per; v.Factors.Add($"+{payment / per}: {payment} credits for the rights"); }
             if (!g.Fleets.Any(f => f.OwnerId == decider && StrategyRules.CanFight(f))) { pressure += LeaderlessPressure; v.Factors.Add($"+{LeaderlessPressure}: we have no fleet led by a flagship"); }
             var hurt = DesignatedProblem(g, decider);
             if (hurt != null) { pressure += BlockadePressure; v.Factors.Add($"+{BlockadePressure}: {hurt}"); }
@@ -72,16 +73,35 @@ namespace RR.Strategy
             sc.LastProposal[polity] = g.Day;
             string decider = Other(polity);
             var pp = g.GetPolity(polity); var dp = g.GetPolity(decider);
+            if (decider == g.Player.Id && !sc.AutoPlayer)
+            {
+                // An AI power proposing to the player: the player answers (it expires at the next settlement).
+                sc.Pending = new Proposal { From = polity, Kind = "rights", Payment = payment, Day = g.Day, Expires = NextSettlementDay(g), Reason = verdict.Reason };
+                verdict.Accepted = false; verdict.Reason = $"Sent to {dp.Name} for an answer.";
+                SliceCampaign.RecordEvent(g, "proposal", SliceCampaign.PassageSystem, null, $"{pp.Name} offered {payment} credits for passage rights through the Umbra passage.");
+                g.Note("danger", $"{pp.Name} offers {payment} credits for passage rights through Umbra, with a truce. Answer in the mandate window before day {sc.Pending.Expires}.");
+                return StratResult.Accept(verdict.Reason);
+            }
             if (!verdict.Accepted)
             {
                 ForPolity(g, polity, "treaty", $"Proposed passage rights for {payment} credits; {dp.Name} declined (pressure {verdict.Pressure} against {verdict.Cost}).", default);
                 g.Note("info", $"{dp.Name} declined the passage treaty. " + verdict.Reason);
                 return StratResult.Accept(verdict.Reason);
             }
+            return ApplyTreaty(g, polity, payment, verdict.Reason);
+        }
+
+        /// <summary>Concludes passage rights for <paramref name="polity"/> once: payment, access by treaty, truce, objectives settled,
+        /// the other side's fleets stand down.</summary>
+        static StratResult ApplyTreaty(GalaxyState g, string polity, int payment, string reason)
+        {
+            string decider = Other(polity);
+            var pp = g.GetPolity(polity); var dp = g.GetPolity(decider);
             if (!g.Slice.Applied.Add($"treaty:{polity}:{g.Day}")) return StratResult.Reject("This treaty was already concluded.");
             pp.Stock = pp.Stock - new Resources(0, 0, payment, 0);
             dp.Stock = dp.Stock + new Resources(0, 0, payment, 0);
             var p = g.Slice.Passage(SliceCampaign.PassageSystem);
+            var sc = Of(g);
             p.AccessHolderId = polity; p.Basis = Treaty; p.SinceDay = g.Day;
             foreach (var obj in g.Slice.Objectives.Where(x => x.SystemId == p.SystemId && x.Status == ObjectiveStatus.Declared))
             { obj.Status = obj.PolityId == polity ? ObjectiveStatus.Secured : ObjectiveStatus.Settled; obj.Note = $"Settled by treaty on day {g.Day}."; }
@@ -99,7 +119,51 @@ namespace RR.Strategy
             ForPolity(g, polity, "treaty", $"Obtained passage rights through {p.Name} by treaty", new Resources(0, 0, payment, 0));
             ForPolity(g, decider, "treaty", $"Granted {pp.Name} passage rights by treaty", new Resources(0, 0, -payment, 0));
             g.Note("result", $"{dp.Name} accepted: {pp.Name} holds passage rights through {p.Name} by treaty. They are ratified at the settlement on day {NextSettlementDay(g)} if the treaty still stands.");
-            return StratResult.Accept(verdict.Reason);
+            return StratResult.Accept(reason);
+        }
+
+        /// <summary>The player's answer to an AI proposal. Accepting applies exactly the same transaction an AI acceptance would.</summary>
+        public static StratResult AnswerProposal(GalaxyState g, bool accept)
+        {
+            var sc = Of(g);
+            var pr = sc?.Pending;
+            if (pr == null) return StratResult.Reject("There is no proposal to answer.");
+            sc.Pending = null;
+            var from = g.GetPolity(pr.From);
+            if (!accept)
+            {
+                SliceCampaign.RecordEvent(g, "proposal", SliceCampaign.PassageSystem, null, $"{g.Player.Name} declined {from.Name}'s proposal.");
+                ForPolity(g, g.Player.Id, "treaty", $"Declined {from.Name}'s proposal ({(pr.Kind == "rights" ? $"{pr.Payment} credits for passage rights" : "a status-quo truce")})", default);
+                return StratResult.Accept("Declined.");
+            }
+            if (pr.Kind == "statusquo")
+            {
+                if (!g.Slice.Applied.Add($"statusquo:{pr.Day}")) return StratResult.Reject("Already concluded.");
+                var rel = g.Slice.RelationOf(pr.From, g.Player.Id);
+                if (rel != null) rel.Status = "truce";
+                SliceCampaign.React(g, $"statusquo_{pr.Day}", pr.From, g.Player.Id, SliceCampaign.SettlementOpinion, "an honoured settlement");
+                SliceCampaign.RecordEvent(g, "treaty", SliceCampaign.PassageSystem, null, $"A status-quo truce between {from.Name} and {g.Player.Name}; access stays as it is.");
+                ForPolity(g, g.Player.Id, "treaty", $"Accepted a status-quo truce with {from.Name}", default);
+                End(g, CampaignOutcome.Inconclusive, "A negotiated status quo: the war ended by a truce that left the passage as it stood.");
+                return StratResult.Accept("Truce concluded.");
+            }
+            if (from.Stock.Credits < pr.Payment) return StratResult.Reject($"{from.Name} can no longer pay {pr.Payment} credits.");
+            return ApplyTreaty(g, pr.From, pr.Payment, "Accepted.");
+        }
+
+        /// <summary>An AI power offers the player a truce that leaves access as it stands (the inconclusive negotiated end).</summary>
+        public static StratResult ProposeStatusQuo(GalaxyState g, string polity, string reason)
+        {
+            var sc = Of(g);
+            if (sc == null || !Running(g)) return StratResult.Reject("No scenario in progress.");
+            if (sc.Pending != null) return StratResult.Reject("A proposal is already waiting.");
+            if (sc.LastProposal.TryGetValue(polity, out var last) && g.Day < last + sc.Interval) return StratResult.Reject("One proposal per settlement interval.");
+            if (AtPeace(g, polity, Other(polity))) return StratResult.Reject("A truce is already in force.");
+            sc.LastProposal[polity] = g.Day;
+            sc.Pending = new Proposal { From = polity, Kind = "statusquo", Day = g.Day, Expires = NextSettlementDay(g), Reason = reason };
+            SliceCampaign.RecordEvent(g, "proposal", SliceCampaign.PassageSystem, null, $"{g.GetPolity(polity).Name} proposed a truce that leaves the passage as it stands.");
+            g.Note("danger", $"{g.GetPolity(polity).Name} proposes a truce leaving the passage as it stands. Accepting ends the campaign as an inconclusive, negotiated status quo. Answer before day {sc.Pending.Expires}.");
+            return StratResult.Accept();
         }
 
         /// <summary>Whether the two powers are under a truce (a settlement or a treaty): their fleets do not engage on contact.</summary>

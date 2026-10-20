@@ -38,7 +38,46 @@ namespace RR.Strategy
                     ["scouted"] = e.Scouted, ["map"] = e.MapId, ["rival"] = e.RivalComposition, ["asset"] = e.Asset, ["day"] = e.CreatedDay, ["outcome"] = e.Outcome, ["battle"] = e.BattleId }),
                 ["applied"] = s.Applied.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
                 ["scenario"] = Scenario(s.Scenario),
+                ["ground"] = L(s.Ground, f => new Dictionary<string, object> { ["id"] = f.Id, ["owner"] = f.OwnerId, ["planet"] = f.PlanetId, ["fleet"] = f.FleetId,
+                    ["units"] = L(f.Units, u => new Dictionary<string, object> { ["uid"] = u.Uid, ["def"] = u.DefId, ["hp"] = u.Hp }) }),
+                ["operations"] = L(s.Operations, Operation),
             };
+        }
+
+        static Dictionary<string, object> Operation(Operation o) => new Dictionary<string, object>
+        {
+            ["id"] = o.Id, ["attacker"] = o.AttackerPolity, ["defender"] = o.DefenderPolity, ["system"] = o.SystemId, ["planet"] = o.PlanetId,
+            ["attackerFleet"] = o.AttackerFleetId, ["defenderFleet"] = o.DefenderFleetId, ["phase"] = o.Phase.ToString(), ["started"] = o.StartedDay, ["ended"] = o.EndedDay,
+            ["orbitalFought"] = o.OrbitalFought, ["orbitalA"] = o.OrbitalAttackerWins, ["orbitalD"] = o.OrbitalDefenderWins, ["protected"] = o.SuppliesProtected,
+            ["seized"] = o.SuppliesSeized, ["followUp"] = o.FollowUp, ["followUpResolved"] = o.FollowUpResolved, ["landed"] = L(o.Landed, x => x), ["hasLanded"] = o.HasLanded,
+            ["winsA"] = o.AttackerWins, ["winsD"] = o.DefenderWins,
+            ["battles"] = L(o.Battles, b => new Dictionary<string, object> { ["id"] = b.BattleId, ["kind"] = b.Kind, ["winner"] = b.WinnerPolity, ["reason"] = b.Reason, ["note"] = b.Note,
+                ["map"] = b.MapId, ["index"] = b.Index, ["conceded"] = b.Conceded, ["deployed"] = L(b.Deployed, x => x) }),
+            ["acting"] = o.Acting.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+            ["prisoners"] = L(o.Prisoners, x => x), ["outcome"] = o.Outcome, ["winner"] = o.WinnerPolity, ["pending"] = o.PendingBattleId,
+        };
+
+        static List<int> IntList(IDictionary<string, object> d, string k) => d.A(k).OfType<double>().Select(x => (int)x).ToList();
+
+        static Operation Operation(IDictionary<string, object> d)
+        {
+            var o = new Operation { Id = d.S("id"), AttackerPolity = d.S("attacker"), DefenderPolity = d.S("defender"), SystemId = d.S("system"), PlanetId = d.S("planet"),
+                AttackerFleetId = d.S("attackerFleet"), DefenderFleetId = d.S("defenderFleet"), Phase = En<OperationPhase>(d.S("phase")), StartedDay = d.I("started"), EndedDay = d.I("ended"),
+                OrbitalFought = d.I("orbitalFought"), OrbitalAttackerWins = d.I("orbitalA"), OrbitalDefenderWins = d.I("orbitalD"), SuppliesProtected = d.B("protected"),
+                SuppliesSeized = d.B("seized"), FollowUp = d.B("followUp"), FollowUpResolved = d.B("followUpResolved"), HasLanded = d.B("hasLanded"),
+                AttackerWins = d.I("winsA"), DefenderWins = d.I("winsD"), Outcome = d.S("outcome"), WinnerPolity = d.S("winner"), PendingBattleId = d.S("pending") };
+            o.Landed.AddRange(IntList(d, "landed"));
+            o.Prisoners.AddRange(IntList(d, "prisoners"));
+            foreach (var b in Os(d, "battles"))
+            {
+                var ob = new OperationBattle { BattleId = b.S("id"), Kind = b.S("kind"), WinnerPolity = b.S("winner"), Reason = b.S("reason"), Note = b.S("note"), MapId = b.S("map"),
+                    Index = b.I("index"), Conceded = b.B("conceded") };
+                ob.Deployed.AddRange(IntList(b, "deployed"));
+                o.Battles.Add(ob);
+            }
+            var acting = d.O("acting");
+            if (acting != null) foreach (var kv in acting) if (kv.Value is double x) o.Acting[kv.Key] = (int)x;
+            return o;
         }
 
         /// <summary>The bounded scenario (PassageWar): configuration, hold progress, outcome, ledger and settlement reports.</summary>
@@ -60,6 +99,14 @@ namespace RR.Strategy
                 ["arrears"] = sc.Arrears.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
                 ["supplyKnown"] = sc.SupplyKnown == null ? null : L(sc.SupplyKnown, x => x),
                 ["threatsKnown"] = sc.ThreatsKnown == null ? null : L(sc.ThreatsKnown, x => x),
+                ["aiPlan"] = sc.AiPlan.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+                ["aiLog"] = L(sc.AiLog, x => x), ["autoPlayer"] = sc.AutoPlayer, ["variant"] = sc.Variant, ["setupSeed"] = sc.SetupSeed,
+                ["researching"] = sc.Researching.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)new Dictionary<string, object>
+                    { ["project"] = kv.Value.ProjectId, ["done"] = kv.Value.DaysDone, ["total"] = kv.Value.DaysTotal, ["paid"] = Res(kv.Value.Paid) }),
+                ["researched"] = sc.Researched.OrderBy(x => x, StringComparer.Ordinal).Cast<object>().ToList(),
+                ["doctrinePath"] = sc.DoctrinePath.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToDictionary(kv => kv.Key, kv => (object)kv.Value),
+                ["pending"] = sc.Pending == null ? null : new Dictionary<string, object> { ["from"] = sc.Pending.From, ["kind"] = sc.Pending.Kind, ["payment"] = sc.Pending.Payment,
+                    ["day"] = sc.Pending.Day, ["expires"] = sc.Pending.Expires, ["reason"] = sc.Pending.Reason },
             };
         }
 
@@ -81,6 +128,20 @@ namespace RR.Strategy
             Ints(d.O("arrears"), sc.Arrears);
             if (d.TryGetValue("supplyKnown", out var sk) && sk is List<object> skl) sc.SupplyKnown = skl.OfType<string>().ToList();
             if (d.TryGetValue("threatsKnown", out var tk) && tk is List<object> tkl) sc.ThreatsKnown = tkl.OfType<string>().ToList();
+            var plan = d.O("aiPlan");
+            if (plan != null) foreach (var kv in plan) if (kv.Value is string sv) sc.AiPlan[kv.Key] = sv;
+            sc.AiLog.AddRange(d.A("aiLog").OfType<string>());
+            sc.AutoPlayer = d.B("autoPlayer");
+            sc.Variant = d.S("variant") ?? Variants.Standard;
+            sc.SetupSeed = d.I("setupSeed");
+            var res = d.O("researching");
+            if (res != null) foreach (var kv in res) if (kv.Value is IDictionary<string, object> r)
+                sc.Researching[kv.Key] = new DoctrineResearch { ProjectId = r.S("project"), DaysDone = r.I("done"), DaysTotal = r.I("total"), Paid = Res(r.O("paid")) };
+            foreach (var x in d.A("researched").OfType<string>()) sc.Researched.Add(x);
+            var dp = d.O("doctrinePath");
+            if (dp != null) foreach (var kv in dp) if (kv.Value is string v) sc.DoctrinePath[kv.Key] = v;
+            var pend = d.O("pending");
+            if (pend != null) sc.Pending = new Proposal { From = pend.S("from"), Kind = pend.S("kind"), Payment = pend.I("payment"), Day = pend.I("day"), Expires = pend.I("expires"), Reason = pend.S("reason") };
             return sc;
         }
 
@@ -131,6 +192,13 @@ namespace RR.Strategy
                     MapId = e.S("map"), RivalComposition = e.S("rival"), Asset = e.S("asset"), CreatedDay = e.I("day"), Outcome = e.S("outcome"), BattleId = e.S("battle") });
             foreach (var k in d.A("applied").OfType<string>()) s.Applied.Add(k);
             s.Scenario = Scenario(d.O("scenario"));
+            foreach (var f in Os(d, "ground"))
+            {
+                var force = new GroundForce { Id = f.S("id"), OwnerId = f.S("owner"), PlanetId = f.S("planet"), FleetId = f.S("fleet") };
+                foreach (var u in Os(f, "units")) force.Units.Add(new GroundUnit { Uid = u.I("uid"), DefId = u.S("def"), Hp = u.I("hp") });
+                s.Ground.Add(force);
+            }
+            foreach (var o in Os(d, "operations")) s.Operations.Add(Operation(o));
             return s;
         }
     }

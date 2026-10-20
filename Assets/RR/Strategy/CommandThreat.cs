@@ -36,7 +36,7 @@ namespace RR.Strategy
         public string Summary(string leaderName)
         {
             if (Lines.Count == 0)
-                return $"No lethal strike on {leaderName} was found for the enemy's next activation ({ShipsChecked} ship{(ShipsChecked == 1 ? "" : "s")}, {CommandsChecked} possible orders checked). " +
+                return $"No lethal strike on {leaderName} was found for the enemy's next activation ({ShipsChecked} unit{(ShipsChecked == 1 ? "" : "s")}, {CommandsChecked} possible orders checked). " +
                        "Later activations are not checked, so this is not a guarantee.";
             var first = Lines[0];
             string more = Lines.Count > 1 ? $" {Lines.Count - 1} other lethal option{(Lines.Count == 2 ? "" : "s")} also exist." : "";
@@ -55,9 +55,9 @@ namespace RR.Strategy
         /// <summary>The enemy's ships could, between them, destroy the leader over their next round if all chose it.</summary>
         public bool Critical => LeaderHull > 0 && Total >= LeaderHull;
         public string Summary(string leaderName) => ByShip.Count == 0
-            ? $"No enemy ship can damage {leaderName} in one activation from where they stand."
-            : $"Focus fire: {ByShip.Count} enemy ship{(ByShip.Count == 1 ? "" : "s")} could each hit {leaderName} in one activation, {Total} damage in all against {LeaderHull} hull and shields. " +
-              "This assumes each enemy ship acts once and your side does nothing in between.";
+            ? $"No enemy unit can damage {leaderName} in one activation from where they stand."
+            : $"Focus fire: {ByShip.Count} enemy unit{(ByShip.Count == 1 ? "" : "s")} could each hit {leaderName} in one activation, {Total} damage in all against {LeaderHull} hull and shields. " +
+              "This assumes each enemy unit acts once and your side does nothing in between.";
     }
 
     public static class CommandThreat
@@ -146,7 +146,7 @@ namespace RR.Strategy
                 best = Math.Max(best, DamageOf(view, c, leaderId, hp0, ref checkedCount));
             var moves = RosterMovement.Reachable(view, u).Keys.Select(h => SliceRules.Order(CommandType.Move, u.Owner, u.Id, h, 0)).ToList();
             if (SliceRules.CanOverclock(view, u) == null)
-                moves.AddRange(RosterMovement.Reachable(view, u, SliceRules.OverclockMove).Keys.Select(h => SliceRules.Order(CommandType.Move, u.Owner, u.Id, h, SliceRules.OverclockOption)));
+                moves.AddRange(RosterMovement.Reachable(view, u, SliceRules.OverclockMoveOf(u)).Keys.Select(h => SliceRules.Order(CommandType.Move, u.Owner, u.Id, h, SliceRules.OverclockOption)));
             int strike = Math.Max(u.Weapon.MaxRange + 1, u.R.Active == null ? 0 : Math.Max(u.R.Active.Range, u.R.ActiveRange) + u.R.Active.DashRange + 2);
             foreach (var mv in moves.Where(m => Hex.Distance(m.Target, leaderHex) <= strike).OrderBy(m => m.Target).ThenBy(m => m.Option))
             {
@@ -179,7 +179,7 @@ namespace RR.Strategy
         public static int Reach(MatchState s, UnitState u)
         {
             int move = Math.Max(u.R.MoveHexes, RosterMovement.Budget(s, u)) * (u.R.Pattern == MovePattern.Diag ? 2 : 1) + (u.R.Pattern == MovePattern.Knight ? 3 : 0);
-            if (SliceRules.OverclockCapable(u)) move += SliceRules.OverclockMove * (u.R.Pattern == MovePattern.Diag ? 2 : 1);
+            if (SliceRules.OverclockCapable(u)) move += SliceRules.OverclockMoveOf(u) * (u.R.Pattern == MovePattern.Diag ? 2 : 1);
             var a = u.R.Active;
             int act = a == null ? 0 : Math.Max(a.Range, u.R.ActiveRange) + a.DashRange + 2;
             return move + Math.Max(u.Weapon.MaxRange + 1, act) + 1;

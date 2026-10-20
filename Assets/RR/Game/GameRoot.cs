@@ -144,7 +144,15 @@ namespace RR.Game
             if (campaignTour != null) StartCoroutine(CampaignAutomation.Tour(this, campaignTour));
             var warTour = Args.Value("-rrWarTour");
             if (warTour != null) StartCoroutine(WarAutomation.Tour(this, warTour));
-            var problems = SliceRoster.Validate();
+            var opsTour = Args.Value("-rrOpsTour");
+            if (opsTour != null) StartCoroutine(OpsAutomation.Tour(this, opsTour));
+            var contentPreview = Args.Value("-rrContentPreview");
+            if (contentPreview != null) StartCoroutine(ContentAutomation.Preview(this, contentPreview));
+            var perfTour = Args.Value("-rrPerfTour");
+            if (perfTour != null) StartCoroutine(PerfAutomation.Tour(this, perfTour));
+            var alphaTour = Args.Value("-rrAlphaTour");
+            if (alphaTour != null) StartCoroutine(AlphaAutomation.Tour(this, alphaTour, Args.Value("-rrJourney") ?? "pygmaei"));
+            var problems = SliceRoster.Validate().Concat(SliceContentCheck.Validate()).ToList();
             if (problems.Count > 0) { foreach (var p in problems) Debug.LogError("Slice content: " + p); UI.Strategy.Toast("Slice content problem: " + problems[0], "bad"); }
             MaybeShowStartMenu();
         }

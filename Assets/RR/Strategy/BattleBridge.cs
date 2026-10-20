@@ -26,6 +26,8 @@ namespace RR.Strategy
         public string Scenario;
         /// <summary>The galaxy system whose space the battle is fought in (campaign: the engagement's system).</summary>
         public string SystemId;
+        /// <summary>The war operation this battle belongs to (Prompt 16), or null.</summary>
+        public string OperationId;
     }
 
     public sealed class ShipOutcome
@@ -79,6 +81,7 @@ namespace RR.Strategy
                 var entry = new RosterEntry(ship.DefId);
                 var prof = g.Slice?.Profile(uid);
                 if (prof != null) foreach (var m in prof.Modules) entry.Equipment.Add(SliceRules.ModuleToken + m);   // the same ship, as fitted
+                entry.Equipment.AddRange(Doctrines.Tokens(g, f.OwnerId));   // adopted doctrine sidegrades (Prompt 18), disclosed before deployment
                 army.Units.Add(entry);
             }
             return army;
@@ -299,6 +302,7 @@ namespace RR.Strategy
             g.Note(winner.OwnerId == g.Player.Id ? "result" : "danger", e.ResultSummary);
             if (sys.Blockaded) g.Note("danger", $"{g.GetPolity(sys.OrbitalControlId).Name} holds the orbit of {sys.Name}. Its worlds are blockaded but not conquered.");
             g.Fleets.RemoveAll(f => f.Ships.Count == 0);
+            Operations.EnforceCapacity(g);   // troops aboard lost ships are lost with them (Prompt 16)
             return StratResult.Accept();
         }
 

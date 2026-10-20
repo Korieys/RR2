@@ -1,0 +1,77 @@
+alpha journey (Pygmaei); rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; content 98b9f7ab15ddb2ab; save <scratchpad>\t20_pygmaei4\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+shot a00_variant_menu
+STEP PASS start a configured campaign: The Passage War / standard
+shot a01_mandate
+shot a02_treasury
+STEP PASS choose an economic priority: Ironmouth ore drive
+shot a03_supply
+STEP PASS inspect supply: Forgefall: supplied (a supply source (Forgefall), 0 days). | Ironmouth: supplied (supplied from Forgefall, 9 days). | Cinderhold: supplied (supplied from Forgefall, 9 days). | Gloam: supplied (supplied from Forgefall via Cinderhold, 15 days).
+shot a04_hangar
+STEP PASS prepare a named ship: Cinder Oath, modules afterburners
+shot a05_doctrine
+STEP PASS make a progression choice: Foundry quotas (Sustained industrial campaigning)
+STEP PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+escort unavailable: Not enough resources.
+STEP PASS prepare the invasion force: Forgefall Raiders: 10 ships, transport capacity 11
+STEP PASS embark the legion: 8 units, capacity 11
+order to Dividend: ok
+shot a10_prep_invade
+STEP PASS launch an operation: op_22 against Dividend I; phase Orbital
+shot a11_operation
+a12_orbital1: op_22_orb0 (Orbital, orbital_gate); player orders: slice AI pilot
+operation battle op_22_orb0: CommanderEliminated; next: Orbital engagement 2 (the defender's second chance to protect its supplies).
+a12_orbital1: winner seat 0 (CommanderEliminated) after 56 orders, 104 s
+shot a12_orbital1
+a12_orbital2: op_22_orb1 (Orbital, orbital_gate); player orders: slice AI pilot
+operation battle op_22_orb1: CommanderEliminated; next: Pygmaei Sector decides: land the embarked troops for the planetary series, offer terms, or withdraw.
+a12_orbital2: winner seat 0 (CommanderEliminated) after 29 orders, 132 s
+shot a12_orbital2
+STEP PASS land the troops: 8 landed; supplies protected False, seized True
+a13_match1: op_22_gnd2 (Planetary, proving_ground); player orders: slice AI pilot
+operation battle op_22_gnd2: CommanderEliminated; next: Planetary match 2 on shattered_citadel; the series stands 1-0 (Pygmaei Sector first).
+a13_match1: winner seat 0 (CommanderEliminated) after 50 orders, 64 s
+shot a13_match1
+STEP PASS save and load at between series rounds: digest identical, history 25->25, no duplicated ships or units: True
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+a13_match2: no battle (conceded or nothing pending)
+STEP NOTE recover from a nonterminal setback: not exercised in this run (no engagement was lost before the operation ended)
+STEP FAIL complete the operation
+conquest route: the defender held the world
+STEP PASS ownership changed only by the final outcome: Dividend I: inhumanus
+shot a14_settled
+STEP PASS save and load at after the operation settlement: digest identical, history 26->26, no duplicated ships or units: True
+STEP FAIL return to the correct strategic state: day 67; Access is contested. Next settlement day 70.
+treaty after the conquest: You cannot pay 100 credits (you have 24).
+a90_late_battle0: no battle (conceded or nothing pending)
+a90_late_battle1: no battle (conceded or nothing pending)
+a90_late_battle2: no battle (conceded or nothing pending)
+a90_late_battle3: no battle (conceded or nothing pending)
+a90_late_battle4: no battle (conceded or nothing pending)
+a90_late_battle5: no battle (conceded or nothing pending)
+shot a99_ending
+STEP FAIL reach a valid ending: not ended by day 67
+journey: 67 strategic days, 481 s of automated time (not a human session length)
+SUMMARY
+  PASS start a configured campaign: The Passage War / standard
+  PASS choose an economic priority: Ironmouth ore drive
+  PASS inspect supply: Forgefall: supplied (a supply source (Forgefall), 0 days). | Ironmouth: supplied (supplied from Forgefall, 9 days). | Cinderhold: supplied (supplied from Forgefall, 9 days). | Gloam: supplied (supplied from Forgefall via Cinderhold, 15 days).
+  PASS prepare a named ship: Cinder Oath, modules afterburners
+  PASS make a progression choice: Foundry quotas (Sustained industrial campaigning)
+  PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+  PASS prepare the invasion force: Forgefall Raiders: 10 ships, transport capacity 11
+  PASS embark the legion: 8 units, capacity 11
+  PASS launch an operation: op_22 against Dividend I; phase Orbital
+  PASS land the troops: 8 landed; supplies protected False, seized True
+  PASS save and load at between series rounds: digest identical, history 25->25, no duplicated ships or units: True
+  FAIL complete the operation
+  PASS ownership changed only by the final outcome: Dividend I: inhumanus
+  PASS save and load at after the operation settlement: digest identical, history 26->26, no duplicated ships or units: True
+  FAIL return to the correct strategic state: day 67; Access is contested. Next settlement day 70.
+  FAIL reach a valid ending: not ended by day 67

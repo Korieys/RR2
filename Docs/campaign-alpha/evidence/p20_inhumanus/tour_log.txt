@@ -1,0 +1,54 @@
+alpha journey (Inhumanus); rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; content 98b9f7ab15ddb2ab; save <scratchpad>\t20_inhumanus\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+shot a00_variant_menu
+STEP PASS start a configured campaign: The Passage War / standard
+shot a01_mandate
+shot a02_treasury
+STEP PASS choose an economic priority: Exchange convoys
+shot a03_supply
+STEP PASS inspect supply: Forgefall: cut (Forgefall Raiders (Pygmaei Sector) holds position at Forgefall). | Ironmouth: cut (Ironmouth is Pygmaei Sector territory). | Cinderhold: cut (Cinderhold is Pygmaei Sector territory). | Gloam: cut (no supplied route reaches it).
+shot a04_hangar
+STEP PASS prepare a named ship: Clause of Dawn, modules extended_magazines
+shot a05_doctrine
+STEP PASS make a progression choice: Toll brokerage (Commercial-access leverage)
+STEP PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+shot a20_treaty_refused
+STEP PASS recover from a nonterminal setback: the first treaty was refused: Pygmaei Sector declined the passage treaty. Rejected: pressure 25 against cost 50. +25: 100 credits for the rights; −30: our claim on the contested passage; −20: we have not lost a battle over the passage.
+order to Ironmouth: ok
+STEP PASS blockade by the northern route: Ironmouth orbit: inhumanus
+treaty under the blockade: Accepted: pressure 63 against cost 50. +33: 100 credits for the rights; +30: Ironmouth is blockaded by Inhumanus Dominion; −30: our claim on the contested passage; −20: we have not lost a battle over the passage.
+shot a22_treaty
+STEP PASS choose negotiation (no conquest step): access inhumanus (treaty); operations 0
+STEP PASS save and load at interrupted access and a treaty awaiting ratification: digest identical, history 7->7, no duplicated ships or units: True
+ending: Victory by treaty; Passage rights through The Umbra passage were ratified at the settlement on day 40.
+shot a99_ending
+STEP PASS reach a valid ending: Victory by treaty: Passage rights through The Umbra passage were ratified at the settlement on day 40.
+  ending: Victory by treaty on day 40. Passage rights through The Umbra passage were ratified at the settlement on day 40.
+  ending: Battles: 0 (0 won, 0 lost). Spent on decisions: 10 energy, 50 materials, 424 credits, 10 influence. Recovered or received: nothing.
+  ending: Relations with Pygmaei Sector: truce, standing +15.
+  ending: Inhumanus Dominion holds access through The Umbra passage (by treaty).
+  ending: Fleet upkeep over the campaign: 224 credits (included in the spending above).
+  ending: Your decisions, in order:
+  ending:   Day 0: Dividend I: Priority: Exchange convoys (10 days) (30 materials, 30 credits)
+  ending:   Day 0: Refitted Clause of Dawn with Extended magazines (10 energy, 20 materials, 30 credits)
+  ending:   Day 0: Began Toll brokerage (12 days) (40 credits, 10 influence)
+  ending:   Day 0: Proposed passage rights for 100 credits; Pygmaei Sector declined (pressure 25 against 50).
+  ending:   Day 10: Completed Exchange convoys at Dividend
+  ending:   Day 12: Adopted Toll brokerage
+  ending:   Day 37: Obtained passage rights through The Umbra passage by treaty (100 credits)
+STEP PASS save and load at after the ending: digest identical, history 8->8, no duplicated ships or units: True
+journey: 40 strategic days, 49 s of automated time (not a human session length)
+SUMMARY
+  PASS start a configured campaign: The Passage War / standard
+  PASS choose an economic priority: Exchange convoys
+  PASS inspect supply: Forgefall: cut (Forgefall Raiders (Pygmaei Sector) holds position at Forgefall). | Ironmouth: cut (Ironmouth is Pygmaei Sector territory). | Cinderhold: cut (Cinderhold is Pygmaei Sector territory). | Gloam: cut (no supplied route reaches it).
+  PASS prepare a named ship: Clause of Dawn, modules extended_magazines
+  PASS make a progression choice: Toll brokerage (Commercial-access leverage)
+  PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+  PASS recover from a nonterminal setback: the first treaty was refused: Pygmaei Sector declined the passage treaty. Rejected: pressure 25 against cost 50. +25: 100 credits for the rights; −30: our claim on the contested passage; −20: we have not lost a battle over the passage.
+  PASS blockade by the northern route: Ironmouth orbit: inhumanus
+  PASS choose negotiation (no conquest step): access inhumanus (treaty); operations 0
+  PASS save and load at interrupted access and a treaty awaiting ratification: digest identical, history 7->7, no duplicated ships or units: True
+  PASS reach a valid ending: Victory by treaty: Passage rights through The Umbra passage were ratified at the settlement on day 40.
+  PASS save and load at after the ending: digest identical, history 8->8, no duplicated ships or units: True

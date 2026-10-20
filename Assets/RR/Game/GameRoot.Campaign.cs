@@ -286,7 +286,9 @@ namespace RR.Game
             }
             Audio.Play("battle_commit");
             yield return EnterBattleRoutine(session);
-            Battle.Announce("Sensors are short in the drift: you see only ships near your own. The derelict holds the centre.", "ok");
+            if (setup.Scenario == "expedition") Battle.Announce("Sensors are short in the drift: you see only ships near your own. The derelict holds the centre.", "ok");
+            else if (setup.OperationId != null && Operations.Get(G, setup.OperationId) is Operation op)
+                Battle.Announce(Operations.Next(G, op) + " Destroying the opposing commander ends this battle, not the operation.", "ok");
         }
 
         void FinishExpedition()

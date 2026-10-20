@@ -1,0 +1,39 @@
+{
+  "schema": "rr.slice.content",
+  "version": 1,
+  "note": "Authoring source for capital-ship module sidegrades and scenario loadouts (campaign alpha Prompt 19). Edit this file, then run Tools/Content/rr_content.py to validate it and regenerate Assets/RR/Vendor/Core/Roster/SliceContent.g.cs. Values are provisional design numbers.",
+  "modules": [
+    {
+      "id": "afterburners", "name": "Afterburner stacks", "slot": "propulsion",
+      "move": 1, "hull": -2, "visual": "afterburners", "cost": { "energy": 10, "materials": 20, "credits": 30 },
+      "summary": "+1 movement, −2 maximum hull. Reach and escape at the cost of staying power."
+    },
+    {
+      "id": "ablative_plating", "name": "Ablative plating", "slot": "protection",
+      "armor": 1, "move": -1, "visual": "ablative_plating", "cost": { "energy": 0, "materials": 40, "credits": 30 },
+      "summary": "+1 armour, −1 movement (never below 1). Harder to kill, easier to flank."
+    },
+    {
+      "id": "heavy_battery", "name": "Heavy battery", "slot": "firepower",
+      "damage": 1, "range": -1, "visual": "heavy_battery", "cost": { "energy": 10, "materials": 30, "credits": 40 },
+      "summary": "+1 weapon damage, −1 maximum range (never below its minimum). Hits harder from closer in."
+    },
+    {
+      "id": "extended_magazines", "name": "Extended magazines", "slot": "firepower",
+      "range": 1, "damage": -1, "visual": "heavy_battery", "cost": { "energy": 10, "materials": 20, "credits": 30 },
+      "summary": "+1 maximum range, −1 weapon damage (never below 1). Reach out of the enemy's answer at the cost of punch."
+    }
+  ],
+  "loadouts": [
+    {
+      "id": "salvage_picket", "faction": "Inhumanus", "domain": "Orbital", "name": "Salvage Picket",
+      "units": ["inhumanus_executive_flagship", "inhumanus_arbitration_destroyer", "inhumanus_proxy_frigate", "inhumanus_mercator_corvette", "inhumanus_mercator_corvette"],
+      "note": "A light picket left to guard the wreck field: fewer hulls, cheaper upkeep, and a flagship that cannot afford a long fight."
+    },
+    {
+      "id": "breaker_crews", "faction": "Pygmaei", "domain": "Orbital", "name": "Breaker Crews",
+      "units": ["pygmaei_revenant_command_ship", "pygmaei_furnace_cruiser", "pygmaei_skirmish_frigate", "pygmaei_skirmish_frigate", "pygmaei_rift_interceptor"],
+      "note": "Salvage tugs pressed into the line: a cruiser to hold the wreck field and frigates to strip it."
+    }
+  ]
+}

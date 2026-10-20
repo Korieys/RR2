@@ -22,7 +22,7 @@ namespace RR.Game
 
         public void MaybeShowStartMenu()
         {
-            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrWarTour") || Args.Has("-rrCameraCheck") || Args.Has("-rrHoverReview")) return;
+            if (_startMenuShown || Args.Has("-rrTour") || Args.Has("-rrSoak") || Args.Has("-rrShipSheet") || Args.Has("-rrCapture") || Args.Has("-rrPassageTour") || Args.Has("-rrCampaignTour") || Args.Has("-rrWarTour") || Args.Has("-rrOpsTour") || Args.Has("-rrContentPreview") || Args.Has("-rrAlphaTour") || Args.Has("-rrPerfTour") || Args.Has("-rrCameraCheck") || Args.Has("-rrHoverReview")) return;
             _startMenuShown = true;
             ShowPassageMenu();
         }
@@ -48,8 +48,8 @@ namespace RR.Game
             Option("Battle as the Inhumanus escort", () => StartPassage(PassageVariant.Challenge, FactionId.Inhumanus, false));
             Option("Two players at this machine", () => StartPassage(PassageVariant.Challenge, FactionId.Pygmaei, true));
             Option("Training: three lessons", () => StartPassage(PassageVariant.Training, FactionId.Pygmaei, false));
-            Option(PassageWar.Title + ", as the Pygmaei", () => StartPassageWar(FactionId.Pygmaei));
-            Option(PassageWar.Title + ", as the Inhumanus", () => StartPassageWar(FactionId.Inhumanus));
+            Option(PassageWar.Title + ", as the Pygmaei", () => ShowVariantMenu(FactionId.Pygmaei));
+            Option(PassageWar.Title + ", as the Inhumanus", () => ShowVariantMenu(FactionId.Inhumanus));
             Option("Freeform passage campaign, as the Pygmaei", () => StartPassageCampaign(FactionId.Pygmaei));
             Option("Freeform passage campaign, as the Inhumanus", () => StartPassageCampaign(FactionId.Inhumanus));
             Option("Continue the Aurelith campaign", () => UI.CloseModal());
@@ -67,6 +67,24 @@ namespace RR.Game
                 }
             }
             m.Add(Para("Ship statistics are codex 0.1 draft values and the doctrines are experimental. Ship models for both factions are first-pass generated art pending approval. F6 reopens this menu.", 11, new Color(0.6f, 0.62f, 0.66f)));
+        }
+
+        /// <summary>Prompt 19: the starting situation for the Passage War (the same campaign, hand-authored variations).</summary>
+        public void ShowVariantMenu(FactionId f)
+        {
+            var m = UI.OpenModal(980);
+            var title = UIX.Text("STARTING SITUATION", "modal-title"); UIRoot.Display(title); m.Add(title);
+            m.Add(Para($"The same campaign, factions, economy, rules and win conditions from four authored starts. Playing as the {(f == FactionId.Pygmaei ? "Pygmaei" : "Inhumanus")}. Nothing here is random; the choice is saved with the campaign."));
+            foreach (var v in Variants.All)
+            {
+                m.Add(UIX.Text(v.Name.ToUpperInvariant(), "h-section"));
+                m.Add(Para(v.Summary, 13));
+                m.Add(Para(v.Changes, 12));
+                var row = UIX.Div("row"); m.Add(row);
+                var id = v.Id;
+                var b = UIX.Btn("Begin: " + v.Name, () => StartPassageWar(f, id)); b.style.marginBottom = 6; row.Add(b);
+            }
+            var back = UIX.Btn("Back", ShowPassageMenu); m.Add(back);
         }
 
         public void StartPassage(PassageVariant v, FactionId player, bool hotseat)

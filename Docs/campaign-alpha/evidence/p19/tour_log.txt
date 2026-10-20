@@ -1,0 +1,18 @@
+content preview; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; content 98b9f7ab15ddb2ab; rr.slice.content-1
+content validation: ok
+Pygmaei afterburners (propulsion, visual afterburners): fitted; +1 movement, −2 maximum hull. Reach and escape at the cost of staying power. Base: move 2, hull 20, armour 1, damage 7, range 2-5; with it: hull 18.
+shot cp_pygmaei_afterburners
+Pygmaei ablative_plating (protection, visual ablative_plating): fitted; +1 armour, −1 movement (never below 1). Harder to kill, easier to flank. Base: move 2, hull 20, armour 1, damage 7, range 2-5; with it: hull 18.
+shot cp_pygmaei_ablative_plating
+Pygmaei heavy_battery (firepower, visual heavy_battery): fitted; +1 weapon damage, −1 maximum range (never below its minimum). Hits harder from closer in. Base: move 2, hull 20, armour 1, damage 7, range 2-5; with it: hull 18.
+shot cp_pygmaei_heavy_battery
+Pygmaei extended_magazines (firepower, visual heavy_battery): fitted; +1 maximum range, −1 weapon damage (never below 1). Reach out of the enemy's answer at the cost of punch. Base: move 2, hull 20, armour 1, damage 7, range 2-5; with it: hull 18.
+shot cp_pygmaei_extended_magazines
+Inhumanus afterburners (propulsion, visual afterburners): fitted; +1 movement, −2 maximum hull. Reach and escape at the cost of staying power. Base: move 1, hull 20, armour 2, damage 6, range 2-5; with it: hull 18.
+shot cp_inhumanus_afterburners
+Inhumanus ablative_plating (protection, visual ablative_plating): fitted; +1 armour, −1 movement (never below 1). Harder to kill, easier to flank. Base: move 1, hull 20, armour 2, damage 6, range 2-5; with it: hull 18.
+shot cp_inhumanus_ablative_plating
+Inhumanus heavy_battery (firepower, visual heavy_battery): fitted; +1 weapon damage, −1 maximum range (never below its minimum). Hits harder from closer in. Base: move 1, hull 20, armour 2, damage 6, range 2-5; with it: hull 18.
+shot cp_inhumanus_heavy_battery
+Inhumanus extended_magazines (firepower, visual heavy_battery): fitted; +1 maximum range, −1 weapon damage (never below 1). Reach out of the enemy's answer at the cost of punch. Base: move 1, hull 20, armour 2, damage 6, range 2-5; with it: hull 18.
+shot cp_inhumanus_extended_magazines

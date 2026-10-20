@@ -28,6 +28,7 @@ namespace RR.Strategy
         {
             var who = Challenger(g, p);
             if (who == null || RivalFleet(g, who) == null) return null;
+            if (PassageWar.Running(g)) return null;   // the Passage War's rival plans its own return (RivalAI)
             int tried = FailedAttempts(g, who, p.SystemId);
             if (tried >= MaxAttempts) return null;
             if (g.Slice.Applied.Contains(CounterKey(who, p))) return null;

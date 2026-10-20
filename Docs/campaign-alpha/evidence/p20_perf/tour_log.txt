@@ -1,0 +1,18 @@
+performance tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; uncapped True
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 0, target fps -1, UI scale 1
+perf galaxy, quiet (campaign start, panels compact): median 2.86 ms (350 fps), p95 3.54 ms, p99 4.19 ms, max 5.99 ms over 399 frames; gen0 GCs 3; managed heap 11.6 MB
+perf galaxy, crowded (supply overlay, labels, campaign panel): median 2.81 ms (356 fps), p95 3.31 ms, p99 4.55 ms, max 4.87 ms over 399 frames; gen0 GCs 4; managed heap 10.3 MB
+perf treasury window open over the galaxy: median 2.91 ms (343 fps), p95 3.51 ms, p99 4.20 ms, max 5.06 ms over 299 frames; gen0 GCs 2; managed heap 11.4 MB
+perf mandate window open: median 2.88 ms (347 fps), p95 3.53 ms, p99 4.31 ms, max 5.72 ms over 299 frames; gen0 GCs 2; managed heap 11.0 MB
+perf doctrine window open: median 2.93 ms (341 fps), p95 3.48 ms, p99 3.69 ms, max 5.40 ms over 299 frames; gen0 GCs 2; managed heap 11.4 MB
+strategic day in the player (economy, supply, rival planner, doctrines, settlement): median 0.45 ms, p95 2.69 ms, max 28.28 ms over 200 days; 1 headless battles
+long history: day 200, 16 history events, 116 ledger entries, 93 dispatch lines, 45 AI log lines
+save of the long campaign: 188 KB in 23 ms
+perf galaxy after 200 days (long history, crowded overlay): median 2.79 ms (358 fps), p95 3.40 ms, p99 3.76 ms, max 4.83 ms over 399 frames; gen0 GCs 3; managed heap 13.4 MB
+perf history window over a long campaign: median 2.85 ms (351 fps), p95 3.42 ms, p99 3.71 ms, max 4.69 ms over 299 frames; gen0 GCs 1; managed heap 13.6 MB
+Eclipse travel order: ok
+perf galaxy, fleet travelling at speed 3 toward the Eclipse: median 2.81 ms (356 fps), p95 3.64 ms, p99 8.01 ms, max 8.70 ms over 399 frames; gen0 GCs 5; managed heap 14.8 MB
+perf transition into the orbital battle: median 2.19 ms (457 fps), p95 4.63 ms, p99 12.70 ms, max 534.07 ms over 239 frames; gen0 GCs 47; managed heap 11.9 MB
+perf orbital battle, idle on the player's turn: median 2.12 ms (473 fps), p95 4.08 ms, p99 5.36 ms, max 6.27 ms over 299 frames; gen0 GCs 24; managed heap 12.3 MB
+perf orbital battle, AI turns and animations: median 2.13 ms (469 fps), p95 3.08 ms, p99 4.45 ms, max 8.68 ms over 399 frames; gen0 GCs 7; managed heap 12.8 MB

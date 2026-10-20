@@ -256,6 +256,15 @@ namespace RR.Game
                 enemyInfo.Add(UIX.Text(StrategyHud.RoleText(d) + ", armor " + d.Armor + ", " + d.Weapon.Damage + " damage at " + d.Weapon.MinRange + " to " + d.Weapon.MaxRange + ". " + d.Roster.ActiveName + ".", "item-sub"));
                 right.Add(it);
             }
+            // Prompt 18: adopted doctrine sidegrades are disclosed to both sides before deployment.
+            var ours = RR.Strategy.Doctrines.Disclosure(G, mine.OwnerId).Where(l => l.Contains("Tactical")).ToList();
+            var theirs = RR.Strategy.Doctrines.Disclosure(G, enemy.OwnerId).Where(l => l.Contains("Tactical")).ToList();
+            if (ours.Count + theirs.Count > 0)
+            {
+                right.Add(UIX.Text("DOCTRINES IN FORCE", "h-section"));
+                foreach (var l in ours) right.Add(UIX.Text("Yours: " + l, "item-sub"));
+                foreach (var l in theirs) right.Add(UIX.Text("Theirs: " + l, "item-sub"));
+            }
             right.Add(UIX.Text("BATTLEFIELD", "h-section"));
             right.Add(UIX.Text(map.Name + ". " + map.Description, "item-sub"));
             right.Add(UIX.Text("Asteroid fields give cover, nebulae shorten weapon range, wrecks block movement and sight, and ion storms damage ships that stop inside them.", "item-sub"));
@@ -264,6 +273,10 @@ namespace RR.Game
             foot.Add(UIX.Div("spacer"));
             foot.Add(UIX.Btn("Suggest a line", () => { selection.Clear(); selection.AddRange(BattleBridge.AutoSelect(G, mine)); rebuild(); }));
             if (G.Slice != null && G.Slice.Active) foot.Add(UIX.Btn("Offer terms instead", () => _game.CampaignOfferBeforeBattle()));
+            // Prompt 16: with troops aboard, the encounter can become an invasion (its first orbital engagement) instead.
+            var invasion = _game.InvasionTarget(e.SystemId, mine);
+            if (invasion != null && (RR.Strategy.Operations.Embarked(G, mine.Id)?.Units.Count ?? 0) > 0)
+                foot.Add(UIX.Btn("Invade " + invasion.Name, () => _game.Invade(mine.Id, invasion.Id)));
             foot.Add(UIX.Btn("Withdraw without fighting", () => withdraw(), "btn-danger"));
             go = UIX.Btn("Commit to battle", () => commit(new List<int>(selection)), "btn-primary");
             foot.Add(go);

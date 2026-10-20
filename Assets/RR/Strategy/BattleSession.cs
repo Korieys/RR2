@@ -15,7 +15,7 @@ namespace RR.Strategy
         public const string Commandfall = "0.15.0";
         /// <summary>Slice revision of the vendored rules. Increment it with every rules-affecting change recorded in
         /// Docs/vertical-slice/VENDOR_PATCHES.md.</summary>
-        public const int SliceRevision = 3;
+        public const int SliceRevision = 6;
         public static string Id => $"commandfall-{Commandfall}+{GameContent.ContentVersion}+{RosterContent.ContentVersion}+vs-{SliceRevision}";
 
         static string _fingerprint;
@@ -192,7 +192,7 @@ namespace RR.Strategy
             {
                 ["rules"] = b.RulesVersionId, ["content"] = b.ContentFingerprint,
                 ["id"] = st.BattleId, ["engagement"] = st.EngagementId, ["playerSeat"] = st.PlayerSeat,
-                ["hotseat"] = st.Hotseat, ["scenario"] = st.Scenario, ["system"] = st.SystemId,
+                ["hotseat"] = st.Hotseat, ["scenario"] = st.Scenario, ["system"] = st.SystemId, ["operation"] = st.OperationId,
                 ["fleets"] = st.FleetIds.Cast<object>().ToList(),
                 ["ships"] = st.ShipUids.Select(l => (object)l.Cast<object>().ToList()).ToList(),
                 ["startHp"] = st.StartHp.Select(l => (object)l.Cast<object>().ToList()).ToList(),
@@ -213,7 +213,7 @@ namespace RR.Strategy
                 var st = new BattleSetup
                 {
                     BattleId = d.S("id"), EngagementId = d.S("engagement"), PlayerSeat = d.I("playerSeat"),
-                    Hotseat = d.B("hotseat"), Scenario = d.S("scenario"), SystemId = d.S("system"),
+                    Hotseat = d.B("hotseat"), Scenario = d.S("scenario"), SystemId = d.S("system"), OperationId = d.S("operation"),
                     Config = Serialization.FromBytes(Convert.FromBase64String(d.S("config")), Serialization.ReadConfig),
                 };
                 var fleets = d.A("fleets");
@@ -274,7 +274,7 @@ namespace RR.Strategy
                     text = $"{who} turned to face {SliceRules.FacingNames[Math.Max(0, SliceRules.TurnFacing(before.Unit(c.UnitId), c.Target))]}.";
                     break;
                 case CommandType.Move:
-                    text = $"{who} moved to {c.Target}{(c.Option == SliceRules.OverclockOption ? " (overclocked, +" + SliceRules.OverclockHeat + " heat)" : "")}.";
+                    text = $"{who} moved to {c.Target}{(c.Option == SliceRules.OverclockOption ? " (overclocked)" : "")}.";
                     break;
                 case CommandType.Attack:
                 {
@@ -306,7 +306,7 @@ namespace RR.Strategy
                     case GameEventType.UnitDestroyed: extra.Add($"{Name(before, e.UnitId)} was destroyed."); break;
                     case GameEventType.UnitArrived: extra.Add($"{Name(after, e.UnitId)} arrived under contract at {e.To}."); break;
                     case GameEventType.ArrivalDelayed: extra.Add($"{Name(after, e.UnitId)}'s contracted arrival was blocked at {e.To}."); break;
-                    case GameEventType.HeatChanged when e.Amount >= SliceRules.OverheatAt: extra.Add($"{Name(after, e.UnitId)} is OVERHEATED (heat {e.Amount})."); break;
+                    case GameEventType.HeatChanged when e.Text != null && e.Text.StartsWith("OVERHEATED", StringComparison.Ordinal): extra.Add($"{Name(after, e.UnitId)} is OVERHEATED (heat {e.Amount})."); break;
                     case GameEventType.UnitCaptured: extra.Add($"{Name(after, e.TargetUnitId)} was captured."); break;
                 }
             }

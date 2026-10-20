@@ -19,7 +19,35 @@ namespace RR.Tools
         {
             string mode = args.Length > 0 ? args[0] : "run";
             if (mode == "stress") return Stress(args.Length > 1 ? int.Parse(args[1]) : 1000, args.Length > 2 ? int.Parse(args[2]) : 365);
+            if (mode == "manifest") return Manifest(args.Length > 1 ? args[1] : ".", args.Length > 2 ? args[2] : "../..");
+            if (mode == "perf") return Perf.Run(args.Length > 1 ? int.Parse(args[1]) : 240);
+            if (mode == "probe") return Probe(args[1]);
             return RunTests(args.Length > 1 ? args[1] : null);
+        }
+
+        /// <summary>Loads a campaign save and reports the active operation and why its next battle can or cannot start.</summary>
+        static int Probe(string path)
+        {
+            var g = SaveGame.FromJson(System.IO.File.ReadAllText(path), out var err);
+            if (g == null) { Console.WriteLine("load failed: " + err); return 1; }
+            var op = Operations.Active(g);
+            Console.WriteLine($"day {g.Day}; active operation: {op?.Id ?? "none"}; ActiveBattle {g.ActiveBattle?.Setup?.BattleId ?? "none"}");
+            if (op == null) return 0;
+            Console.WriteLine($"phase {op.Phase}; series {op.AttackerWins}-{op.DefenderWins}; pending {op.PendingBattleId}; applied {g.AppliedBattles.Contains(op.PendingBattleId ?? "")}; next: {Operations.Next(g, op)}");
+            var setup = Operations.PrepareNext(g, op, out var e, out var conceded);
+            Console.WriteLine($"prepare: {(setup != null ? setup.BattleId : "null")}; error {e}; conceded {conceded}");
+            return 0;
+        }
+
+        /// <summary>Writes the read-only ship manifest (JSON and Markdown) from the live registry (campaign alpha Prompt 19).</summary>
+        static int Manifest(string outDir, string projectRoot)
+        {
+            var rows = ShipManifest.Build(path => System.IO.File.Exists(System.IO.Path.Combine(projectRoot, path)));
+            System.IO.Directory.CreateDirectory(outDir);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(outDir, "ship_manifest.json"), ShipManifest.ToJson(rows));
+            System.IO.File.WriteAllText(System.IO.Path.Combine(outDir, "ship_manifest.md"), ShipManifest.ToMarkdown(rows));
+            Console.WriteLine($"manifest: {rows.Count} ships, {ShipManifest.RulesStamp}");
+            return 0;
         }
 
         static int RunTests(string filter)

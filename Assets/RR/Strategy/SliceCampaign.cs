@@ -97,6 +97,10 @@ namespace RR.Strategy
         public HashSet<string> Applied = new HashSet<string>(StringComparer.Ordinal);
         /// <summary>A bounded scenario configuration (PassageWar), or null in the freeform passage campaign.</summary>
         public ScenarioState Scenario;
+        /// <summary>Ground units, as garrisons on worlds or embarked in fleets (Prompt 16).</summary>
+        public List<GroundForce> Ground = new List<GroundForce>();
+        /// <summary>War operations, in progress or settled (Prompt 16).</summary>
+        public List<Operation> Operations = new List<Operation>();
 
         public bool Active => PlayerPolityId != null;
         public PassageState Passage(string systemId) => Passages.FirstOrDefault(p => p.SystemId == systemId);
@@ -111,6 +115,7 @@ namespace RR.Strategy
         public const string PassageSystem = "umbra";
         public const int VictoryPrize = 40;
         public const int MaxAttempts = 3;
+        public const int TruceBrokenOpinion = -30;
 
         public static string PolityOf(FactionId f) => f == FactionId.Pygmaei ? "pygmaei" : f == FactionId.Inhumanus ? "inhumanus" : null;
         public static FactionId FactionOf(string polity) => polity == "pygmaei" ? FactionId.Pygmaei : FactionId.Inhumanus;
@@ -192,6 +197,13 @@ namespace RR.Strategy
                 Attempts = failed };
             s.Objectives.Add(obj);
             var rel = s.RelationOf(polity, target);
+            if (rel.Status == "truce")
+            {
+                // Declaring over a truce violates the terms that made it: a disclosed, bounded political cost.
+                React(g, $"truce_broken_{polity}_{g.Day}", polity, target, TruceBrokenOpinion, "broke a truce");
+                Record(g, new HistoryEvent { Kind = "violation", SystemId = systemId, Text = $"{g.GetPolity(polity).Name} broke the truce with {g.GetPolity(target).Name}." });
+                PassageWar.ForPolity(g, polity, "violation", $"Broke the truce with {g.GetPolity(target).Name}", default);
+            }
             rel.Status = "war";
             // The other power answers: its fleet sails for the passage in two days (disclosed).
             var rival = g.Fleets.FirstOrDefault(f => f.OwnerId == target && f.AIControlled);
@@ -218,11 +230,12 @@ namespace RR.Strategy
             foreach (var p in s.Passages.Where(p => p.AccessHolderId != null))
             {
                 var pol = g.GetPolity(p.AccessHolderId);
-                if (pol != null) pol.Stock = pol.Stock + new Resources(0, 0, p.TollPerDay, 0);
+                if (pol != null) pol.Stock = pol.Stock + new Resources(0, 0, p.TollPerDay + (Doctrines.Has(g, p.AccessHolderId, "inh_toll_brokerage") ? 2 : 0), 0);
             }
             foreach (var r in s.Relations) r.Modifiers.RemoveAll(m => m.ExpiresDay <= g.Day);
             CounterOffensives(g);
             Economy.Daily(g);
+            Doctrines.Daily(g);
             PassageWar.OnDay(g);
         }
 

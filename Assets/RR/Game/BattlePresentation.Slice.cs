@@ -143,7 +143,7 @@ namespace RR.Game
         /// <summary>Reach shown in gold: the overclocked reach in overclock mode.</summary>
         Dictionary<Commandfall.Core.Hex, MoveOption> ShownReach(UnitState u) =>
             BoardMode ? new Dictionary<Commandfall.Core.Hex, MoveOption>() :
-            RosterMovement.Reachable(Seen, Seen.Unit(u.Id), OverclockMode && SliceRules.CanOverclock(S, u) == null && !u.MovedThisActivation ? SliceRules.OverclockMove : 0);
+            RosterMovement.Reachable(Seen, Seen.Unit(u.Id), OverclockMode && SliceRules.CanOverclock(S, u) == null && !u.MovedThisActivation ? SliceRules.OverclockMoveOf(u) : 0);
 
         IEnumerable<Commandfall.Core.Hex> ShownTargets(UnitState u)
         {
@@ -182,24 +182,67 @@ namespace RR.Game
 
         string HeatLine(UnitState u)
         {
-            int now = SliceRules.Heat(u), after = now + SliceRules.OverclockHeat;
-            return after >= SliceRules.OverheatAt
-                ? $"Heat {now} → {after}: OVERHEATED, armour −{SliceRules.OverheatArmor} and no overclocking until it cools below {SliceRules.OverheatAt}."
-                : $"Heat {now} → {after} (overheats at {SliceRules.OverheatAt}; sheds {SliceRules.CoolPerActivation} after any activation without overclocking).";
+            int now = SliceRules.Heat(u), after = now + SliceRules.OverclockHeatOf(u, attack: false), cap = SliceRules.OverheatAtOf(u);
+            int afterShot = now + SliceRules.OverclockHeatOf(u, attack: true);
+            string shot = afterShot != after ? $" An overclocked shot costs {afterShot - now} heat." : "";
+            return after >= cap
+                ? $"Heat {now} → {after}: OVERHEATED, armour −{SliceRules.OverheatArmor} and no overclocking until it cools below {cap}.{shot}"
+                : $"Heat {now} → {after} (overheats at {cap}; sheds {SliceRules.CoolPerActivation} after any activation without overclocking).{shot}";
         }
 
         // ------------------------------------------------------------------ analysis
 
-        /// <summary>Recomputes the command-threat analysis when the state has changed (same rules as everything else).</summary>
+        /// <summary>Recomputes the command-threat analysis when the state has changed (same rules as everything else).
+        /// Campaign alpha Prompt 20: the analysis took about two seconds at a battle's opening position and froze the first
+        /// frame, so it now runs on a worker thread on a copy of the state and is published only if the state is unchanged.</summary>
         public void RefreshAnalysis()
         {
+            if (_analysisTask != null)
+            {
+                if (!_analysisTask.IsCompleted) return;
+                Analysis a = null;
+                try { a = _analysisTask.Result; } catch (Exception ex) { Debug.LogError("Threat analysis failed: " + ex); }
+                _analysisTask = null;
+                if (a != null && a.Revision == S.Revision)
+                {
+                    MyThreat = a.Threat; MyExposure = a.Exposure; Opportunity = a.Opportunity;
+                    _analysisRevision = a.Revision;
+                    if (ShowThreat) RefreshCells();
+                    WarnIfThreatened();
+                }
+                return;
+            }
             if (S.Revision == _analysisRevision || Animating) return;
-            _analysisRevision = S.Revision;
             int me = Setup.PlayerSeat;
             var v = S.Config.FogOfWar ? Vision.FoggedView(S, me) : S;   // only threats from ships the player can see
-            MyThreat = CommandThreat.Assess(v, me);
-            MyExposure = CommandThreat.RoundExposure(v, me);
-            Opportunity = S.ActiveSeat == me ? CommandThreat.Assess(v, 1 - me) : null;
+            if (ReferenceEquals(v, S)) v = S.Clone();                   // the worker never reads the live state
+            var paths = v.Map.Paths; var hexes = v.Map.AllHexes;                // build shared caches before the worker reads them
+            int rev = S.Revision;
+            bool mine = S.ActiveSeat == me;
+            _analysisTask = Task.Run(() => new Analysis
+            {
+                Revision = rev,
+                Threat = CommandThreat.Assess(v, me),
+                Exposure = CommandThreat.RoundExposure(v, me),
+                Opportunity = mine ? CommandThreat.Assess(v, 1 - me) : null,
+            });
+        }
+
+        sealed class Analysis { public int Revision; public ThreatReport Threat; public Exposure Exposure; public ThreatReport Opportunity; }
+        Task<Analysis> _analysisTask;
+        int _warnedRevision = -1;
+
+        /// <summary>True while the threat analysis for the current state is still being computed.</summary>
+        public bool AnalysisPending => _analysisTask != null || (_analysisRevision != S.Revision && !S.IsOver);
+
+        /// <summary>Warns once per position when the player's flagship can be destroyed by the enemy's next activation.</summary>
+        void WarnIfThreatened()
+        {
+            if (S.IsOver || S.ActiveSeat != PlayerSeat || S.ActiveUnitId != 0 || _warnedRevision == S.Revision) return;
+            if (MyThreat == null || MyThreat.Lines.Count == 0) return;
+            _warnedRevision = S.Revision;
+            Say("Your flagship can be destroyed by the enemy's next activation. The Command Threat panel shows how.", "danger");
+            _root.Audio.Play("threat", 0.7f);
         }
 
         // ------------------------------------------------------------------ AI on a worker thread
@@ -317,7 +360,7 @@ namespace RR.Game
 
         public IEnumerable<(Commandfall.Core.Hex hex, string text)> EntryLabels() =>
             S.Units.Where(SliceRules.InReserve).Select(u => (SliceRules.EntryHex(S.Map, u.Owner, SliceRules.ContractLane(u)),
-                $"{u.Def.Name}: round {Math.Max(S.Round + 1, SliceRules.ContractArrivalRound)}"));
+                $"{u.Def.Name}: round {Math.Max(S.Round + 1, SliceRules.ArrivalRoundOf(u))}"));
 
         /// <summary>World position of a unit's view (for HUD labels), or null.</summary>
         public Vector3? ViewPosition(int unitId)

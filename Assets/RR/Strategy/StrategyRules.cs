@@ -80,13 +80,16 @@ namespace RR.Strategy
     {
         // ================================================================== management
 
-        public static List<ProjectOption> ProjectOptions(GalaxyState g, string planetId)
+        public static List<ProjectOption> ProjectOptions(GalaxyState g, string planetId) => ProjectOptionsFor(g, planetId, g.Player.Id);
+
+        /// <summary>The projects a world offers to <paramref name="polity"/> (the player or an AI power: one rule for both).</summary>
+        public static List<ProjectOption> ProjectOptionsFor(GalaxyState g, string planetId, string polity)
         {
             var list = new List<ProjectOption>();
             var p = g.GetPlanet(planetId);
             if (p == null) return list;
             var sys = g.SystemOf(p);
-            var player = g.Player;
+            var player = g.GetPolity(polity);
             string common = p.OwnerId != player.Id ? "This world is not under your rule."
                           : p.Project != null ? "This world is already working on a project."
                           : sys.Blockaded ? "Enemy ships hold the orbit; construction is halted."
@@ -94,8 +97,10 @@ namespace RR.Strategy
                           : Economy.Active(g) ? Economy.ArrearsProblem(g, player.Id) : null;
             if (p.HasShipyard)
             {
-                foreach (var (defId, cost, days) in SliceCampaign.Commissionable(g, player.Id) ?? ShipCatalog.Commissionable)
+                foreach (var (defId, cost, baseDays) in SliceCampaign.Commissionable(g, player.Id) ?? ShipCatalog.Commissionable)
                 {
+                    // Yard expansion (Prompt 18): a third less time at the home shipyard.
+                    int days = Doctrines.Has(g, player.Id, "pyg_yard_expansion") && sys.Id == SliceCampaign.HomeOf(player.Id) ? Math.Max(1, baseDays * 2 / 3) : baseDays;
                     string why = common ?? (player.Stock.Covers(cost) ? null : "Not enough resources.");
                     list.Add(new ProjectOption { Kind = ProjectKind.CommissionShip, ShipDefId = defId, Label = "Commission " + ShipCatalog.Name(defId),
                         Cost = cost, Days = days, Available = why == null, UnavailableReason = why });
@@ -117,14 +122,17 @@ namespace RR.Strategy
             return list;
         }
 
-        public static StratResult StartProject(GalaxyState g, string planetId, ProjectKind kind, string shipDefId = null)
+        public static StratResult StartProject(GalaxyState g, string planetId, ProjectKind kind, string shipDefId = null) =>
+            StartProjectFor(g, planetId, kind, shipDefId, g.Player.Id);
+
+        public static StratResult StartProjectFor(GalaxyState g, string planetId, ProjectKind kind, string shipDefId, string polity)
         {
             // For a priority, the third argument names the priority (Economy.Priorities).
-            var opt = ProjectOptions(g, planetId).FirstOrDefault(o => o.Kind == kind && (kind == ProjectKind.CommissionShip ? o.ShipDefId == shipDefId : kind != ProjectKind.Priority || o.PriorityId == shipDefId));
+            var opt = ProjectOptionsFor(g, planetId, polity).FirstOrDefault(o => o.Kind == kind && (kind == ProjectKind.CommissionShip ? o.ShipDefId == shipDefId : kind != ProjectKind.Priority || o.PriorityId == shipDefId));
             if (opt == null) return StratResult.Reject("That project is not offered on this world.");
             if (!opt.Available) return StratResult.Reject(opt.UnavailableReason);
             var p = g.GetPlanet(planetId);
-            var player = g.Player;
+            var player = g.GetPolity(polity);
             player.Stock = player.Stock - opt.Cost;
             PassageWar.ForPolity(g, player.Id, "production", $"{p.Name}: {opt.Label} ({opt.Days} days)", opt.Cost);
             p.Project = new ProjectState { Kind = kind, ShipDefId = kind == ProjectKind.CommissionShip ? shipDefId : null, PriorityId = opt.PriorityId, Cost = opt.Cost, DaysTotal = opt.Days };
@@ -171,6 +179,7 @@ namespace RR.Strategy
             if (start == targetId) { plan.Reason = "The fleet is already there."; return plan; }
             // Dijkstra over lanes by travel days (ties broken by id for determinism).
             var dist = new Dictionary<string, int> { [start] = 0 };
+            var net = Doctrines.Has(g, f.OwnerId, "pyg_forward_logistics") ? Supply.Of(g, f.OwnerId) : null;   // doctrine lane speeds (Prompt 18)
             var prev = new Dictionary<string, string>();
             var open = new SortedSet<(int d, string id)> { (0, start) };
             while (open.Count > 0)
@@ -182,7 +191,7 @@ namespace RR.Strategy
                 {
                     var n = lane.Other(id);
                     if (!PassageWar.InScope(g, n)) continue;   // a bounded scenario routes only through its active systems
-                    int nd = d + lane.Days;
+                    int nd = d + Doctrines.LaneDays(g, f.OwnerId, lane, net);
                     if (!dist.TryGetValue(n, out var cur) || nd < cur)
                     {
                         if (dist.ContainsKey(n)) open.Remove((cur, n));
@@ -230,6 +239,7 @@ namespace RR.Strategy
             if (g.PendingEngagement != null) { rep.BlockedReason = "An engagement is waiting for a decision."; return rep; }
             var scenario = PassageWar.Of(g);
             if (scenario != null && scenario.Ended && !scenario.Freeform) { rep.BlockedReason = "The campaign has ended. Continue freeform to keep playing."; return rep; }
+            if (Operations.Active(g) != null) { rep.BlockedReason = "An operation is in progress; it is settled before time moves on."; return rep; }
             g.Day++;
             rep.Advanced = true;
 
@@ -248,7 +258,8 @@ namespace RR.Strategy
                     if (p.Project.DaysDone >= p.Project.DaysTotal) { CompleteProject(g, s, p); rep.Completed.Add(p.Id); }
                 }
 
-            // 3. AI intent
+            // 3. AI intent: the bounded strategic rival (Passage War, Prompt 17) plans first, through the same commands.
+            RivalAI.Daily(g);
             foreach (var f in g.Fleets.Where(f => f.AIControlled && f.AITarget != null && !f.Moving && f.EngagementId == null).OrderBy(f => f.Id).ToList())
             {
                 if (g.Day < f.AIDepartDay || f.SystemId == f.AITarget) continue;
@@ -262,7 +273,7 @@ namespace RR.Strategy
             {
                 var lane = g.LaneBetween(f.SystemId, f.Order.Path[0]);
                 f.Order.DaysIntoLane++;
-                if (f.Order.DaysIntoLane < lane.Days) continue;
+                if (f.Order.DaysIntoLane < Doctrines.LaneDays(g, f.OwnerId, lane)) continue;
                 f.LastSystemId = f.SystemId;
                 f.SystemId = f.Order.Path[0];
                 f.Order.Path.RemoveAt(0);

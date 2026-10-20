@@ -15,6 +15,17 @@ namespace Commandfall.Core
     {
         public string Id, Name, Slot, Summary;
         public int Move, Armor, Hull, Damage, Range;
+        /// <summary>Campaign alpha Prompt 19 (vs-6): content data. The module mesh to show, and the refit price.</summary>
+        public string Visual;
+        public int CostEnergy, CostMaterials, CostCredits;
+    }
+
+    /// <summary>A scenario loadout of existing hulls (content data, Prompt 19).</summary>
+    public sealed class LoadoutDef
+    {
+        public string Id, Name, Note;
+        public FactionId Faction;
+        public string[] Units;
     }
 
     public static class SliceRules
@@ -122,7 +133,7 @@ namespace Commandfall.Core
             if (oc && !u.MovedThisActivation && !u.ActedThisActivation && vu != null)
             {
                 var normal = RosterMovement.Reachable(view, vu);
-                foreach (var kv in RosterMovement.Reachable(view, vu, OverclockMove).OrderBy(k => k.Key))
+                foreach (var kv in RosterMovement.Reachable(view, vu, OverclockMoveOf(u)).OrderBy(k => k.Key))
                     if (!normal.ContainsKey(kv.Key)) list.Add(Order(CommandType.Move, seat, u.Id, kv.Key, OverclockOption));
             }
             if (HasArc(u))
@@ -149,15 +160,29 @@ namespace Commandfall.Core
         public const int OverclockOption = 1;
         public const int OverclockMove = 2, OverclockDamage = 2, OverclockHeat = 2, OverheatAt = 4, CoolPerActivation = 2, OverheatArmor = 2;
 
+        // Campaign alpha Prompt 18 (vs-5): doctrine sidegrades a faction adopts in the campaign ride on its ships as army-entry
+        // tokens, so previews, the AI, validation and results all read the same values. Each is disclosed before deployment.
+        public const string DoctrineToken = "doctrine:";
+        public const string CoolantDoctrine = "doctrine:coolant", FurnaceDoctrine = "doctrine:furnace", LeveragedDoctrine = "doctrine:leveraged", GuaranteedDoctrine = "doctrine:guaranteed";
+        static bool Doc(UnitState u, string t) => u != null && u.Equipment.Contains(t);
+        /// <summary>Coolant discipline: +1 instead of +2; overheated at 6 instead of 4. Furnace doctrine: +3 damage for 3 heat.</summary>
+        public static int OverclockMoveOf(UnitState u) => Doc(u, CoolantDoctrine) ? 1 : OverclockMove;
+        public static int OverclockDamageOf(UnitState u) => Doc(u, CoolantDoctrine) ? 1 : Doc(u, FurnaceDoctrine) ? 3 : OverclockDamage;
+        public static int OverclockHeatOf(UnitState u, bool attack) => attack && Doc(u, FurnaceDoctrine) ? 3 : OverclockHeat;
+        public static int OverheatAtOf(UnitState u) => Doc(u, CoolantDoctrine) ? 6 : OverheatAt;
+        /// <summary>Leveraged contracts: 2 points cheaper, arriving in round 4. Guaranteed arrival: full price, arriving in round 2.</summary>
+        public static int ArrivalRoundOf(UnitState u) => Doc(u, LeveragedDoctrine) ? 4 : Doc(u, GuaranteedDoctrine) ? 2 : ContractArrivalRound;
+        public static int ContractDiscountOf(RosterEntry e) => e.Equipment.Contains(LeveragedDoctrine) ? 2 : e.Equipment.Contains(GuaranteedDoctrine) ? 0 : ContractDiscount;
+
         public static bool OverclockCapable(UnitState u) => u != null && u.Def.Faction == FactionId.Pygmaei && u.R.IsShip && !u.R.IsToken;
 
         public static int Heat(UnitState u) => u.RAmount(RStatusType.Heat);
-        public static bool Overheated(UnitState u) => Heat(u) >= OverheatAt;
+        public static bool Overheated(UnitState u) => Heat(u) >= OverheatAtOf(u);
 
         public static string CanOverclock(MatchState s, UnitState u)
         {
             if (!OverclockCapable(u)) return $"{u.Def.Name} has no overclock (Pygmaei ships only).";
-            if (Overheated(u)) return $"{u.Def.Name} is OVERHEATED (heat {Heat(u)}): it cannot overclock until it cools below {OverheatAt}.";
+            if (Overheated(u)) return $"{u.Def.Name} is OVERHEATED (heat {Heat(u)}): it cannot overclock until it cools below {OverheatAtOf(u)}.";
             return null;
         }
 
@@ -168,7 +193,7 @@ namespace Commandfall.Core
             u.RStatuses.RemoveAll(x => x.Type == RStatusType.Heat);
             u.RStatuses.Add(new RStatus { Type = RStatusType.Heat, Amount = before + amount, Expire = RExpire.Battle, Mode = 1 });
             ev.Add(new GameEvent(GameEventType.HeatChanged) { Seat = u.Owner, UnitId = u.Id, TargetUnitId = u.Id, To = u.Position, Amount = before + amount,
-                Text = before + amount >= OverheatAt ? $"OVERHEATED (heat {before + amount})" : $"heat {before + amount}" });
+                Text = before + amount >= OverheatAtOf(u) ? $"OVERHEATED (heat {before + amount})" : $"heat {before + amount}" });
         }
 
         /// <summary>End of the ship's own activation: it sheds heat unless it overclocked during that activation.</summary>
@@ -194,15 +219,9 @@ namespace Commandfall.Core
         /// <summary>Three slot-compatible sidegrades for capital ships: each gains one thing and pays for it with another.
         /// Experimental values. They are applied by <see cref="ApplyModules"/> whenever a unit's stats are computed, so
         /// previews, the AI and replays all see them.</summary>
-        public static readonly ModuleDef[] Modules =
-        {
-            new ModuleDef { Id = "afterburners", Name = "Afterburner stacks", Slot = "propulsion", Move = 1, Hull = -2,
-                Summary = "+1 movement, −2 maximum hull. Reach and escape at the cost of staying power." },
-            new ModuleDef { Id = "ablative_plating", Name = "Ablative plating", Slot = "protection", Armor = 1, Move = -1,
-                Summary = "+1 armour, −1 movement (never below 1). Harder to kill, easier to flank." },
-            new ModuleDef { Id = "heavy_battery", Name = "Heavy battery", Slot = "firepower", Damage = 1, Range = -1,
-                Summary = "+1 weapon damage, −1 maximum range (never below its minimum). Hits harder from closer in." },
-        };
+        /// (vs-6) The modules are content: authored in Assets/RR/Content/slice_content.json and generated into
+        /// SliceContent.g.cs by Tools/Content/rr_content.py. Adding a sidegrade needs no rules code.
+        public static ModuleDef[] Modules => SliceContent.Modules;
 
         public static ModuleDef Module(string id) => Modules.FirstOrDefault(m => m.Id == id);
         public static IEnumerable<string> ModulesOf(IEnumerable<string> equipment) =>
@@ -229,6 +248,10 @@ namespace Commandfall.Core
 
         /// <summary>Scenario policy token, carried on each side's flagship entry: capture is allowed in this battle.</summary>
         public const string CapturePolicyToken = "policy:capture";
+        /// <summary>Campaign alpha (Prompt 16, vs-4): marks the army's acting commander after succession. The unit leads the
+        /// army (its loss ends the battle like a flagship's or commander's) and counts as the army's one leader.</summary>
+        public const string ActingCommandToken = "command:acting";
+        public static bool IsActingCommander(RosterEntry e) => e.Equipment.Contains(ActingCommandToken);
         /// <summary>Attack option: a boarding action against the enemy flagship.</summary>
         public const int BoardOption = 3;
         /// <summary>A flagship can be boarded only when DISABLED and at or below this share of its hull (in thirds).</summary>
@@ -284,13 +307,23 @@ namespace Commandfall.Core
         public static bool InReserve(UnitState u) => u.Alive && !u.Deployed && IsContracted(u);
 
         /// <summary>Contracted escorts are paid one point less (minimum 1); the price of arriving late and in the open.</summary>
-        public static int EntryCost(RosterEntry e, int printed) => ContractLane(e) != null ? Math.Max(1, printed - ContractDiscount) : printed;
+        public static int EntryCost(RosterEntry e, int printed) => ContractLane(e) != null ? Math.Max(1, printed - ContractDiscountOf(e)) : printed;
 
         /// <summary>Errors for slice tokens in an army entry (contracts and modules); null when there are none or all are valid.</summary>
         public static string ValidateContract(ArmyRoster army, RosterEntry e, BattleDomain domain)
         {
             var def = RosterContent.Unit(e.UnitId);
-            var extra = e.Equipment.Where(x => !x.StartsWith(ContractToken, StringComparison.Ordinal) && !x.StartsWith(ModuleToken, StringComparison.Ordinal) && x != CapturePolicyToken).ToList();
+            var extra = e.Equipment.Where(x => !x.StartsWith(ContractToken, StringComparison.Ordinal) && !x.StartsWith(ModuleToken, StringComparison.Ordinal) && x != CapturePolicyToken && x != ActingCommandToken && !x.StartsWith(DoctrineToken, StringComparison.Ordinal)).ToList();
+            foreach (var d in e.Equipment.Where(x => x.StartsWith(DoctrineToken, StringComparison.Ordinal)))
+            {
+                bool pyg = d == CoolantDoctrine || d == FurnaceDoctrine, inh = d == LeveragedDoctrine || d == GuaranteedDoctrine;
+                if (!pyg && !inh) return $"Unknown doctrine '{d}'.";
+                if (domain != BattleDomain.Orbital || (pyg && army.Faction != FactionId.Pygmaei) || (inh && army.Faction != FactionId.Inhumanus)) return $"{d} is not a doctrine of this army.";
+            }
+            if (e.Equipment.Contains(CoolantDoctrine) && e.Equipment.Contains(FurnaceDoctrine)) return "Coolant discipline and furnace doctrine are exclusive.";
+            if (e.Equipment.Contains(LeveragedDoctrine) && e.Equipment.Contains(GuaranteedDoctrine)) return "Leveraged contracts and guaranteed arrival are exclusive.";
+            if (e.Equipment.Contains(ActingCommandToken) && def != null && def.Roster.IsLeaderRole) return $"{def.Name} already leads by role; it cannot also be an acting commander.";
+            if (e.Equipment.Contains(ActingCommandToken) && ContractLane(e) != null) return "An acting commander must deploy at the start; it cannot be contracted.";
             if (extra.Count > 0) return $"{def?.Name ?? e.UnitId}: Full Roster units carry no equipment (research upgrades apply automatically).";
             var mods = ModulesOf(e.Equipment).ToList();
             if (mods.Count > 0)
@@ -328,9 +361,9 @@ namespace Commandfall.Core
         /// wait for the next round. Deterministic by unit id.</summary>
         public static void Arrivals(MatchState s, List<GameEvent> ev)
         {
-            if (s.Round < ContractArrivalRound) return;
             foreach (var u in s.Units.Where(InReserve).OrderBy(x => x.Id).ToList())
             {
+                if (s.Round < ArrivalRoundOf(u)) continue;   // each escort's contract (vs-5: a doctrine may move it)
                 var h = EntryHex(s.Map, u.Owner, ContractLane(u));
                 if (RosterTerrain.Blocks(s, h) || s.UnitAt(h) != null)
                 {

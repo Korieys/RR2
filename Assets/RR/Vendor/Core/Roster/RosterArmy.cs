@@ -91,7 +91,7 @@ namespace Commandfall.Core
                 if (def.Faction != army.Faction) errs.Add($"{def.Name} does not serve the {GameContent.Faction(army.Faction).Name}.");
                 if (def.Roster.Domain != domain) errs.Add($"{def.Name} is a{(def.Roster.IsShip ? "n orbital" : " planetary")} unit; this is a{(domain == BattleDomain.Orbital ? "n orbital" : " planetary")} battle.");
                 if (!def.Roster.Established) errs.Add($"{def.Name} is a proposed unit and is disabled.");
-                if (def.Roster.IsLeaderRole) leaders++;
+                if (def.Roster.IsLeaderRole || SliceRules.IsActingCommander(entry)) leaders++;   // vs-4: an acting commander leads
                 else
                 {
                     nonLeaders++;

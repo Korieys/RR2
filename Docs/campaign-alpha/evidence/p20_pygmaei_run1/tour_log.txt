@@ -1,0 +1,84 @@
+alpha journey (Pygmaei); rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; content 98b9f7ab15ddb2ab; save <scratchpad>\t20_pygmaei\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+shot a00_variant_menu
+STEP PASS start a configured campaign: The Passage War / standard
+shot a01_mandate
+shot a02_treasury
+STEP PASS choose an economic priority: Ironmouth ore drive
+shot a03_supply
+STEP PASS inspect supply: Forgefall: supplied (a supply source (Forgefall), 0 days). | Ironmouth: supplied (supplied from Forgefall, 9 days). | Cinderhold: supplied (supplied from Forgefall, 9 days). | Gloam: supplied (supplied from Forgefall via Cinderhold, 15 days).
+shot a04_hangar
+STEP PASS prepare a named ship: Cinder Oath, modules afterburners
+shot a05_doctrine
+STEP PASS make a progression choice: Foundry quotas (Sustained industrial campaigning)
+STEP PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+STEP PASS embark the legion: 8 units, capacity 9
+order to Dividend: ok
+shot a10_prep_invade
+STEP PASS launch an operation: op_19 against Dividend I; phase Orbital
+shot a11_operation
+a12_orbital1: op_19_orb0 (Orbital, orbital_gate); player orders: slice AI pilot
+operation battle op_19_orb0: CommanderEliminated; next: Orbital engagement 2 (the defender's second chance to protect its supplies).
+a12_orbital1: winner seat 0 (CommanderEliminated) after 75 orders, 118 s
+shot a12_orbital1
+a12_orbital2: op_19_orb1 (Orbital, orbital_gate); player orders: slice AI pilot
+operation battle op_19_orb1: CommanderEliminated; next: Pygmaei Sector decides: land the embarked troops for the planetary series, offer terms, or withdraw.
+a12_orbital2: winner seat 0 (CommanderEliminated) after 2 orders, 5 s
+shot a12_orbital2
+STEP PASS land the troops: 4 landed; supplies protected False, seized True
+a13_match1: op_19_gnd2 (Planetary, shattered_citadel); player orders: pass (deliberate setback)
+operation battle op_19_gnd2: CommanderEliminated; next: Planetary match 2 on citadel_crossroads; the series stands 0-1 (Pygmaei Sector first).
+a13_match1: winner seat 1 (CommanderEliminated) after 21 orders, 26 s
+shot a13_match1
+STEP PASS recover from a nonterminal setback: a lost planetary match left the series at 0-1; the operation continued
+STEP PASS save and load at between series rounds: digest identical, history 23->23, no duplicated ships or units: True
+a13_match2: no battle (conceded or nothing pending)
+STEP PASS complete the operation: Inhumanus Dominion held Dividend I, winning the series 2-0.
+STEP PASS ownership changed only by the final outcome: Dividend I: inhumanus
+shot a14_settled
+STEP PASS save and load at after the operation settlement: digest identical, history 25->25, no duplicated ships or units: True
+STEP PASS return to the correct strategic state: day 46; Access is contested. Next settlement day 50.
+treaty after the conquest: Accepted: pressure 70 against cost 30. +25: 100 credits for the rights; +40: we have no fleet led by a flagship; +15: their fleets' hull 24 against our 16; -10: standing -20; −30: our claim on the contested passage.
+ending: Victory by treaty; Passage rights through The Umbra passage were ratified at the settlement on day 50.
+shot a99_ending
+STEP PASS reach a valid ending: Victory by treaty: Passage rights through The Umbra passage were ratified at the settlement on day 50.
+  ending: Victory by treaty on day 50. Passage rights through The Umbra passage were ratified at the settlement on day 50.
+  ending: Battles: 3 (2 won, 1 lost). Spent on decisions: 30 energy, 20 materials, 434 credits, 10 influence. Recovered or received: 40 materials.
+  ending: Relations with Inhumanus Dominion: truce, standing -5.
+  ending: Pygmaei Sector holds access through The Umbra passage (by treaty).
+  ending: Fleet upkeep over the campaign: 234 credits (included in the spending above).
+  ending: Your decisions, in order:
+  ending:   Day 0: Ironmouth I: Priority: Ironmouth ore drive (8 days) (20 energy, 30 credits)
+  ending:   Day 0: Refitted Cinder Oath with Afterburner stacks (10 energy, 20 materials, 30 credits)
+  ending:   Day 0: Began Foundry quotas (12 days) (40 credits, 10 influence)
+  ending:   Day 0: Embarked 8 ground unit(s) in Forgefall Raiders at Forgefall I
+  ending:   Day 8: Completed Ironmouth ore drive at Ironmouth
+  ending:   Day 12: Adopted Foundry quotas
+  ending:   Day 45: Launched an invasion of Dividend I
+  ending:   Day 45: Won the battle of Dividend (a flagship destroyed); lost 5 ship(s), the enemy 5
+  ending:   Day 45: Won the battle of Dividend (a flagship destroyed); lost 0 ship(s), the enemy 1
+  ending:   Day 45: Seized 40 materials of Dividend I's supplies (+40 materials)
+  ending:   Day 45: Lost planetary match 1 at Dividend I; lost 4 unit(s), the enemy 0
+  ending:   Day 45: Failed to take Dividend I
+  ending:   Day 46: Obtained passage rights through The Umbra passage by treaty (100 credits)
+STEP PASS save and load at after the ending: digest identical, history 27->27, no duplicated ships or units: True
+journey: 50 strategic days, 264 s of automated time (not a human session length)
+SUMMARY
+  PASS start a configured campaign: The Passage War / standard
+  PASS choose an economic priority: Ironmouth ore drive
+  PASS inspect supply: Forgefall: supplied (a supply source (Forgefall), 0 days). | Ironmouth: supplied (supplied from Forgefall, 9 days). | Cinderhold: supplied (supplied from Forgefall, 9 days). | Gloam: supplied (supplied from Forgefall via Cinderhold, 15 days).
+  PASS prepare a named ship: Cinder Oath, modules afterburners
+  PASS make a progression choice: Foundry quotas (Sustained industrial campaigning)
+  PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+  PASS embark the legion: 8 units, capacity 9
+  PASS launch an operation: op_19 against Dividend I; phase Orbital
+  PASS land the troops: 4 landed; supplies protected False, seized True
+  PASS recover from a nonterminal setback: a lost planetary match left the series at 0-1; the operation continued
+  PASS save and load at between series rounds: digest identical, history 23->23, no duplicated ships or units: True
+  PASS complete the operation: Inhumanus Dominion held Dividend I, winning the series 2-0.
+  PASS ownership changed only by the final outcome: Dividend I: inhumanus
+  PASS save and load at after the operation settlement: digest identical, history 25->25, no duplicated ships or units: True
+  PASS return to the correct strategic state: day 46; Access is contested. Next settlement day 50.
+  PASS reach a valid ending: Victory by treaty: Passage rights through The Umbra passage were ratified at the settlement on day 50.
+  PASS save and load at after the ending: digest identical, history 27->27, no duplicated ships or units: True

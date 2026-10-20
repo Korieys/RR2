@@ -157,6 +157,8 @@ namespace RR.Game
             yield return Until(() => !root.Battle.Animating && root.Battle.PlayersTurn, 30);
             b = root.Battle;
             b.ShowThreat = true; b.RefreshCells();
+            yield return Until(() => !b.AnalysisPending, 30);
+            b.RefreshCells();
             yield return Wait(0.6f);
             Note("command threat: " + (b.MyThreat != null ? b.MyThreat.Summary("your flagship") : "none") + " | " + (b.MyExposure != null ? b.MyExposure.Summary("your flagship") : ""));
             Note("opportunity: " + (b.Opportunity != null ? (b.Opportunity.Lines.Count > 0 ? b.Opportunity.Lines[0].Text : "none") : "n/a"));

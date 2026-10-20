@@ -16,7 +16,7 @@ namespace RR.Tests
             var p = War.Passage(g); p.AccessHolderId = polity; p.Basis = basis; p.SinceDay = g.Day;
         }
 
-        static Fleet Park(GalaxyState g, Fleet f, string systemId) { f.SystemId = systemId; f.Order = null; f.AIControlled = true; f.AITarget = null; return f; }
+        static Fleet Park(GalaxyState g, Fleet f, string systemId) { f.SystemId = systemId; f.Order = null; f.AIControlled = false; f.AITarget = null; return f; }
 
         static void ToSettlement(GalaxyState g) => War.ToDay(g, PassageWar.NextSettlementDay(g));
 
@@ -46,7 +46,7 @@ namespace RR.Tests
             War.Sc(g).HoldRequired = 99;   // fixture: keep the scenario running while the route is tested
             StrategyRules.AdvanceDay(g);   // the first announcement baseline
             var rival = Camp.Theirs(g);
-            rival.AIControlled = true; rival.AITarget = null;
+            rival.AIControlled = false; rival.AITarget = null;   // the test commands this fleet (the rival planner leaves it alone)
             Assert.IsTrue(StrategyRules.OrderMove(g, rival.Id, "gloam", asAI: true).Ok);
             var net = Supply.Of(g, "pygmaei");
             var threat = net.Node("gloam").Threat ?? net.Node("umbra").Threat;

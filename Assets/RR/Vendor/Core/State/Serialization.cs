@@ -312,6 +312,8 @@ namespace Commandfall.Core
                 if (p.Passive != null) sb.Append($":{p.Passive.Kind}/{p.Passive.Amount}/{p.Passive.Range}");
             }
             foreach (var m in MapLibrary.Maps.Values.Where(x => !x.Id.StartsWith("test")).OrderBy(x => x.Id, StringComparer.Ordinal)) sb.Append('|').Append(m.LayoutSignature());
+            // Slice content (vs-6): capital-ship modules change stats, so a changed module set is a different content fingerprint.
+            foreach (var md in SliceRules.Modules.OrderBy(x => x.Id, StringComparer.Ordinal)) sb.Append($"|mod:{md.Id}:{md.Move}:{md.Armor}:{md.Hull}:{md.Damage}:{md.Range}");
             return Fnv1a(Encoding.UTF8.GetBytes(sb.ToString()));
         }
     }

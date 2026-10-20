@@ -1,0 +1,83 @@
+alpha journey (Inhumanus); rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; content 98b9f7ab15ddb2ab; save <scratchpad>\t20_inhwar5\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+shot a00_variant_menu
+STEP PASS start a configured campaign: The Passage War / standard
+shot a01_mandate
+shot a02_treasury
+STEP PASS choose an economic priority: Exchange convoys
+shot a03_supply
+STEP PASS inspect supply: Forgefall: cut (Forgefall Raiders (Pygmaei Sector) holds position at Forgefall). | Ironmouth: cut (Ironmouth is Pygmaei Sector territory). | Cinderhold: cut (Cinderhold is Pygmaei Sector territory). | Gloam: cut (no supplied route reaches it).
+shot a04_hangar
+STEP PASS prepare a named ship: Clause of Dawn, modules extended_magazines
+shot a05_doctrine
+STEP PASS make a progression choice: Underwritten repairs (Underwritten military protection)
+STEP PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+escort unavailable: This world is already working on a project.
+STEP PASS prepare the invasion force: Convoy Escort: 9 ships, transport capacity 10
+STEP PASS embark the legion: 8 units, capacity 10
+order to Ironmouth: ok
+STEP PASS launch an operation: op_15 against Ironmouth I; phase AttackerChoice
+shot a11_operation
+STEP PASS land the troops: 8 landed; supplies protected False, seized False
+a13_match1: no battle (conceded or nothing pending)
+a13_match1: op_15_gnd1 (Planetary, shattered_citadel); player orders: slice AI pilot
+operation battle op_15_gnd1: CommanderEliminated; next: Planetary match 2 on citadel_crossroads; the series stands 0-1 (Inhumanus Dominion first).
+a13_match1: winner seat 1 (CommanderEliminated) after 37 orders, 47 s
+shot a13_match1
+STEP PASS recover from a nonterminal setback: a13_match1 was lost; the operation continued (Planetary match 2 on citadel_crossroads; the series stands 0-1 (Inhumanus Dominion first).)
+STEP PASS save and load at between series rounds: digest identical, history 11->11, no duplicated ships or units: True
+a13_match2: op_15_gnd2 (Planetary, citadel_crossroads); player orders: slice AI pilot
+operation battle op_15_gnd2: CommanderEliminated; next: Pygmaei Sector held Ironmouth I, winning the series 2-0.
+a13_match2: winner seat 1 (CommanderEliminated) after 42 orders, 51 s
+shot a13_match2
+STEP PASS complete the operation: Pygmaei Sector held Ironmouth I, winning the series 2-0.
+conquest route: the defender held the world
+STEP PASS ownership changed only by the final outcome: Ironmouth I: pygmaei
+shot a14_settled
+STEP PASS save and load at after the operation settlement: digest identical, history 14->14, no duplicated ships or units: True
+STEP PASS return to the correct strategic state: day 68; Pygmaei Sector holds access. Next settlement day 70.
+treaty after the conquest: Rejected: pressure 31 against cost 80. +25: 100 credits for the rights; +6: their fleets' hull 94 against our 77; −60: we hold the passage; −20: we have not lost a battle over the passage.
+ending: Inconclusive end; The mandate ran out on day 240. Pygmaei Sector holds access.
+shot a99_ending
+STEP PASS reach a valid ending: Inconclusive end: The mandate ran out on day 240. Pygmaei Sector holds access.
+  ending: Inconclusive end on day 240. The mandate ran out on day 240. Pygmaei Sector holds access.
+  ending: Battles: 2 (0 won, 2 lost). Spent on decisions: 100 energy, 260 materials, 1774 credits, 10 influence. Recovered or received: nothing.
+  ending: Relations with Pygmaei Sector: war, standing 0.
+  ending: Pygmaei Sector holds access through The Umbra passage (by battle).
+  ending: Fleet upkeep over the campaign: 1602 credits (included in the spending above).
+  ending: Your decisions, in order:
+  ending:   Day 0: Dividend I: Priority: Exchange convoys (10 days) (30 materials, 30 credits)
+  ending:   Day 0: Refitted Clause of Dawn with Extended magazines (10 energy, 20 materials, 30 credits)
+  ending:   Day 0: Began Underwritten repairs (12 days) (30 materials, 40 credits, 10 influence)
+  ending:   Day 10: Completed Exchange convoys at Dividend
+  ending:   Day 10: Dividend I: Commission Proxy Frigate (10 days) (45 energy, 90 materials, 36 credits)
+  ending:   Day 12: Adopted Underwritten repairs
+  ending:   Day 20: Dividend I: Commission Proxy Frigate (10 days) (45 energy, 90 materials, 36 credits)
+  ending:   Day 30: Embarked 8 ground unit(s) in Convoy Escort at Dividend I
+  ending:   Day 67: Launched an invasion of Ironmouth I
+  ending:   Day 67: Lost planetary match 1 at Ironmouth I; lost 3 unit(s), the enemy 2
+  ending:   Day 67: Lost planetary match 2 at Ironmouth I; lost 5 unit(s), the enemy 3
+  ending:   Day 67: Failed to take Ironmouth I
+  ending:   Day 68: Declared war over The Umbra passage (attempt 1 of 3)
+STEP PASS save and load at after the ending: digest identical, history 17->17, no duplicated ships or units: True
+journey: 240 strategic days, 342 s of automated time (not a human session length)
+SUMMARY
+  PASS start a configured campaign: The Passage War / standard
+  PASS choose an economic priority: Exchange convoys
+  PASS inspect supply: Forgefall: cut (Forgefall Raiders (Pygmaei Sector) holds position at Forgefall). | Ironmouth: cut (Ironmouth is Pygmaei Sector territory). | Cinderhold: cut (Cinderhold is Pygmaei Sector territory). | Gloam: cut (no supplied route reaches it).
+  PASS prepare a named ship: Clause of Dawn, modules extended_magazines
+  PASS make a progression choice: Underwritten repairs (Underwritten military protection)
+  PASS save and load at pending production and research: digest identical, history 0->0, no duplicated ships or units: True
+  PASS prepare the invasion force: Convoy Escort: 9 ships, transport capacity 10
+  PASS embark the legion: 8 units, capacity 10
+  PASS launch an operation: op_15 against Ironmouth I; phase AttackerChoice
+  PASS land the troops: 8 landed; supplies protected False, seized False
+  PASS recover from a nonterminal setback: a13_match1 was lost; the operation continued (Planetary match 2 on citadel_crossroads; the series stands 0-1 (Inhumanus Dominion first).)
+  PASS save and load at between series rounds: digest identical, history 11->11, no duplicated ships or units: True
+  PASS complete the operation: Pygmaei Sector held Ironmouth I, winning the series 2-0.
+  PASS ownership changed only by the final outcome: Ironmouth I: pygmaei
+  PASS save and load at after the operation settlement: digest identical, history 14->14, no duplicated ships or units: True
+  PASS return to the correct strategic state: day 68; Pygmaei Sector holds access. Next settlement day 70.
+  PASS reach a valid ending: Inconclusive end: The mandate ran out on day 240. Pygmaei Sector holds access.
+  PASS save and load at after the ending: digest identical, history 17->17, no duplicated ships or units: True

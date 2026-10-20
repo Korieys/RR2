@@ -18,12 +18,13 @@ namespace RR.Game
             float len = mf != null && mf.sharedMesh != null ? Mathf.Max(mf.sharedMesh.bounds.size.z, mf.sharedMesh.bounds.size.x) : 1f;
             var host = mf != null ? mf.transform : model.transform;
             bool fitted = Mounts.TryGetValue(defId, out var fit);
-            foreach (var id in modules.Distinct())
+            foreach (var mid in modules.Distinct())
             {
+                var id = Commandfall.Core.SliceRules.Module(mid)?.Visual ?? mid;   // content names the mesh it reuses (Prompt 19)
                 var prefab = ArtLibrary.I.Model("module_" + id);
                 if (prefab == null) continue;
                 var part = Object.Instantiate(prefab, host);
-                part.name = "Module " + id;
+                part.name = "Module " + mid;
                 var pos = mf != null ? mf.sharedMesh.bounds.center : Vector3.zero;
                 var scale = Vector3.one * len;
                 if (fitted)

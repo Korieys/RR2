@@ -1,0 +1,68 @@
+operations tour; rules commandfall-0.15.0+cf-content-1.3+cf-roster-0.1+vs-6; save <scratchpad>\t16_ops\disposable.json
+device NVIDIA GeForce RTX 5060, Direct3D12, Intel(R) Core(TM) i5-14400F, 32607 MB RAM, Windows 11  (10.0.26200)
+screen 1920x1080, render scale 1.0 (native), quality Ultra, vsync 1, target fps 60, UI scale 1
+embarked: 8 of capacity 9: Iron Marshal, Rush Trooper, Rush Trooper, Volt Striker, Ember Vanguard, Combat Engineer, Blast Furnace Tank, Razorbug Speeder
+shot o01_embarked
+order to Dividend: ok
+shot o02_prep_with_invade
+battle preparation offers: Invade Dividend I
+operation launched: day 45; phase Orbital; orbital 0-0 of 0; protected False, seized False, follow-up False; series 0-0; world Dividend I owned by inhumanus
+  Orbital engagement 1.
+  Pygmaei Sector: fleet Forgefall Raiders, 8 ships; commander Revenant Command Ship.
+  Inhumanus Dominion: fleet Convoy Escort, 8 ships; commander Executive Flagship.
+  stake: Objective: Pygmaei Sector invades Dividend I. The world changes hands only through the operation's final legal outcome: the attacker winning the planetary series, or the defender yielding it under terms. No single battle takes it.
+  stake: Orbital supply defence: Inhumanus Dominion needs one victory in up to 2 orbital engagements to protect the world's supplies. If its first engagement is won, it may stop there (supplies protected) or elect a second for a chance to seize 30 materials of the attacker's supplies and take prisoners by boarding; losing that optional second never revokes the protection already earned. If the attacker wins both, it seizes 40 materials of the world's supplies and the garrison's reserves are cut off. There is no random capture roll.
+  stake: Planetary series: best of three Commandfall matches; the first side to 2 wins takes the series, and a 2-0 ends it without a third match. Destroying the opposing commander ends that match at once, not the operation.
+  stake: Each match deploys at most 6 units (and the battle point budget). Destroyed units stay destroyed and damage carries over; positions, statuses, heat, cooldowns and objectives reset for every match. Units not deployed are reserves: the attacker's landed reserves can always replace losses; the defender's only while its supplies are protected.
+  stake: Ground units travel aboard ships (a flagship carries two, every other ship one). If ships are lost, the units beyond the remaining capacity are lost with them.
+  stake: Command succession (provisional): if a side's flagship or commander is lost, it names an acting commander from its surviving committed units before the next engagement. Nobody is resurrected. A side that cannot deploy a commander concedes that engagement or match.
+  stake: Matches never end drawn: at the round limit the rules decide on objectives held, then surviving strength, then the commander's hull, and a full tie goes to the defender.
+  stake: Either side may end the operation instead: the attacker by withdrawing (its fleet and landed troops leave; nothing changes hands), the defender by yielding the world under terms. Strategic time stays stopped until the operation is settled.
+shot o03_operation_window
+o04_orbital1: op_17_orb0 on orbital_gate (Orbital); units 15
+shot o04_orbital1_start
+operation battle op_17_orb0: CommanderEliminated; next: Orbital engagement 2 (the defender's second chance to protect its supplies).
+o04_orbital1: over in 103 s after 44 orders; CommanderEliminated
+shot o04_orbital1_result
+after o04_orbital1: day 45; phase Orbital; orbital 1-0 of 1; protected False, seized False, follow-up False; series 0-0; world Dividend I owned by inhumanus
+  Orbital engagement 2 (the defender's second chance to protect its supplies).
+  Pygmaei Sector: fleet Forgefall Raiders, 6 ships; commander Revenant Command Ship.
+  Inhumanus Dominion: fleet Convoy Escort, 6 ships; commander lost; an acting commander must be named.
+save and load between engagements: digest identical; phase Orbital
+o04_orbital2: op_17_orb1 on orbital_gate (Orbital); units 12
+shot o04_orbital2_start
+operation battle op_17_orb1: CommanderEliminated; next: Pygmaei Sector decides: land the embarked troops for the planetary series, offer terms, or withdraw.
+o04_orbital2: over in 54 s after 10 orders; CommanderEliminated
+shot o04_orbital2_result
+after o04_orbital2: day 45; phase AttackerChoice; orbital 2-0 of 2; protected False, seized True, follow-up False; series 0-0; world Dividend I owned by inhumanus
+  Pygmaei Sector decides: land the embarked troops for the planetary series, offer terms, or withdraw.
+  Pygmaei Sector: 6 ground unit(s) available (36 hull), 0 beyond the 6-unit deployment; commander Iron Marshal.
+  Inhumanus Dominion: 8 ground unit(s) available (40 hull), 2 beyond the 6-unit deployment; commander Executive Adjudicator.
+  The defender's supplies were seized: its reserves are cut off.
+land: ok
+shot o05_landed
+o04_match3: op_17_gnd2 on proving_ground (Planetary); units 12
+shot o04_match3_start
+operation battle op_17_gnd2: CommanderEliminated; next: Planetary match 2 on shattered_citadel; the series stands 0-1 (Pygmaei Sector first).
+o04_match3: over in 64 s after 55 orders; CommanderEliminated
+shot o04_match3_result
+after o04_match3: day 45; phase Series; orbital 2-0 of 2; protected False, seized True, follow-up False; series 0-1; world Dividend I owned by inhumanus
+  Planetary match 2 on shattered_citadel; the series stands 0-1 (Pygmaei Sector first).
+  Pygmaei Sector: 0 ground unit(s) available (0 hull), 0 beyond the 6-unit deployment; commander none and no eligible successor: it would concede.
+  Inhumanus Dominion: 3 ground unit(s) available (12 hull), 0 beyond the 6-unit deployment; commander Executive Adjudicator.
+  The defender's supplies were seized: its reserves are cut off.
+no battle started: Pygmaei Sector had no commander and no eligible successor, and conceded.
+operation outcome: Inhumanus Dominion held Dividend I, winning the series 2-0.
+  history: day 45: Pygmaei Sector launched an invasion of Dividend I (Dividend) with 8 ground unit(s).
+  history: day 45: Orbital engagement 1 at Dividend: Pygmaei Sector won (the commander fell).
+  history: day 45: Inhumanus Dominion named its Parallax Cruiser acting flagship for operation op_17.
+  history: day 45: Orbital engagement 2 at Dividend: Pygmaei Sector won (the commander fell).
+  history: day 45: Pygmaei Sector won both orbital engagements over Dividend I: it seized 40 materials and cut off the garrison's reserves.
+  history: day 45: Pygmaei Sector landed 6 ground unit(s) on Dividend I.
+  history: day 45: Planetary match 1 at Dividend: Inhumanus Dominion won (the commander fell).
+  history: day 45: Pygmaei Sector had no commander and no eligible successor, and conceded.
+  history: day 45: Inhumanus Dominion held Dividend I, winning the series 2-0. Dividend I stays Inhumanus Dominion.
+shot o06_settled
+time after the operation: advances
+designated-world problem for the Inhumanus: none
+tour took 413 s of automated real time

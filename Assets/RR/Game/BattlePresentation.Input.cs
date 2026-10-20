@@ -357,7 +357,7 @@ namespace RR.Game
                         MotionBurst.Spawn(transform,World(e.To)+Vector3.up*.05f,Look.GoldBright,.9f,.65f*k,MotionBeat.Objective);
                         break;
                     case GameEventType.HeatChanged:
-                        Float(World(e.To) + Vector3.up * 0.5f, e.Amount >= SliceRules.OverheatAt ? "OVERHEATED" : "Heat " + e.Amount, new Color(1f, 0.55f, 0.2f));
+                        Float(World(e.To) + Vector3.up * 0.5f, e.Text != null && e.Text.StartsWith("OVERHEATED") ? "OVERHEATED" : "Heat " + e.Amount, new Color(1f, 0.55f, 0.2f));
                         break;
                     case GameEventType.UnitArrived:
                         SyncAll(false);
@@ -381,8 +381,7 @@ namespace RR.Game
             Animating = false;
             RefreshCells();
             if (S.IsOver) _root.Audio.Play(S.Winner == PlayerSeat ? "victory" : "defeat");
-            else if (S.ActiveSeat == PlayerSeat && S.ActiveUnitId == 0 && CommandThreat.Assess(S, PlayerSeat).Lines.Count > 0)
-            { Say("Your flagship can be destroyed by the enemy's next activation. The Command Threat panel shows how.", "danger"); _root.Audio.Play("threat", 0.7f); }
+            // The flagship warning now comes when the background threat analysis for this position is published.
         }
 
         bool LeaderThreatened()

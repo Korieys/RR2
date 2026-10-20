@@ -172,7 +172,7 @@ namespace Commandfall.Core
 
             var hit = new HitSpec
             {
-                Attacker = attacker, Raw = w.Damage + (overclock ? SliceRules.OverclockDamage : 0), Direct = true, Basic = true, From = from, TargetHex = targetHex, Cause = w.Name, FxKey = w.FxKey,
+                Attacker = attacker, Raw = w.Damage + (overclock ? SliceRules.OverclockDamageOf(attacker) : 0), Direct = true, Basic = true, From = from, TargetHex = targetHex, Cause = w.Name, FxKey = w.FxKey,
             };
             if (barrier != null)
             {
@@ -187,7 +187,7 @@ namespace Commandfall.Core
                 return o;
             }
             var r = Compute(s, target, hit, fromOverride);
-            if (overclock) r.Breakdown.Insert(0, $"+{SliceRules.OverclockDamage} overclock");
+            if (overclock) r.Breakdown.Insert(0, $"+{SliceRules.OverclockDamageOf(attacker)} overclock");
             o.Roster = r;
             o.BaseDamage = w.Damage;
             o.BonusDamage = r.Raw - w.Damage;
