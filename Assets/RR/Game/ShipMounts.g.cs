@@ -9,7 +9,7 @@ namespace RR.Game
         static readonly Dictionary<string, (float afterburnerWidth, float platingWidth, float batteryLift)> Mounts =
             new Dictionary<string, (float, float, float)>
         {
-            ["pygmaei_revenant_command_ship"] = (0.6359f, 0.6169f, -0.2083f),
+            ["pygmaei_revenant_command_ship"] = (0.5714f, 0.5376f, 0.0082f),
             ["inhumanus_executive_flagship"] = (1.4902f, 1.3611f, -0.1159f),
         };
     }

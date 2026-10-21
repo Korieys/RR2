@@ -1,7 +1,8 @@
 Shader "RR/Ship"
 {
-    // Hull shader for Blender-generated ships and stations. Vertex colour: R = material class (0 hull, 0.5 trim,
-    // 1 glass/crystal/bio), G = emission, B = baked ambient occlusion. Lit by the system's star (_RR_StarPosWS).
+    // Hull shader for Blender-generated ships and stations. Vertex colour: R = material class (0 hull, 0.25 painted armour,
+    // 0.5 trim, 1 glass/crystal/bio), G = emission, B = baked ambient occlusion. Lit by the system's star (_RR_StarPosWS).
+    // Painted armour takes _HullColor2 (only meshes that use class 0.25 show it); _Grime weathers hull and paint.
     Properties
     {
         _HullColor ("Hull", Color) = (0.72, 0.71, 0.69, 1)
@@ -17,6 +18,7 @@ Shader "RR/Ship"
         _Chitin ("Chitin sheen (Craigon)", Range(0, 1)) = 0
         _SheenColor ("Sheen colour", Color) = (0.7, 0.3, 1.0, 1)
         _RimTint ("Rim tint (selection / ownership)", Color) = (0, 0, 0, 0)
+        _Grime ("Weathering: grime, chipped paint, rivets (Pygmaei)", Range(0, 1)) = 0
         _Damage ("Damage", Range(0, 1)) = 0
         _Dissolve ("Dissolve", Range(0, 1)) = 0
     }
@@ -28,7 +30,7 @@ Shader "RR/Ship"
         #include "RR_Common.hlsl"
         CBUFFER_START(UnityPerMaterial)
             float4 _HullColor, _HullColor2, _TrimColor, _GlassColor, _SheenColor, _RimTint;
-            float _GlowIntensity, _HullRough, _TrimRough, _Metal, _DetailScale, _Stone, _Chitin, _Damage, _Dissolve;
+            float _GlowIntensity, _HullRough, _TrimRough, _Metal, _DetailScale, _Stone, _Chitin, _Grime, _Damage, _Dissolve;
         CBUFFER_END
         struct A { float4 posOS : POSITION; float3 nOS : NORMAL; float4 col : COLOR; };
         struct V { float4 posCS : SV_POSITION; float3 posWS : TEXCOORD0; float3 nWS : TEXCOORD1; float4 col : TEXCOORD2; float3 posOS : TEXCOORD3; };
@@ -60,7 +62,8 @@ Shader "RR/Ship"
                 float cls = i.col.r, emis = i.col.g, ao = lerp(0.35, 1.0, i.col.b);
                 float isGlass = smoothstep(0.75, 0.95, cls);
                 float isTrim = smoothstep(0.25, 0.45, cls) * (1 - isGlass);
-                float isHull = 1 - isGlass - isTrim;
+                float isPaint = smoothstep(0.1, 0.2, cls) * (1 - smoothstep(0.3, 0.4, cls));
+                float isHull = saturate(1 - isGlass - isTrim - isPaint);
                 float3 p = i.posOS * _DetailScale;
                 float3 n = normalize(i.nWS);
                 // Procedural surface detail (object space, so it never swims with the camera).
@@ -82,11 +85,22 @@ Shader "RR/Ship"
                 float det = dot(dpx, r1);
                 float3 grad = (det != 0) ? (r1 * dhx + r2 * dhy) / det : 0;
                 n = normalize(n - grad * 0.012 * isHull);
-                float3 albedo = hull * isHull + _TrimColor.rgb * isTrim + _GlassColor.rgb * 0.25 * isGlass;
+                // Weathering (Pygmaei): blotchy grime, paint chipped back to the iron, rivet heads catching the light.
+                float grime = 0, chip = 0, rivet = 0;
+                if (_Grime > 0)
+                {
+                    grime = RR_Fbm(i.posOS * _DetailScale * 0.6, 3) * 0.5 + 0.5;
+                    chip = smoothstep(0.6, 0.68, RR_Fbm(i.posOS * _DetailScale * 1.7 + 7.3, 3) * 0.5 + 0.5);
+                    rivet = smoothstep(0.17, 0.09, RR_Cell(i.posOS * _DetailScale * 3.2).x);
+                }
+                float3 paint = lerp(_HullColor2.rgb, _HullColor.rgb * 1.4, chip * _Grime);
+                float3 albedo = hull * isHull + paint * isPaint + _TrimColor.rgb * isTrim + _GlassColor.rgb * 0.25 * isGlass;
+                albedo *= 1 - _Grime * 0.3 * saturate(1.2 - grime * 1.6) * (1 - isGlass);
+                albedo += rivet * _Grime * 0.025 * (isHull + isPaint);
                 // Battle damage: scorched plates.
                 float burn = smoothstep(1 - _Damage, 1 - _Damage + 0.15, RR_Fbm(i.posOS * 3.1, 3) * 0.5 + 0.5) * step(0.01, _Damage);
                 albedo *= 1 - burn * 0.75;
-                float rough = _HullRough * isHull + _TrimRough * isTrim + 0.08 * isGlass;
+                float rough = _HullRough * (isHull + isPaint) + _TrimRough * isTrim + 0.08 * isGlass;
                 float metal = _Metal * isTrim;
                 float3 L = RR_StarDir(i.posWS);
                 float3 Vv = normalize(GetCameraPositionWS() - i.posWS);

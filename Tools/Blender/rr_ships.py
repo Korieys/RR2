@@ -703,8 +703,8 @@ def build_all(only=None):
         jobs.append((sid, lambda sid=sid, p=p: silex_ship(sid, p)))
     for sid, p in CRAIGON.items():
         jobs.append((sid, lambda sid=sid, p=p: craigon_ship(sid, p)))
-    for sid, p in PYGMAEI.items():
-        jobs.append((sid, lambda sid=sid, p=p: pygmaei_ship(sid, p)))
+    # Pygmaei hulls are built by rr_pygmaei.py (detailed, after the creator's concept sheets); PYGMAEI here is the
+    # superseded first pass, kept for reference and not exported.
     for sid, p in INHUMANUS.items():
         jobs.append((sid, lambda sid=sid, p=p: inhumanus_ship(sid, p)))
     for sid, fn in MODULES.items():

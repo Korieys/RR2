@@ -89,10 +89,11 @@ namespace RR.Game
                     break;
                 // Vertical slice, provisional palettes pending approval (Docs/vertical-slice/DECISIONS.md, CR-17).
                 case "pygmaei":
-                    m.SetColor("_HullColor", new Color(0.2f, 0.18f, 0.18f)); m.SetColor("_HullColor2", new Color(0.34f, 0.12f, 0.1f));
-                    m.SetColor("_TrimColor", new Color(0.46f, 0.2f, 0.12f)); m.SetFloat("_Metal", 0.6f); m.SetFloat("_TrimRough", 0.6f);
-                    m.SetColor("_GlassColor", new Color(1.0f, 0.46f, 0.12f)); m.SetFloat("_GlowIntensity", 2.6f);
-                    m.SetFloat("_HullRough", 0.62f); m.SetFloat("_DetailScale", 9f);
+                    // Dark riveted iron, crimson painted armour (class 0.25), gunmetal trim, red furnace glow; weathered.
+                    m.SetColor("_HullColor", new Color(0.3f, 0.28f, 0.27f)); m.SetColor("_HullColor2", new Color(0.66f, 0.07f, 0.05f));
+                    m.SetColor("_TrimColor", new Color(0.46f, 0.42f, 0.38f)); m.SetFloat("_Metal", 0.75f); m.SetFloat("_TrimRough", 0.45f);
+                    m.SetColor("_GlassColor", new Color(1.0f, 0.22f, 0.08f)); m.SetFloat("_GlowIntensity", 2.8f);
+                    m.SetFloat("_HullRough", 0.66f); m.SetFloat("_DetailScale", 7f); m.SetFloat("_Grime", 1f);
                     break;
                 case "inhumanus":
                     m.SetColor("_HullColor", new Color(0.86f, 0.85f, 0.82f)); m.SetColor("_HullColor2", new Color(0.7f, 0.7f, 0.72f));
