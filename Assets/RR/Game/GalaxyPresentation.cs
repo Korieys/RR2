@@ -136,7 +136,7 @@ namespace RR.Game
             switch (s.Id)
             {
                 case "silex_expanse": return new Color(0.18f, 0.62f, 1f);
-                case "pygmaei_sector": return new Color(0.62f, 0.22f, 1f);
+                case "pygmaei_sector": return new Color(1f, 0.16f, 0.12f);
                 case "pirate_reach": return new Color(0.2f, 0.92f, 0.34f);
                 case "inhumanus_dominion": return new Color(1f, 0.72f, 0.14f);
                 case "elven_front": return new Color(1f, 0.38f, 0.16f);

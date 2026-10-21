@@ -29,6 +29,7 @@ namespace RR.Tests
             var g = War.New();
             Assert.AreEqual(0xF2C044, g.GetPolity("inhumanus").Color, "the Inhumanus are gold");
             Assert.AreEqual(0x4FD86A, g.GetPolity("pirates").Color, "the Pirates are green");
+            Assert.AreEqual(0xE5383B, g.GetPolity("pygmaei").Color, "the Pygmaei are red");
             g.GetPolity("inhumanus").Color = 0xE8443C; g.GetPolity("pirates").Color = 0xE8B23A;   // as an older save stored them
             var back = Camp.Reload(g);
             Assert.AreEqual(0xF2C044, back.GetPolity("inhumanus").Color);

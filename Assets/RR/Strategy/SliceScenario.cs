@@ -23,10 +23,10 @@ namespace RR.Strategy
         static double Y(double py) => (543 - py) * LyPerPx;
 
         /// <summary>The faction map palette. Applied when a galaxy is created and again when a save is loaded, so a palette change
-        /// reaches existing saves (colour is presentation, not rules). 2026-10-20: Inhumanus gold, Pirates green, at the creator's request.</summary>
+        /// reaches existing saves (colour is presentation, not rules). 2026-10-20: Inhumanus gold, Pirates green, Pygmaei red, at the creator's request.</summary>
         public static readonly Dictionary<string, int> Palette = new Dictionary<string, int>
         {
-            ["silex"] = 0x4AA8FF, ["craigon"] = 0xC452FF, ["meeples"] = 0x3CC4FF, ["pygmaei"] = 0xA45CFF,
+            ["silex"] = 0x4AA8FF, ["craigon"] = 0xC452FF, ["meeples"] = 0x3CC4FF, ["pygmaei"] = 0xE5383B,
             ["pirates"] = 0x4FD86A, ["inhumanus"] = 0xF2C044, ["elven"] = 0xFF7A48,
         };
 
@@ -45,7 +45,7 @@ namespace RR.Strategy
             g.Polities.Add(new Polity { Id = "craigon", Name = "Cr\u00e4igon", Color = 0xC452FF, Playable = true, CommandfallFaction = "Craigon",
                 Stock = new Resources(400, 400, 400, 40) });
             g.Polities.Add(new Polity { Id = "meeples", Name = "Meeples", Color = 0x3CC4FF });
-            g.Polities.Add(new Polity { Id = "pygmaei", Name = "Pygmaei Sector", Color = 0xA45CFF });
+            g.Polities.Add(new Polity { Id = "pygmaei", Name = "Pygmaei Sector", Color = 0xE5383B });
             g.Polities.Add(new Polity { Id = "pirates", Name = "Pirate Reach", Color = 0xE8B23A });
             g.Polities.Add(new Polity { Id = "inhumanus", Name = "Inhumanus Dominion", Color = 0xE8443C });
             g.Polities.Add(new Polity { Id = "elven", Name = "Elven Front", Color = 0xFF7A48 });
