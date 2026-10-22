@@ -115,7 +115,7 @@ namespace RR.EditorTools
     string matPath=dir.Replace('\\','/')+"/Surface.mat";
     var mat=AssetDatabase.LoadAssetAtPath<Material>(matPath);
     if(mat==null){mat=new Material(Shader.Find("RR/UnitSurface"));AssetDatabase.CreateAsset(mat,matPath);}
-    mat.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/albedo.png"));mat.SetColor("_Energy",visual.Energy);mat.SetFloat("_Bio",bio?1:0);EditorUtility.SetDirty(mat);
+    mat.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/albedo.png"));mat.SetColor("_Energy",visual.Energy);mat.SetFloat("_Bio",bio?1:0);mat.SetColor("_BaseTint",id.StartsWith("pygmaei")?new Color(2.3f,2.15f,2.05f,1):Color.white);EditorUtility.SetDirty(mat);   // Pygmaei textures are authored very dark
     mat.SetTexture("_NormalMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/normal.png"));
     mat.SetTexture("_MaskMap",AssetDatabase.LoadAssetAtPath<Texture2D>(dir.Replace('\\','/')+"/orm.png"));
     var rs=go.GetComponentsInChildren<SkinnedMeshRenderer>();
