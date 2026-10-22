@@ -1,0 +1,22 @@
+{
+  "source_index": 101,
+  "id": "pygmaei_revenant_command_ship",
+  "category": "Ships",
+  "source_triangles": 490000,
+  "lod_triangles": [
+    25996,
+    8000,
+    1999
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 11.0,
+  "provisional": false
+}

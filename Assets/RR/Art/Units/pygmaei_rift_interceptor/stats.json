@@ -1,0 +1,22 @@
+{
+  "source_index": 105,
+  "id": "pygmaei_rift_interceptor",
+  "category": "Ships",
+  "source_triangles": 490000,
+  "lod_triangles": [
+    25983,
+    8000,
+    2805
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 23.3,
+  "provisional": false
+}

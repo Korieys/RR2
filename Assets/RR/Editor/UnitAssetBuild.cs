@@ -111,7 +111,7 @@ namespace RR.EditorTools
     foreach(var oldLod in geometry.GetComponentsInChildren<LODGroup>())UnityEngine.Object.DestroyImmediate(oldLod);
     var visual=go.AddComponent<UnitVisual>();visual.UnitId=id;visual.Ground=stats.category!="Ships";visual.Vehicle=stats.category=="GroundVehicles";
     visual.SourceTriangles=stats.source_triangles;visual.HeroTriangles=stats.lod_triangles[0];visual.ProvisionalName=stats.provisional;
-    bool bio=id.StartsWith("craigon");visual.Energy=bio?new Color(.70f,.32f,1):new Color(.38f,.80f,1);
+    bool bio=id.StartsWith("craigon");visual.Energy=bio?new Color(.70f,.32f,1):id.StartsWith("pygmaei")?new Color(1f,.22f,.08f):new Color(.38f,.80f,1);
     string matPath=dir.Replace('\\','/')+"/Surface.mat";
     var mat=AssetDatabase.LoadAssetAtPath<Material>(matPath);
     if(mat==null){mat=new Material(Shader.Find("RR/UnitSurface"));AssetDatabase.CreateAsset(mat,matPath);}

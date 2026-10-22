@@ -37,8 +37,9 @@ def normalize(obj,row):
         plus=np.percentile(np.linalg.norm(cross[proj>np.quantile(proj,.88)],axis=1),80)
         if minus<plus:fwd=-fwd
         right=np.cross(fwd,up);right/=np.linalg.norm(right);up=np.cross(right,fwd)
-        if row['category']=='GroundVehicles':
-            # Keep walkers vertical; only horizontal alignment for grounded creatures.
+        if row['category']=='GroundVehicles' or row.get('keep_up'):
+            # Keep walkers vertical; only horizontal alignment for grounded creatures. keep_up: sources already upright
+            # (deep-hulled ships, taller than wide, which the smallest-variance rule would roll onto their sides).
             up=np.array([0.,0.,1.]);fwd[2]=0;fwd/=np.linalg.norm(fwd);right=np.cross(fwd,up)
         a=np.column_stack((a@right,-a@fwd,a@up));a-= (a.max(0)+a.min(0))/2
         a*=2.4/max(np.ptp(a,axis=0))

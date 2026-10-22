@@ -1,0 +1,22 @@
+{
+  "source_index": 102,
+  "id": "pygmaei_furnace_cruiser",
+  "category": "Ships",
+  "source_triangles": 490000,
+  "lod_triangles": [
+    26000,
+    8000,
+    2000
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 50.9,
+  "provisional": false
+}

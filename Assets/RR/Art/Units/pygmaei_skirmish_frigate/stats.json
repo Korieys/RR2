@@ -1,0 +1,22 @@
+{
+  "source_index": 104,
+  "id": "pygmaei_skirmish_frigate",
+  "category": "Ships",
+  "source_triangles": 490000,
+  "lod_triangles": [
+    25987,
+    7999,
+    2780
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 15.5,
+  "provisional": false
+}

@@ -1,0 +1,22 @@
+{
+  "source_index": 103,
+  "id": "pygmaei_annihilator_destroyer",
+  "category": "Ships",
+  "source_triangles": 490000,
+  "lod_triangles": [
+    25997,
+    8000,
+    2000
+  ],
+  "bones": 2,
+  "clips": [
+    "Idle",
+    "Move",
+    "Attack",
+    "Ability",
+    "Hit",
+    "Death"
+  ],
+  "elapsed_seconds": 35.0,
+  "provisional": false
+}
